@@ -11,6 +11,8 @@ internal class MqttClient : IDeviceBus, IDisposable
     private IMqttClient? mqttClient;
     private MqttFactory? mqttFactory;
 
+    private Dictionary<string, Action<string, string>> _subscriptions = new();
+
     private IConsoleOutput ConsoleOutput { get; }
     private string Host { get; }
     private int Port { get; }
@@ -41,6 +43,16 @@ internal class MqttClient : IDeviceBus, IDisposable
         if(!response.ResultCode.Equals(MqttClientConnectResultCode.Success))
             throw new Exception($"Failed to connect to MQTT server {Host}:{Port}");
 
+        mqttClient.ApplicationMessageReceivedAsync += e =>
+        {
+            ConsoleOutput.InfoLine($"Received message on topic {e.ApplicationMessage.Topic}, payload: {e.ApplicationMessage.ConvertPayloadToString()}");
+            var msg = e.ApplicationMessage;
+            foreach(var kv in _subscriptions.Where(kv => msg.Topic.StartsWith(kv.Key)))
+                kv.Value(msg.Topic, msg.ConvertPayloadToString());
+
+            return Task.CompletedTask;
+        };
+
         ConsoleOutput.MessageLine($"Connected to MQTT server {Host}:{Port}");
     }
 
@@ -58,19 +70,17 @@ internal class MqttClient : IDeviceBus, IDisposable
         mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
     }
 
-    public void Subscribe(string topic, Action<string, string> callback)
+    public async Task Subscribe(string topic, Action<string, string> callback)
     {
-        if(mqttClient == null)
+        if(mqttClient == null || mqttFactory == null)
             throw new InvalidOperationException("Not connected to MQTT server");
 
-        mqttClient.ApplicationMessageReceivedAsync += e =>
-        {
-            var msg = e.ApplicationMessage;
-            if(msg.Topic.StartsWith($"{BaseTopic}/{topic}"))
-                callback(msg.Topic, msg.ConvertPayloadToString());
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+                .WithTopicFilter(f => f.WithTopic($"{BaseTopic}/{topic}"))
+                .Build();
 
-            return Task.CompletedTask;
-        };
+        _subscriptions[$"{BaseTopic}/{topic}"] = callback;
+        await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
     }
 
     public async void Dispose()

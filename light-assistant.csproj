@@ -6,6 +6,7 @@
     <RootNamespace>LightAssistant</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <treatWarningsAsErrors>true</treatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

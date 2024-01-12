@@ -7,12 +7,17 @@ internal class Config
     public int MqttPort { get; set; } = 1883;
     public string MqttBaseTopic { get; set; } = "zigbee2mqtt";
 
-    public Config(string configFile = "")
+    public Config(string configFile = "", bool configFileSpecifiedDirectly = false)
     {
         if (string.IsNullOrWhiteSpace(configFile))
             return;
 
-        Dictionary<string, string> configDictionary = new Dictionary<string, string>();
+        if(!File.Exists(configFile)) {
+            if(configFileSpecifiedDirectly)
+                throw new FileNotFoundException($"Configuration file {configFile} not found.");
+
+            return;
+        }
 
         string[] lines = File.ReadAllLines(configFile);
         foreach (string line in lines) {

@@ -17,31 +17,39 @@ public static class MainApp {
         public bool Verbose { get; set; } = false;
     }
 
+    private static int result = 0;
+
     public static int Main(string[] args)
     {
-        int result = 0;
         Parser.Default.ParseArguments<Options>(args)
-            .WithParsed(async options => result = await Run(options));
+            .WithParsed(options => Run(options).Wait());
         return result;
     }
 
-    private static async Task<int> Run(Options options)
+    private static async Task Run(Options options)
     {
-        if(string.IsNullOrEmpty(options.ConfigFile))
-            options.ConfigFile = Environment.GetEnvironmentVariable(ENV_CONFIG_FILE_KEY) ?? ENV_CONFIG_FILE_DEFAULT;
+        bool hasConfigFile = !string.IsNullOrEmpty(options.ConfigFile);
+        if(!hasConfigFile) {
+            var configFile = Environment.GetEnvironmentVariable(ENV_CONFIG_FILE_KEY);
+            if(!string.IsNullOrEmpty(configFile)) {
+                hasConfigFile = true;
+                options.ConfigFile = configFile;
+            }
+            else
+                options.ConfigFile = ENV_CONFIG_FILE_DEFAULT;
+        }
 
         try {
-            var config = new Config(options.ConfigFile);
+            var config = new Config(options.ConfigFile, hasConfigFile);
             var consoleOutput = new ConsoleOutput() { Verbose = options.Verbose };
             var mqttBus = new MqttClient(consoleOutput, config.MqttHost, config.MqttPort, config.MqttBaseTopic, APP_NAME);
             await mqttBus.ConnectAsync();
-
+            var controller = new Controller(consoleOutput, mqttBus);
+            await controller.Run();
         }
         catch(Exception e) {
             Console.WriteLine($"Error: {e.Message}");
-            return 127;
+            result = 127;
         }
-
-        return 0;
     }
 }
