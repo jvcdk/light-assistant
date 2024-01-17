@@ -1,11 +1,11 @@
 
 namespace LightAssistant;
 
+/// TODO: Re-write to use reflection to find properties.
 internal class Config
 {
     public string MqttHost { get; set; } = "localhost";
     public int MqttPort { get; set; } = 1883;
-    public string MqttBaseTopic { get; set; } = "zigbee2mqtt";
 
     public Config(string configFile = "", bool configFileSpecifiedDirectly = false)
     {
@@ -39,10 +39,6 @@ internal class Config
 
                 case "mqtt_port" when int.TryParse(value, out int port):
                     MqttPort = port;
-                    break;
-
-                case "mqtt_base_topic":
-                    MqttBaseTopic = value;
                     break;
 
                 default:

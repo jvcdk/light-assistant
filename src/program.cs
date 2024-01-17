@@ -42,7 +42,7 @@ public static class MainApp {
         try {
             var config = new Config(options.ConfigFile, hasConfigFile);
             var consoleOutput = new ConsoleOutput() { Verbose = options.Verbose };
-            var mqttBus = new MqttClient(consoleOutput, config.MqttHost, config.MqttPort, config.MqttBaseTopic, APP_NAME);
+            var mqttBus = new Z2MClient(consoleOutput, config.MqttHost, config.MqttPort, APP_NAME);
             await mqttBus.ConnectAsync();
             var controller = new Controller(consoleOutput, mqttBus);
             await controller.Run();

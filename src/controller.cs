@@ -11,17 +11,18 @@ internal class Controller : IController
     {
         ConsoleOutput = consoleOutput;
         DeviceBus = deviceBus;
+
+        DeviceBus.DeviceDiscovered += (sender, device) => HandleDeviceDiscovered(device);
+    }
+
+    private void HandleDeviceDiscovered(IDevice device)
+    {
+        ConsoleOutput.InfoLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
     }
 
     public async Task Run()
     {
         ConsoleOutput.InfoLine("Controller running.");
-        await DeviceBus.Subscribe("#", ProcessIncomingMessage); // Subscribe once to everything
         await Task.Delay(Timeout.Infinite);
-    }
-
-    private void ProcessIncomingMessage(string topic, string message)
-    {
-        // Do someting...
     }
 }

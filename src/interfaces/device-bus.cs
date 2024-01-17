@@ -3,6 +3,13 @@ namespace LightAssistant.Interfaces;
 internal interface IDeviceBus
 {
     Task ConnectAsync();
-    void Publish(string topic, string message);
-    Task Subscribe(string topic, Action<string, string> callback);
+    event EventHandler<IDevice> DeviceDiscovered;
+}
+
+internal interface IDevice
+{
+    internal string Address { get; }
+    internal string Vendor { get; }
+    internal string Model { get; }
+    internal string Description { get; }
 }
