@@ -69,6 +69,5 @@ public static class MainApp {
         }
         var config = new Config();
         config.SaveToFile(options.ConfigFile);
-        Console.WriteLine($"Saved default configuration file {options.ConfigFile}");
     }
 }

@@ -1,7 +1,6 @@
 using Newtonsoft.Json;
 namespace LightAssistant;
 
-/// TODO: Re-write to use reflection to find properties.
 internal class Config
 {
     public string MqttHost { get; set; } = "localhost";
@@ -19,40 +18,20 @@ internal class Config
             return;
         }
 
-        string[] lines = File.ReadAllLines(configFile);
-        foreach (string line in lines) {
-            if (line.StartsWith("//") || line.StartsWith('#'))
-                continue;
-
-            var idx = line.IndexOf(':');
-            if (idx == -1) {
-                Console.Error.WriteLine($"Invalid configuration line: {line}");
-                continue;
-            }
-
-            var (key, value) = (line.Substring(0, idx).Trim().ToLower(), line.Substring(idx + 1).Trim());
-
-            switch (key) {
-                case "mqtt_host":
-                    MqttHost = value;
-                    break;
-
-                case "mqtt_port" when int.TryParse(value, out int port):
-                    MqttPort = port;
-                    break;
-
-                default:
-                    Console.Error.WriteLine($"Invalid configuration line: {line}");
-                    break;
-            }
-        }
-
-        Console.WriteLine($"Loaded configuration file {configFile}");
+        LoadFromFile(configFile);
     }
 
     public void SaveToFile(string configFile)
     {
         var json = JsonConvert.SerializeObject(this, Formatting.Indented);
         File.WriteAllText(configFile, json);
+        Console.WriteLine($"Saved default configuration file {configFile}");
+    }
+
+    private void LoadFromFile(string configFile)
+    {
+        var json = File.ReadAllText(configFile);
+        JsonConvert.PopulateObject(json, this);
+        Console.WriteLine($"Loaded configuration file {configFile}");
     }
 }
