@@ -7,7 +7,8 @@ internal interface IDeviceBus
 
 internal interface IDeviceBusConnection
 {
-    event EventHandler<IDevice> DeviceDiscovered;
+    event Action<IDevice> DeviceDiscovered;
+    event Action<IDevice, Dictionary<string, string>> DeviceAction;
 }
 
 internal interface IDevice

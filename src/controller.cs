@@ -12,12 +12,18 @@ internal class Controller : IController
         ConsoleOutput = consoleOutput;
         DeviceBus = deviceBus;
 
-        DeviceBus.DeviceDiscovered += (sender, device) => HandleDeviceDiscovered(device);
+        DeviceBus.DeviceDiscovered += HandleDeviceDiscovered;
+        DeviceBus.DeviceAction += HandleDeviceAction;
+    }
+
+    private void HandleDeviceAction(IDevice device, Dictionary<string, string> dictionary)
+    {
+        ConsoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", dictionary.Select(kv => $"{kv.Key}={kv.Value}"))}");
     }
 
     private void HandleDeviceDiscovered(IDevice device)
     {
-        ConsoleOutput.InfoLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
+        ConsoleOutput.ErrorLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
     }
 
     public async Task Run()
