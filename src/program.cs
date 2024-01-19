@@ -15,6 +15,9 @@ public static class MainApp {
 
         [Option('v', "verbose", Required = false, HelpText = "Verbose output.")]
         public bool Verbose { get; set; } = false;
+
+        [Option('s', "save-config", Required = false, HelpText = "Save default config file and exit.")]
+        public bool SaveConfig { get; set; } = false;
     }
 
     private static int result = 0;
@@ -39,6 +42,11 @@ public static class MainApp {
                 options.ConfigFile = ENV_CONFIG_FILE_DEFAULT;
         }
 
+        if(options.SaveConfig) {
+            SaveConfigFile(options);
+            return;
+        }
+
         try {
             var config = new Config(options.ConfigFile, hasConfigFile);
             var consoleOutput = new ConsoleOutput() { Verbose = options.Verbose };
@@ -51,5 +59,16 @@ public static class MainApp {
             Console.WriteLine($"Error: {e.Message}");
             result = 127;
         }
+    }
+
+    private static void SaveConfigFile(Options options)
+    {
+        if(File.Exists(options.ConfigFile)) {
+            Console.Error.WriteLine($"Configuration file {options.ConfigFile} already exists. Refusing to overwrite.");
+            return;
+        }
+        var config = new Config();
+        config.SaveToFile(options.ConfigFile);
+        Console.WriteLine($"Saved default configuration file {options.ConfigFile}");
     }
 }

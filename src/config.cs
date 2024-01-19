@@ -1,4 +1,4 @@
-
+using Newtonsoft.Json;
 namespace LightAssistant;
 
 /// TODO: Re-write to use reflection to find properties.
@@ -48,5 +48,11 @@ internal class Config
         }
 
         Console.WriteLine($"Loaded configuration file {configFile}");
+    }
+
+    public void SaveToFile(string configFile)
+    {
+        var json = JsonConvert.SerializeObject(this, Formatting.Indented);
+        File.WriteAllText(configFile, json);
     }
 }
