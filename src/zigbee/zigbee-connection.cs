@@ -2,14 +2,11 @@ using LightAssistant.Interfaces;
 using MQTTnet;
 using MQTTnet.Client;
 
-namespace LightAssistant;
+namespace LightAssistant.Zigbee;
 
-internal class Z2MClient : IDeviceBus, IDisposable
+internal class ZigbeeConnection : IDeviceBus, IDisposable
 {
     private const int MQTT_TIMEOUT = 1500;
-    private const string BASE_TOPIC = "zigbee2mqtt";
-
-    public event EventHandler<IDevice> DeviceDiscovered = (sender, device) => { };
 
     private IMqttClient? mqttClient;
     private MqttFactory? mqttFactory;
@@ -18,7 +15,9 @@ internal class Z2MClient : IDeviceBus, IDisposable
     private int Port { get; }
     private string ClientId { get; }
 
-    internal Z2MClient(IConsoleOutput consoleOutput, string host, int port, string clientId)
+    private readonly Dictionary<string, Action<IReadOnlyCollection<string>, string>> _subscriptions = new();
+
+    internal ZigbeeConnection(IConsoleOutput consoleOutput, string host, int port, string clientId)
     {
         ConsoleOutput = consoleOutput;
         Host = host;
@@ -44,7 +43,7 @@ internal class Z2MClient : IDeviceBus, IDisposable
         mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessage;
 
         var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicFilter(f => f.WithTopic($"{BASE_TOPIC}/#"))
+                .WithTopicFilter(f => f.WithTopic($"#"))
                 .Build();
 
         await mqttClient.SubscribeAsync(mqttSubscribeOptions, ct);
@@ -54,12 +53,25 @@ internal class Z2MClient : IDeviceBus, IDisposable
 
     private Task HandleMqttMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        ConsoleOutput.InfoLine($"Received message on topic {e.ApplicationMessage.Topic}, payload: {e.ApplicationMessage.ConvertPayloadToString()}");
-        var msg = e.ApplicationMessage;
-//        foreach (var kv in _subscriptions.Where(kv => msg.Topic.StartsWith(kv.Key)))
-//            kv.Value(msg.Topic, msg.ConvertPayloadToString());
+        var handlers = _subscriptions
+            .Where(kv => e.ApplicationMessage.Topic.StartsWith(kv.Key))
+            .ToList();
+
+        if(handlers.Count == 0)
+            ConsoleOutput.ErrorLine($"No handler for topic {e.ApplicationMessage.Topic}.");
+        else {
+            var parts = e.ApplicationMessage.Topic.Split('/').AsReadOnly();
+            var payload = e.ApplicationMessage.ConvertPayloadToString();
+            foreach(var handler in handlers.Select(kv => kv.Value))
+                handler(parts, payload);
+        }
 
         return Task.CompletedTask;
+    }
+
+    internal void SubscribeToTopic(string topic, Action<IReadOnlyCollection<string>, string> callback)
+    {
+        _subscriptions[topic] = callback;
     }
 
 //    private void Publish(string topic, string message)

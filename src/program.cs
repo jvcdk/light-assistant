@@ -1,5 +1,6 @@
 
 using CommandLine;
+using LightAssistant.Zigbee;
 
 namespace LightAssistant;
 
@@ -49,10 +50,12 @@ public static class MainApp {
 
         try {
             var config = new Config(options.ConfigFile, hasConfigFile);
+            options.Verbose |= config.Verbose;
             var consoleOutput = new ConsoleOutput() { Verbose = options.Verbose };
-            var mqttBus = new Z2MClient(consoleOutput, config.MqttHost, config.MqttPort, APP_NAME);
-            await mqttBus.ConnectAsync();
-            var controller = new Controller(consoleOutput, mqttBus);
+            var zigbeeConnection = new ZigbeeConnection(consoleOutput, config.MqttHost, config.MqttPort, APP_NAME);
+            var mqttClient = new Zigbee2MqttClient(zigbeeConnection, consoleOutput);
+            var controller = new Controller(consoleOutput, mqttClient);
+            await zigbeeConnection.ConnectAsync();
             await controller.Run();
         }
         catch(Exception e) {

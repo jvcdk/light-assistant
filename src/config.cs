@@ -5,6 +5,7 @@ internal class Config
 {
     public string MqttHost { get; set; } = "localhost";
     public int MqttPort { get; set; } = 1883;
+    public bool Verbose { get; set; } = false;
 
     public Config(string configFile = "", bool configFileSpecifiedDirectly = false)
     {

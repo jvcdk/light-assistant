@@ -5,9 +5,9 @@ namespace LightAssistant;
 internal class Controller : IController
 {
     private IConsoleOutput ConsoleOutput { get; }
-    private IDeviceBus DeviceBus { get; }
+    private IDeviceBusConnection DeviceBus { get; }
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBus deviceBus)
+    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus)
     {
         ConsoleOutput = consoleOutput;
         DeviceBus = deviceBus;
