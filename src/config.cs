@@ -6,6 +6,8 @@ internal class Config
     public string MqttHost { get; set; } = "localhost";
     public int MqttPort { get; set; } = 1883;
     public bool Verbose { get; set; } = false;
+    public string WebGuiHostAddress { get; set; } = "*";
+    public int WebGuiPort { get; set; } = 8080;
 
     public Config(string configFile = "", bool configFileSpecifiedDirectly = false)
     {
