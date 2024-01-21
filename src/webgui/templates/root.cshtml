@@ -1,1 +1,11 @@
-This is the root page.
+@using RazorLight
+@{
+    Model.PageTitle = $"Welcome to {Model.SiteName}";
+}
+@{await IncludeAsync("_header.cshtml", Model);}
+
+<h2>Device list</h2>
+<div id="device_list">
+Device list loading...
+</div>
+@{await IncludeAsync("_footer.cshtml", Model);}

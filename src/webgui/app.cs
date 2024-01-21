@@ -1,7 +1,5 @@
 using System.Text;
 using EmbedIO;
-using EmbedIO.Routing;
-using EmbedIO.WebApi;
 using LightAssistant.Interfaces;
 using RazorLight;
 
@@ -10,7 +8,9 @@ namespace LightAssistant.WebGUI
     internal class App : IDisposable, IUserInterface
     {
         private string TemplateRoot => Path.Combine(AppContext.BaseDirectory, "templates");
+        private string StaticRoot => Path.Combine(AppContext.BaseDirectory, "static");
         private string TemplatePath(string name) => Path.Combine(TemplateRoot, name);
+        private string SiteName => "Light Assistant";
 
         private readonly IConsoleOutput _consoleOutput;
         private readonly WebServer _webServer;
@@ -47,7 +47,9 @@ namespace LightAssistant.WebGUI
                     .WithMode(HttpListenerMode.EmbedIO)
             )
             .WithLocalSessionManager()
-            .WithWebApi("/", m => m.WithController(() => new RoutingProxy(this)));;
+            .WithStaticFolder("/css/", Path.Combine(StaticRoot, "css"), isImmutable: true, m => { m.ContentCaching = true; })
+            .WithStaticFolder("/js/", Path.Combine(StaticRoot, "js"), isImmutable: true, m => { m.ContentCaching = true; })
+            .WithAction("/", HttpVerbs.Any, HandleRootUrl); // Must be last as it a catch-all
 
             server.HandleHttpException(async (ctx, ex) => {
                 ctx.Response.StatusCode = ex.StatusCode;
@@ -58,37 +60,37 @@ namespace LightAssistant.WebGUI
                         await ctx.SendStringAsync(text, "text/html", Encoding.UTF8);
                         break;
                     default:
-                        // Handle other HTTP Status codes or call the default handler 'SendStandardHtmlAsync'
                         await ctx.SendStandardHtmlAsync(ex.StatusCode);
                         break;
                 }
             });
 
-            // Listen for state changes.
             server.StateChanged += (s, e) => _consoleOutput.InfoLine($"WebServer New State - {e.NewState}");
 
             return server;
         }
 
-        public async Task<string> PageRoot()
+        private async Task HandleRootUrl(IHttpContext context)
         {
-            var model = new { Name = "John Doe" };
-            return await _engine.CompileRenderAsync("root.cshtml", model);
+            if(context.RequestedPath == "/") {
+                var content = await PageRoot();
+                await context.SendStringAsync(content, "text/html", Encoding.UTF8);
+            }
+            else
+                throw new HttpException(404, "Content not available.");
         }
 
-        
-        // Proxy class to prevent App to be disposed.
-        private class RoutingProxy : WebApiController
+        public async Task<string> IncludeFile(string file, object model)
         {
-            private readonly App _app;
+            return await _engine.CompileRenderAsync(file, model);
+        }
 
-            internal RoutingProxy(App app)
-            {
-                _app = app;
-            }
-
-            [Route(HttpVerbs.Get, "/")]
-            public async Task<string> PageRoot() => await _app.PageRoot();
+        public async Task<string> PageRoot()
+        {
+            var model = new { 
+                SiteName,
+            };
+            return await _engine.CompileRenderAsync("root.cshtml", model);
         }
     }
 }
