@@ -13,11 +13,9 @@ public static class OfflineApp {
     {
         try {
             var consoleOutput = new ConsoleOutput() { Verbose = true };
-            var zigbeeConnection = new ZigbeeConnection(consoleOutput, "localhost", 1889, "app name");
-            var mqttClient = new Zigbee2MqttClient(zigbeeConnection, consoleOutput);
+            var mqttClient = new MqttEmulatedClient();
             var guiApp = new App(consoleOutput, WebGuiHostAddress, WebGuiHostPort);
             var controller = new Controller(consoleOutput, mqttClient, guiApp);
-            zigbeeConnection.ConnectAsync().Wait();
             controller.Run().Wait();
             return result;
         }
