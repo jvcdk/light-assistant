@@ -17,10 +17,14 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="RazorLight" Version="2.3.1" />
   </ItemGroup>
+  
 
   <ItemGroup>
-    <Content Include="src\webgui\templates\**" Link="templates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
-    <Content Include="src\webgui\static\**" Link="static\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="webgui\templates\**" Link="templates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="webgui\static\**" Link="static\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
+<ItemGroup>
+  <InternalsVisibleTo Include="light-assistant-offline" />
+</ItemGroup>
 </Project>
