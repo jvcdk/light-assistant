@@ -49,6 +49,8 @@ namespace LightAssistant.WebGUI
             .WithLocalSessionManager()
             .WithStaticFolder("/css/", Path.Combine(StaticRoot, "css"), isImmutable: true, m => { m.ContentCaching = true; })
             .WithStaticFolder("/js/", Path.Combine(StaticRoot, "js"), isImmutable: true, m => { m.ContentCaching = true; })
+            .WithStaticFolder("/images/", Path.Combine(StaticRoot, "images"), isImmutable: true, m => { m.ContentCaching = true; })
+            .WithStaticFolder("/favicon.ico", Path.Combine(StaticRoot, "images/favicon.ico"), isImmutable: true, m => { m.ContentCaching = true; })
             .WithAction("/", HttpVerbs.Any, HandleRootUrl); // Must be last as it a catch-all
 
             server.HandleHttpException(async (ctx, ex) => {
