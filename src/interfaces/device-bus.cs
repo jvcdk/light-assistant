@@ -18,4 +18,5 @@ internal interface IDevice
     string Vendor { get; }
     string Model { get; }
     string Description { get; }
+    bool BatteryPowered { get; }
 }

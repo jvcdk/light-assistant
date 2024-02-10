@@ -40,6 +40,16 @@ internal partial class Zigbee2MqttClient
 
         [JsonIgnore]
         public string Description => Definition?.Description ?? "";
+
+        private string _powerSource = "";
+        [JsonProperty("power_source")]
+        public string PowerSource {
+            get => _powerSource;
+            set => _powerSource = value ?? "";
+        }
+
+        [JsonIgnore]
+        public bool BatteryPowered => PowerSource == "Battery";
     }
 
     public class DeviceDefinition

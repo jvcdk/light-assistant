@@ -28,3 +28,19 @@
     min-width: 5rem;
     max-width: 15rem;
 }
+
+.Device .Battery::before {
+    content: "Battery: ";
+}
+
+.Device .LinkQuality::before {
+    content: "LinkQuality: ";
+}
+
+.Device .Brightness::before {
+    content: "Brightness: ";
+}
+
+.Device .State::before {
+    content: "State: ";
+}

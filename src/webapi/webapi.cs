@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using EmbedIO;
 using EmbedIO.WebSockets;
 using LightAssistant.Interfaces;
@@ -78,10 +79,29 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         var contexts = context != null ? EnumerableExt.Wrap(context) : ActiveContexts;
 
         var devices = AppController.GetDeviceList();
-        var response = new JsonMessageDeviceList(devices);
+        var response = JsonMessage.CreateDeviceList(devices);
         foreach(var inner in contexts)
             await SendMessage(inner, response);
+
+        foreach(var device in devices) {
+            if(AppController.TryGetDeviceStatus(device, out var status)) {
+                Debug.Assert(status != null);
+                response = JsonMessage.CreateDeviceStatus(device.Address, status);
+                foreach(var inner in contexts)
+                    await SendMessage(inner, response);
+            }
+        }
     }
 
     public Task DeviceListUpdated() => DeviceListUpdated(null);
+
+    public async Task DeviceStateUpdated(string address, IDeviceStatus deviceStatus)
+    {
+        if(AppController == null)
+            return;
+        
+        var message = JsonMessage.CreateDeviceStatus(address, deviceStatus);
+        foreach(var context in ActiveContexts)
+            await SendMessage(context, message);
+    }
 }

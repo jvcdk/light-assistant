@@ -23,7 +23,8 @@ internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
             Model = "TS004F",
             Definition = new DeviceDefinition() {
                 Description = "Smart knob"
-            }
+            },
+            PowerSource = "Battery",
         };
         DeviceDiscovered(smartKnob);
         Thread.Sleep(100);
@@ -34,7 +35,8 @@ internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
             Model = "HK-ZD-DIM-A",
             Definition = new DeviceDefinition() {
                 Description = "Constant Current Zigbee LED dimmable driver"
-            }
+            },
+            PowerSource = "Mains (single phase)",
         };
         DeviceDiscovered(ledDriver);
 
@@ -52,7 +54,7 @@ internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
                     DeviceAction(ledDriver,
                         new Dictionary<string, string>() {
                             {"brightness", brightness.ToString()},
-                            {"level_config", "\"on_level\":\"previous\"}"},
+                            {"level_config", "{\"on_level\":\"previous\"}"},
                             {"state", state}
                         });
                     break;
