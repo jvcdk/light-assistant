@@ -13,9 +13,9 @@ internal interface IDeviceBusConnection
 
 internal interface IDevice
 {
-    internal string Name { get; }
-    internal string Address { get; }
-    internal string Vendor { get; }
-    internal string Model { get; }
-    internal string Description { get; }
+    string Name { get; }
+    string Address { get; }
+    string Vendor { get; }
+    string Model { get; }
+    string Description { get; }
 }

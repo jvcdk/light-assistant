@@ -1,6 +1,8 @@
+
 namespace LightAssistant.Interfaces
 {
-    public interface IController
+    internal interface IController
     {
+        IReadOnlyList<IDevice> GetDeviceList();
     }
 }

@@ -1,8 +1,11 @@
 
 namespace LightAssistant.Interfaces
 {
-    public interface IUserInterface
+    internal interface IUserInterface
     {
+        IController? AppController { set; }
+
+        Task DeviceListUpdated();
         Task Run();
     }
 }

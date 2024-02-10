@@ -16,8 +16,8 @@ internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
     private void ThreadMain()
     {
         Thread.Sleep(1000);
-//', payload '{"battery":100,"operation_mode":"command","voltage":3000}'
         var smartKnob = new Device() {
+            Name = "Tuya Smart Knob",
             Address = "0x4c5bb3fffe2e8acb",
             Vendor = "_TZ3000_qja6nq5z",
             Model = "TS004F",
@@ -28,6 +28,7 @@ internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
         DeviceDiscovered(smartKnob);
         Thread.Sleep(100);
         var ledDriver = new Device() {
+            Name = "Led Driver",
             Address = "0x94deb8fffe6aa0be",
             Vendor = "ENVILAR",
             Model = "HK-ZD-DIM-A",

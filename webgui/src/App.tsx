@@ -1,20 +1,11 @@
 import './App.css'
-import { Device } from './Device';
-import MyComponent from './MyComponent';
-
-function MyButton() {
-  return (
-    <button>I'm a button</button>
-  );
-}
+import { DeviceList } from './DeviceList';
 
 function App() {
   return (
     <div>
       <h1>Light Assistant</h1>
-      <MyButton />
-      <Device name="My Device" />
-      <MyComponent />
+      <DeviceList />
     </div>
   )
 }
