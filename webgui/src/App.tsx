@@ -1,5 +1,6 @@
 import './App.css'
 import { Device } from './Device';
+import MyComponent from './MyComponent';
 
 function MyButton() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <h1>Light Assistant</h1>
       <MyButton />
       <Device name="My Device" />
+      <MyComponent />
     </div>
   )
 }
