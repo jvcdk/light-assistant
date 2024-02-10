@@ -1,0 +1,8 @@
+.DeviceList {
+    display: table;
+}
+
+.DeviceList .Heading {
+    font-weight: bold;
+    background-color: #444480;
+}

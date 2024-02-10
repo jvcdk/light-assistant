@@ -1,3 +1,5 @@
+import './DeviceList.css'
+
 import { useEffect, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceStatus } from "./Device";
@@ -29,6 +31,12 @@ export function DeviceList() {
 
   return (
     <div className='DeviceList'>
+      <div className='Heading'>
+        <div className='NameAddress'>Name / Address</div>
+        <div className='VendorModel'>Vendor / Model</div>
+        <div className='Description'>Description</div>
+        <div className='Status'>Status</div>
+      </div>
       {devices.map(device => Device(device))}
     </div>
   );

@@ -1,4 +1,6 @@
+.Heading,
 .Device {
+    display: table-row;
     background-color: #343434;
 }
 
@@ -10,9 +12,10 @@
     background-color: #446044;
 }
 
+.Heading > div,
 .Device > div {
-    display: inline-block;
-    margin: 0.5em;
+    display: table-cell;
+    padding: 0.5em;
     vertical-align: top;
 }
 
@@ -24,9 +27,8 @@
     font-size: 80%;
 }
 
-.Device .Description {
-    min-width: 5rem;
-    max-width: 15rem;
+.Device .Status {
+    width: 8em;
 }
 
 .Device .Battery::before {
@@ -34,7 +36,7 @@
 }
 
 .Device .LinkQuality::before {
-    content: "LinkQuality: ";
+    content: "Link quality: ";
 }
 
 .Device .Brightness::before {
