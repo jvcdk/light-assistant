@@ -18,7 +18,7 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
-  const { sendMessage, lastMessage, readyState } = useWebSocket('wss://echo.websocket.org/', {
+  const { sendMessage, lastMessage, readyState } = useWebSocket('ws://' + location.hostname + ':8081', {
     shouldReconnect: () => true,
   });
 
