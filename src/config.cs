@@ -8,6 +8,7 @@ internal class Config
     public bool Verbose { get; set; } = false;
     public string WebApiHostAddress { get; set; } = "*";
     public int WebApiPort { get; set; } = 8081;
+    public string DeviceMappingFile { get; set; } = "light-assistant-devices.json";
 
     public Config(string configFile = "", bool configFileSpecifiedDirectly = false)
     {
@@ -28,13 +29,13 @@ internal class Config
     {
         var json = JsonConvert.SerializeObject(this, Formatting.Indented);
         File.WriteAllText(configFile, json);
-        Console.WriteLine($"Saved default configuration file {configFile}");
+        Console.Error.WriteLine($"Saved default configuration file {configFile}.");
     }
 
     private void LoadFromFile(string configFile)
     {
         var json = File.ReadAllText(configFile);
         JsonConvert.PopulateObject(json, this);
-        Console.WriteLine($"Loaded configuration file {configFile}");
+        Console.Error.WriteLine($"Loaded configuration file {configFile}.");
     }
 }
