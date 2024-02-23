@@ -1,4 +1,5 @@
 ﻿using LightAssistant;
+using LightAssistant.Controller;
 using LightAssistant.WebApi;
 
 namespace LightAssistantOffline;
@@ -7,7 +8,6 @@ public static class OfflineApp {
     private const string WebApiHostAddress = "*";
     private const int WebApiHostPort = 8081;
     private static int result = 0;
-    private const string DeviceMappingFile = ".deviceMapping";
 
     public static int Main(string[] args)
     {
@@ -15,7 +15,7 @@ public static class OfflineApp {
             var consoleOutput = new ConsoleOutput() { Verbose = true };
             var mqttClient = new MqttEmulatedClient();
             var guiApp = new WebApi(consoleOutput, WebApiHostAddress, WebApiHostPort);
-            var controller = new Controller(consoleOutput, mqttClient, guiApp, DeviceMappingFile);
+            var controller = new Controller(consoleOutput, mqttClient, guiApp);
             controller.Run().Wait();
             return result;
         }

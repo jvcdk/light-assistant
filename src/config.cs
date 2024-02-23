@@ -8,7 +8,6 @@ internal class Config
     public bool Verbose { get; set; } = false;
     public string WebApiHostAddress { get; set; } = "*";
     public int WebApiPort { get; set; } = 8081;
-    public string DeviceMappingFile { get; set; } = "light-assistant-devices.json";
 
     public Config(string configFile = "", bool configFileSpecifiedDirectly = false)
     {

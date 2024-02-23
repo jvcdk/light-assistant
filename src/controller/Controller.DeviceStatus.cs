@@ -1,6 +1,6 @@
 using LightAssistant.Interfaces;
 
-namespace LightAssistant;
+namespace LightAssistant.Controller;
 
 internal partial class Controller
 {

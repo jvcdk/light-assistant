@@ -1,6 +1,6 @@
 using LightAssistant.Interfaces;
 
-namespace LightAssistant;
+namespace LightAssistant.Controller;
 
 internal partial class Controller : IController
 {
@@ -28,12 +28,12 @@ internal partial class Controller : IController
         return false;
     }
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp, string deviceMappingFile)
+    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp)
     {
         _consoleOutput = consoleOutput;
         _deviceBus = deviceBus;
         _guiApp = guiApp;
-        _deviceMapping = new DeviceMapping(deviceMappingFile, _consoleOutput);
+        _deviceMapping = new DeviceMapping(_consoleOutput);
 
         _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
         _deviceBus.DeviceAction += HandleDeviceAction;
@@ -79,6 +79,5 @@ internal partial class Controller : IController
     {
         _consoleOutput.InfoLine("Controller running.");
         await _guiApp.Run();
-        _deviceMapping.SaveToFile();
     }
 }

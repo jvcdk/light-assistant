@@ -1,4 +1,4 @@
-namespace LightAssistant;
+namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
@@ -6,7 +6,6 @@ internal partial class Controller
     {
         internal class DimmableLightService : DeviceService
         {
-
         }
 
         internal class PushService : DeviceService

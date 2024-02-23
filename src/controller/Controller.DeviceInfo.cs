@@ -1,10 +1,10 @@
-namespace LightAssistant;
+namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
     private class DeviceInfo
     {
         public DeviceStatus Status = new();
-        public List<DeviceService> Services = [];
+        public DeviceServiceCollection Services = new EmptyDeviceServiceCollection();
     }
 }
