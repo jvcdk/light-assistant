@@ -6,6 +6,8 @@ internal partial class Controller
 {
     private partial class DeviceMapping
     {
+        private class ModelFactoryCollection : Dictionary<string, Func<DeviceServiceCollection>> { }
+
         private readonly IConsoleOutput _consoleOutput;
         private readonly Dictionary<string, ModelFactoryCollection> _factoryCollection = new();
 
@@ -14,6 +16,7 @@ internal partial class Controller
             _consoleOutput = consoleOutput;
 
             VendorTuya.Add(_factoryCollection);
+            VendorSunricher.Add(_factoryCollection);
         }
 
         internal DeviceServiceCollection GetServicesFor(IDevice device)

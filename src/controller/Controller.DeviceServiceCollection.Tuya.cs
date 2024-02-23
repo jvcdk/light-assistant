@@ -4,8 +4,6 @@ internal partial class Controller
 {
     private partial class DeviceMapping
     {
-        private class ModelFactoryCollection : Dictionary<string, Func<DeviceServiceCollection>> { }
-
         private static class VendorTuya
         {
             internal static void Add(Dictionary<string, ModelFactoryCollection> dst)
