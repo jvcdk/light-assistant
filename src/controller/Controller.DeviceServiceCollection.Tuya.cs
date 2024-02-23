@@ -2,7 +2,7 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private partial class DeviceMapping
+    private partial class DeviceServiceMapping
     {
         private static class VendorTuya
         {
@@ -18,14 +18,12 @@ internal partial class Controller
         {
             internal static DeviceServiceCollection Create() => new TuyaSmartKnob();
 
-            [DeviceService("AutoModeChange")]
             internal DeviceService.AutoModeChangeService AutoModeChange { get; } = new() {
                 ModeField = "operation_mode",
                 FromMode = "event",
                 ModeChangeCommand = "some command"
             };
 
-            [DeviceService("Default")]
             internal DeviceService.SmartKnobService Default { get; } = new (
                     push: new DeviceService.PushService { Push = "toggle"},
                     rotateNormal: new DeviceService.RotateService { RotateLeft = "brightness_step_down", RotateRight = "brightness_step_up" },

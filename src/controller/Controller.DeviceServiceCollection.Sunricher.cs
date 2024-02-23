@@ -2,7 +2,7 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private partial class DeviceMapping
+    private partial class DeviceServiceMapping
     {
         private static class VendorSunricher
         {
@@ -18,7 +18,6 @@ internal partial class Controller
         {
             internal static DeviceServiceCollection Create() => new SunricherCctLed();
 
-            [DeviceService("Default")]
             internal DeviceService.DimmableLightService Default { get; } = new();
         }
     }

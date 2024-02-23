@@ -7,7 +7,7 @@ internal partial class Controller : IController
     private readonly IConsoleOutput _consoleOutput;
     private readonly IDeviceBusConnection _deviceBus;
     private readonly IUserInterface _guiApp;
-    private readonly DeviceMapping _deviceMapping;
+    private readonly DeviceServiceMapping _deviceServiceMapping;
     private readonly Dictionary<IDevice, DeviceInfo> _devices = new();
 
     public IReadOnlyList<IDevice> GetDeviceList()
@@ -33,25 +33,27 @@ internal partial class Controller : IController
         _consoleOutput = consoleOutput;
         _deviceBus = deviceBus;
         _guiApp = guiApp;
-        _deviceMapping = new DeviceMapping(_consoleOutput);
+        _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
 
         _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
         _deviceBus.DeviceAction += HandleDeviceAction;
         _guiApp.AppController = this;
     }
 
-    private void HandleDeviceAction(IDevice device, Dictionary<string, string> state)
+    private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
     {
         if(!_devices.TryGetValue(device, out var deviceInfo)) {
             _consoleOutput.ErrorLine($"Got Device Action from unknown device '{device.Name}'.");
             return;            
         }
 
-        var didUpdate = deviceInfo.Status.UpdateFrom(state);
+        var didUpdate = deviceInfo.Status.UpdateFrom(data);
+        var internalEvents = deviceInfo.Services.ProcessExternalEvent(data);
+
         if(didUpdate)
             _guiApp.DeviceStateUpdated(device.Address, deviceInfo.Status);
 
-        _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", state.Select(kv => $"{kv.Key}={kv.Value}"))}");
+        _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
     }
 
     private void HandleDeviceDiscovered(IDevice device)
@@ -71,7 +73,7 @@ internal partial class Controller : IController
     private DeviceInfo CreateDeviceInfo(IDevice device)
     {
         return new DeviceInfo {
-            Services = _deviceMapping.GetServicesFor(device)
+            Services = _deviceServiceMapping.GetServicesFor(device)
         };
     }
 

@@ -1,9 +1,22 @@
+
 namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
     private abstract class DeviceService
     {
+        internal virtual IEnumerable<InternalEvent> ProcessExternalEvent(IReadOnlyDictionary<string, string> _)
+        {
+            // Do nothing per default
+            return [];
+        }
+
+        internal virtual void ProcessInternalEvent(InternalEvent _)
+        {
+            // Do nothing per default
+        }
+
+        [ConsumesEvent(typeof(InternalEvent_ToggleOnOff))]
         internal class DimmableLightService : DeviceService
         {
         }
@@ -19,6 +32,7 @@ internal partial class Controller
             public string RotateLeft { get; set; } = string.Empty;
         }
 
+        [ProvidesEvent(typeof(InternalEvent_ButtonPush))]
         internal class SmartKnobService(PushService push, RotateService rotateNormal, RotateService rotatePushed) : DeviceService
         {
             public PushService Push { get; set; } = push;
