@@ -59,7 +59,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         return DeviceListUpdated(context);
     }
 
-    private async Task SendMessage(IWebSocketContext context, JsonMessage msg)
+    private static async Task SendMessage(IWebSocketContext context, JsonMessage msg)
     {
         await context.WebSocket.SendAsync(msg.Serialize(), true);
     }

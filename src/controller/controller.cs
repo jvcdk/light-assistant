@@ -9,6 +9,7 @@ internal partial class Controller : IController
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
     private readonly Dictionary<IDevice, DeviceInfo> _devices = new();
+    private readonly List<EventRoute> _routes = new();
 
     public IReadOnlyList<IDevice> GetDeviceList()
     {
@@ -48,12 +49,35 @@ internal partial class Controller : IController
         }
 
         var didUpdate = deviceInfo.Status.UpdateFrom(data);
-        var internalEvents = deviceInfo.Services.ProcessExternalEvent(data);
-
         if(didUpdate)
             _guiApp.DeviceStateUpdated(device.Address, deviceInfo.Status);
 
+        var internalEvents = deviceInfo.Services.ProcessExternalEvent(device, data);
+        RouteInternalEvents(internalEvents);
+
         _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+    }
+
+    private class EventRoute(string sourceAddress, string sourceEvent, string targetAddress, string targetFunctionality)
+    {
+        internal string SourceAddress { get; } = sourceAddress;
+        internal string SourceEvent { get; } = sourceEvent;
+        internal string TargetAddress { get; } = targetAddress;
+        internal string TargetFunctionality { get; } = targetFunctionality;
+    }
+
+    private void RouteInternalEvents(IEnumerable<InternalEvent> events)
+    {
+        foreach(var ev in events) {
+            foreach(var route in _routes.Where(route => route.SourceAddress == ev.SourceAddress && route.SourceEvent == ev.Type)) {
+                foreach(var (targetDevice, targetInfo) in _devices) {
+                    if(targetDevice.Address != route.TargetAddress)
+                        continue;
+
+                    targetInfo.Services.ProcessInternalEvent(ev, route.TargetFunctionality);
+                }
+            }
+        }
     }
 
     private void HandleDeviceDiscovered(IDevice device)

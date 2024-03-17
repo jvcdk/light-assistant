@@ -4,34 +4,6 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public class ProvidesEventAttribute : Attribute
-    {
-        public Type SrcType { get; }
-
-        public ProvidesEventAttribute(Type srcType)
-        {
-            if(srcType.IsSubclassOf(typeof(InternalEvent)))
-                throw new Exception("Invalid provider type. It should inherit from InternalEvent.");
-
-            SrcType = srcType;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Class)]
-    public class ConsumesEventAttribute : Attribute
-    {
-        public Type DstType { get; }
-
-        public ConsumesEventAttribute(Type dstType)
-        {
-            if(dstType.IsSubclassOf(typeof(InternalEvent)))
-                throw new Exception("Invalid consumer type. It should inherit from InternalEvent.");
-
-            DstType = dstType;
-        }
-    }
-
     private partial class DeviceServiceMapping
     {
         private class ModelFactoryCollection : Dictionary<string, Func<DeviceServiceCollection>> { }

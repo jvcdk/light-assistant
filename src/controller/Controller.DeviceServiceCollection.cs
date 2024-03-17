@@ -1,4 +1,5 @@
 using System.Reflection;
+using LightAssistant.Interfaces;
 
 namespace LightAssistant.Controller;
 
@@ -6,19 +7,22 @@ internal partial class Controller
 {
     private abstract class DeviceServiceCollection
     {
-        internal IEnumerable<InternalEvent> ProcessExternalEvent(IReadOnlyDictionary<string, string> data)
+        internal IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
         {
             foreach(var service in EnumerateServices()) {
-                foreach(var ev in service.ProcessExternalEvent(data))
+                foreach(var ev in service.ProcessExternalEvent(sourceDevice, data))
                     yield return ev;
             }
         }
 
-        internal void ProcessInternalEvent(InternalEvent ev)
+        internal void ProcessInternalEvent(InternalEvent ev, string targetFunctionality)
         {
             foreach(var service in EnumerateServices())
-                service.ProcessInternalEvent(ev);
+                service.ProcessInternalEvent(ev, targetFunctionality);
         }
+
+        internal IEnumerable<InternalEventSink> ConsumedEvents =>
+            EnumerateServices().SelectMany(service => service.ConsumedEvents);
 
         private IEnumerable<DeviceService> EnumerateServices() => GetType()
                 .GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
