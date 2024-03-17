@@ -1,5 +1,8 @@
 obj/
 bin/
 
+# VS Code plugin crashes!?!?!?
+.mono
+
 # Don'g commit config file
 light-assistant.conf
