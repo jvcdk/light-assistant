@@ -86,7 +86,14 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         foreach(var device in devices) {
             if(AppController.TryGetDeviceStatus(device, out var status)) {
                 Debug.Assert(status != null);
-                response = JsonMessage.CreateDeviceStatus(device.Address, status);
+                response = new JsonMessage();
+                response.AddDeviceStatus(device.Address, status);
+                // TODO JVC: Instead of target address, we need target name.
+                var routes = AppController.GetRoutingFor(device).Select(route =>
+                    $"{route.SourceEvent} => {route.TargetAddress}:{route.TargetFunctionality}"
+                ).ToList();
+                response.AddDeviceRouting(device.Address, routes);
+
                 foreach(var inner in contexts)
                     await SendMessage(inner, response);
             }

@@ -11,7 +11,13 @@ export interface IDevice {
   Description : string;
   BatteryPowered: boolean;
 
+  /**
+   * Additional device info that is sent seperately (not part of JsonDevice)
+   * but sent in their own message types and attached client side to this
+   * device object.
+   */
   Status: IDeviceStatus | undefined;
+  Routing: string[]
 }
 
 /**
@@ -23,6 +29,14 @@ export interface IDeviceStatus {
   Battery: number;
   Brightness : number;
   State : boolean | undefined;
+}
+
+/**
+ * Should match JsonDeviceRouting
+ */
+export interface IDeviceRouting {
+  Address : string;
+  Routing: string[];
 }
 
 function DeviceBattery(prop: { battery: number | undefined })
@@ -65,8 +79,26 @@ function DeviceOnState(prop: { onState: boolean | undefined })
     )
 }
 
+function Route(route: string, idx: number)
+{
+  return (
+    <div key={idx} className='Route'>{route}</div>
+  )
+}
+
+function DeviceRouting(prop: { routing: string[] })
+{
+  const routing = prop.routing || [];
+    return (
+      <div className='Routing'>
+        {routing.map((route, idx) => Route(route, idx))}
+      </div>
+    )
+}
+
 export function Device(device: IDevice) {
   const status = device.Status;
+  const routing = device.Routing;
   return (
     <div className='Device' key={device.Address}>
       <div className='NameAddress'>
@@ -84,6 +116,7 @@ export function Device(device: IDevice) {
         <DeviceBrightness brightness={status?.Brightness} />
         <DeviceOnState onState={status?.State} />
       </div>
+      <DeviceRouting routing={routing}></DeviceRouting>
     </div>
   );
 }

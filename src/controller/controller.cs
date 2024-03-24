@@ -11,6 +11,23 @@ internal partial class Controller : IController
     private readonly Dictionary<IDevice, DeviceInfo> _devices = new();
     private readonly List<EventRoute> _routes = new();
 
+    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp)
+    {
+        _consoleOutput = consoleOutput;
+        _deviceBus = deviceBus;
+        _guiApp = guiApp;
+        _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
+
+        _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
+        _deviceBus.DeviceAction += HandleDeviceAction;
+        _guiApp.AppController = this;
+
+        // Temp - dummy TODO JVC: Implement interface to configure these; save them in a persistent file.
+        _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Push", "target_1", "on/off"));
+        _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Toggle", "target_3", "Flip"));
+        _routes.Add(new EventRoute("0x94deb8fffe6aa0be", "Nope", "target_2", "brightness"));
+    }
+
     public IReadOnlyList<IDevice> GetDeviceList()
     {
         lock(_devices)
@@ -29,18 +46,6 @@ internal partial class Controller : IController
         return false;
     }
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp)
-    {
-        _consoleOutput = consoleOutput;
-        _deviceBus = deviceBus;
-        _guiApp = guiApp;
-        _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
-
-        _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
-        _deviceBus.DeviceAction += HandleDeviceAction;
-        _guiApp.AppController = this;
-    }
-
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
     {
         if(!_devices.TryGetValue(device, out var deviceInfo)) {
@@ -56,14 +61,6 @@ internal partial class Controller : IController
         RouteInternalEvents(internalEvents);
 
         _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
-    }
-
-    private class EventRoute(string sourceAddress, string sourceEvent, string targetAddress, string targetFunctionality)
-    {
-        internal string SourceAddress { get; } = sourceAddress;
-        internal string SourceEvent { get; } = sourceEvent;
-        internal string TargetAddress { get; } = targetAddress;
-        internal string TargetFunctionality { get; } = targetFunctionality;
     }
 
     private void RouteInternalEvents(IEnumerable<InternalEvent> events)
@@ -105,5 +102,10 @@ internal partial class Controller : IController
     {
         _consoleOutput.InfoLine("Controller running.");
         await _guiApp.Run();
+    }
+
+    public IEnumerable<IEventRoute> GetRoutingFor(IDevice device)
+    {
+        return _routes.Where(routing => routing.SourceAddress == device.Address);
     }
 }
