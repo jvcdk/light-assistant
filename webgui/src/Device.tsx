@@ -96,11 +96,11 @@ function DeviceRouting(prop: { routing: string[] })
     )
 }
 
-export function Device(device: IDevice) {
+export function Device(device: IDevice, openPopup: () => void) {
   const status = device.Status;
   const routing = device.Routing;
   return (
-    <div className='Device' key={device.Address}>
+    <div onClick={openPopup} className='Device' key={device.Address}>
       <div className='NameAddress'>
         <div className='Name'>{device.Name}</div>
         <div className='Address'>{device.Address}</div>
