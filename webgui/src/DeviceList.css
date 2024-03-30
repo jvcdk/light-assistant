@@ -4,5 +4,12 @@
 
 .DeviceList .Heading {
     font-weight: bold;
-    background-color: #444480;
+    background-color: var(--light-assistant-highligh-1);
+}
+
+.popup-content {
+    background-color: var(--light-assistant-background);
+    padding: 0.5rem;
+    border: 0.125rem solid var(--light-assistant-primary);
+    border-radius: 10%;
 }
