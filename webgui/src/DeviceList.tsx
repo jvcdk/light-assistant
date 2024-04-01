@@ -1,12 +1,13 @@
 import './DeviceList.css'
 import Popup from 'reactjs-popup';
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceRouting, IDeviceStatus } from "./Device";
 
 export function DeviceList() {
   const { sendMessage, lastMessage } = useWebSocketContext();
-  const [devices, setDevices] = useState<IDevice[]>([]);
+  const [_devices, setDevices] = useState<IDevice[]>([]);
+  const devices = useRef(_devices);
 
   const [selectedDevice, setSelectedDevice] = useState<IDevice | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -19,7 +20,7 @@ export function DeviceList() {
   const closeModal = () => setPopupOpen(false);
 
   const FindDevice: (address: string) => IDevice | undefined = useCallback((address: string) => {
-    return devices.find(device => device.Address === address);
+    return devices.current.find(device => device.Address === address);
   }, [devices]);
 
   useEffect(() => {
@@ -40,8 +41,10 @@ export function DeviceList() {
 
     try {
       const data = JSON.parse(lastMessage.data)
-      if (data["Devices"])
-        setDevices(data["Devices"]);
+      if (data["Devices"]) {
+        devices.current = data["Devices"];
+        setDevices(devices.current);
+      }
       if (data["DeviceStatus"])
         handleDeviceStatus(data["DeviceStatus"]);
       if (data["Routing"])
@@ -61,7 +64,7 @@ export function DeviceList() {
         <div className='Status'>Status</div>
         <div className='Routing'>Routing</div>
       </div>
-      {devices.map(device => Device(device, () => openPopup(device), FindDevice))}
+      {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
       <Popup open={popupOpen} onClose={closeModal} modal>
         {selectedDevice && selectedDevice.Name}
       </Popup>
