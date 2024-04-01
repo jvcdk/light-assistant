@@ -17,7 +17,7 @@ export interface IDevice {
    * device object.
    */
   Status: IDeviceStatus | undefined;
-  Routing: string[]
+  Routing: IDeviceRoute[];
 }
 
 /**
@@ -36,8 +36,16 @@ export interface IDeviceStatus {
  */
 export interface IDeviceRouting {
   Address : string;
-  Routing: string[];
+  Routing: IDeviceRoute[];
 }
+
+
+export interface IDeviceRoute {
+    SourceEvent: string;
+    TargetAddress: string;
+    TargetFunctionality: string;
+}
+
 
 function DeviceBattery(prop: { battery: number | undefined })
 {
@@ -79,24 +87,25 @@ function DeviceOnState(prop: { onState: boolean | undefined })
     )
 }
 
-function Route(route: string, idx: number)
+function Route(route: IDeviceRoute, idx: number, findDevice: (address: string) => IDevice | undefined)
 {
+  const targetName = findDevice(route.TargetAddress)?.Name || route.TargetAddress;
   return (
-    <div key={idx} className='Route'>{route}</div>
+    <div key={idx} className='Route'>{route.SourceEvent} -&gt; {targetName}:{route.TargetFunctionality}</div>
   )
 }
 
-function DeviceRouting(prop: { routing: string[] })
+function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: (address: string) => IDevice | undefined })
 {
   const routing = prop.routing || [];
     return (
       <div className='Routing'>
-        {routing.map((route, idx) => Route(route, idx))}
+        {routing.map((route, idx) => Route(route, idx, prop.findDevice))}
       </div>
     )
 }
 
-export function Device(device: IDevice, openPopup: () => void) {
+export function Device(device: IDevice, openPopup: () => void, findDevice: (address: string) => IDevice | undefined) {
   const status = device.Status;
   const routing = device.Routing;
   return (
@@ -116,7 +125,7 @@ export function Device(device: IDevice, openPopup: () => void) {
         <DeviceBrightness brightness={status?.Brightness} />
         <DeviceOnState onState={status?.State} />
       </div>
-      <DeviceRouting routing={routing}></DeviceRouting>
+      <DeviceRouting routing={routing} findDevice={findDevice}></DeviceRouting>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import './DeviceList.css'
 import Popup from 'reactjs-popup';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceRouting, IDeviceStatus } from "./Device";
 
@@ -18,35 +18,39 @@ export function DeviceList() {
   }
   const closeModal = () => setPopupOpen(false);
 
+  const FindDevice: (address: string) => IDevice | undefined = useCallback((address: string) => {
+    return devices.find(device => device.Address === address);
+  }, [devices]);
+
   useEffect(() => {
     function handleDeviceStatus(deviceStatus: IDeviceStatus) {
-      const device = devices.find(device => device.Address === deviceStatus.Address);
-      if(device)
+      const device = FindDevice(deviceStatus.Address);
+      if (device)
         device.Status = deviceStatus;
     }
 
     function handleDeviceRouting(deviceRouting: IDeviceRouting) {
-      const device = devices.find(device => device.Address === deviceRouting.Address);
-      if(device)
+      const device = FindDevice(deviceRouting.Address);
+      if (device)
         device.Routing = deviceRouting.Routing;
     }
 
-    if(lastMessage == undefined)
+    if (lastMessage == undefined)
       return
 
     try {
       const data = JSON.parse(lastMessage.data)
-      if(data["Devices"])
+      if (data["Devices"])
         setDevices(data["Devices"]);
-      if(data["DeviceStatus"])
+      if (data["DeviceStatus"])
         handleDeviceStatus(data["DeviceStatus"]);
-      if(data["Routing"])
+      if (data["Routing"])
         handleDeviceRouting(data["Routing"]);
     } catch (error) {
       console.log(`Could not parse data '${lastMessage.data}'`)
       console.log(`Error message: ${error}`)
     }
-  }, [devices, lastMessage]);
+  }, [FindDevice, lastMessage]);
 
   return (
     <div className='DeviceList'>
@@ -57,11 +61,10 @@ export function DeviceList() {
         <div className='Status'>Status</div>
         <div className='Routing'>Routing</div>
       </div>
-      {devices.map(device => Device(device, () => openPopup(device)))}
+      {devices.map(device => Device(device, () => openPopup(device), FindDevice))}
       <Popup open={popupOpen} onClose={closeModal} modal>
         {selectedDevice && selectedDevice.Name}
       </Popup>
     </div>
   );
 }
-

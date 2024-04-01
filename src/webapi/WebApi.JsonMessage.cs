@@ -22,7 +22,7 @@ internal partial class WebApi
         internal void AddDeviceStatus(string address, IDeviceStatus status) => 
             DeviceStatus = new JsonDeviceStatus(address, status);
 
-        internal void AddDeviceRouting(string address, IReadOnlyList<string> routing) => 
+        internal void AddDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing) => 
             Routing = new JsonDeviceRouting(address, routing);
 
         internal static JsonMessage CreateDeviceStatus(string address, IDeviceStatus deviceStatus) => 
@@ -62,9 +62,16 @@ internal partial class WebApi
     /// <summary>
     /// Must match IDeviceRouting in Device.tsx
     /// </summary>
-    public class JsonDeviceRouting(string address, IReadOnlyList<string> routing)
+    public class JsonDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing)
     {
         public string Address { get; } = address;
-        public IReadOnlyList<string> Routing = routing;
+        public IReadOnlyList<JsonDeviceRoute> Routing = routing;
+    }
+
+    public class JsonDeviceRoute(string sourceEvent, string targetAddress, string targetFunctionality)
+    {
+        public string SourceEvent { get; } = sourceEvent;
+        public string TargetAddress { get; } = targetAddress;
+        public string TargetFunctionality { get; } = targetFunctionality;
     }
 }

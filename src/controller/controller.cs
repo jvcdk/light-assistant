@@ -24,7 +24,7 @@ internal partial class Controller : IController
 
         // Temp - dummy TODO JVC: Implement interface to configure these; save them in a persistent file.
         _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Push", "target_1", "on/off"));
-        _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Toggle", "target_3", "Flip"));
+        _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Toggle", "0x94deb8fffe6aa0be", "Flip"));
         _routes.Add(new EventRoute("0x94deb8fffe6aa0be", "Nope", "target_2", "brightness"));
     }
 

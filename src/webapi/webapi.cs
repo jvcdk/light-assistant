@@ -88,9 +88,8 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                 Debug.Assert(status != null);
                 response = new JsonMessage();
                 response.AddDeviceStatus(device.Address, status);
-                // TODO JVC: Instead of target address, we need target name.
                 var routes = AppController.GetRoutingFor(device).Select(route =>
-                    $"{route.SourceEvent} => {route.TargetAddress}:{route.TargetFunctionality}"
+                    new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
                 ).ToList();
                 response.AddDeviceRouting(device.Address, routes);
 

@@ -46,3 +46,8 @@
 .Device .State::before {
     content: "State: ";
 }
+
+.Device .Route {
+    display: inline-block;
+    white-space: nowrap;
+}
