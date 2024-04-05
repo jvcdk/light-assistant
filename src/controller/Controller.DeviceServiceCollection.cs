@@ -24,6 +24,9 @@ internal partial class Controller
         internal IEnumerable<InternalEventSink> ConsumedEvents =>
             EnumerateServices().SelectMany(service => service.ConsumedEvents);
 
+        internal IEnumerable<Type> ProvidedEvents =>
+            EnumerateServices().SelectMany(service => service.ProvidedEvents);
+
         private IEnumerable<DeviceService> EnumerateServices() => GetType()
                 .GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Select(p => p.GetValue(this))

@@ -11,8 +11,9 @@ internal partial class WebApi
         internal byte[] Serialize() => UTF8.GetBytes(JsonConvert.SerializeObject(this));
 
         public IReadOnlyList<JsonDevice>? Devices { get; private set; }
-        public JsonDeviceStatus? DeviceStatus { get; set; }
-        public JsonDeviceRouting? Routing { get; set; }
+        public JsonDeviceStatus? DeviceStatus { get; private set; }
+        public JsonDeviceRouting? Routing { get; private set; }
+        public JsonDeviceRoutingOptions? RoutingOptions { get; private set; }
 
         internal static JsonMessage CreateDeviceList(IReadOnlyList<IDevice> devices) =>
             new() {
@@ -24,6 +25,9 @@ internal partial class WebApi
 
         internal void AddDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing) => 
             Routing = new JsonDeviceRouting(address, routing);
+
+        internal void AddDeviceRoutingOptions(string address, IReadOnlyList<string> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) => 
+            RoutingOptions = new JsonDeviceRoutingOptions(address, providedEvents, consumableEvents);
 
         internal static JsonMessage CreateDeviceStatus(string address, IDeviceStatus deviceStatus) => 
             new() { DeviceStatus = new JsonDeviceStatus(address, deviceStatus)};
@@ -73,5 +77,18 @@ internal partial class WebApi
         public string SourceEvent { get; } = sourceEvent;
         public string TargetAddress { get; } = targetAddress;
         public string TargetFunctionality { get; } = targetFunctionality;
+    }
+
+    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<string> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents)
+    {
+        public string Address { get; } = address;
+        public IReadOnlyList<string> ProvidedEvents { get; } = providedEvents;
+        public IReadOnlyList<JsonDeviceConsumableEvent> ConsumableEvents { get; } = consumedEvents;
+    }
+
+    internal class JsonDeviceConsumableEvent(string eventName, string targetName)
+    {
+        public string EventName { get; } = eventName;
+        public string TargetName { get; } = targetName;
     }
 }

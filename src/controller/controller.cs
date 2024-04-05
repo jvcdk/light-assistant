@@ -46,6 +46,22 @@ internal partial class Controller : IController
         return false;
     }
 
+    public IRoutingOptions? GetRoutingOptionsFor(IDevice device)
+    {
+        if(!_devices.TryGetValue(device, out var deviceInfo)) {
+            _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
+            return null;
+        }
+
+        string GetInternalEventName(Type ev) => ev.Name.Replace("InternalEvent_", "");
+
+        var providedEvents = deviceInfo.Services.ProvidedEvents.Select(GetInternalEventName).ToList();
+        var consumedEvents = deviceInfo.Services.ConsumedEvents
+            .Select(route => new ConsumableEvent(GetInternalEventName(route.Event), route.TargetName))
+            .ToList();
+        return new RoutingOptions(providedEvents, consumedEvents);
+    }
+
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
     {
         if(!_devices.TryGetValue(device, out var deviceInfo)) {

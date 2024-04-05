@@ -18,6 +18,7 @@ export interface IDevice {
    */
   Status: IDeviceStatus | undefined;
   Routing: IDeviceRoute[];
+  RoutingOptions: IDeviceRoutingOptions | undefined;
 }
 
 /**
@@ -46,6 +47,16 @@ export interface IDeviceRoute {
     TargetFunctionality: string;
 }
 
+export interface IDeviceRoutingOptions {
+    Address: string;
+    ProvidedEvents: string[];
+    ConsumableEvents: IDeviceConsumableEvent[];
+}
+
+export interface IDeviceConsumableEvent {
+    EventName: string;
+    TargetName: string;
+}
 
 function DeviceBattery(prop: { battery: number | undefined })
 {

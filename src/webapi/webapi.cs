@@ -88,10 +88,17 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                 Debug.Assert(status != null);
                 response = new JsonMessage();
                 response.AddDeviceStatus(device.Address, status);
+
                 var routes = AppController.GetRoutingFor(device).Select(route =>
                     new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
                 ).ToList();
                 response.AddDeviceRouting(device.Address, routes);
+
+                var routingOptions = AppController.GetRoutingOptionsFor(device);
+                if(routingOptions != null) {
+                    var jsonConsumableEvents = routingOptions.ConsumedEvents.Select(ev => new JsonDeviceConsumableEvent(ev.Type, ev.Functionality)).ToList(); 
+                    response.AddDeviceRoutingOptions(device.Address, routingOptions.ProvidedEvents, jsonConsumableEvents);
+                }
 
                 foreach(var inner in contexts)
                     await SendMessage(inner, response);
