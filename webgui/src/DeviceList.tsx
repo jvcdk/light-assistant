@@ -3,6 +3,7 @@ import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceRouting, IDeviceStatus } from "./Device";
+import { PopUp_DeviceConfiguration } from './Popup_DeviceConfiguration';
 
 export function DeviceList() {
   const { sendMessage, lastMessage } = useWebSocketContext();
@@ -66,7 +67,7 @@ export function DeviceList() {
       </div>
       {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
       <Popup open={popupOpen} onClose={closeModal} modal>
-        {selectedDevice && selectedDevice.Name}
+        {PopUp_DeviceConfiguration(selectedDevice)}
       </Popup>
     </div>
   );
