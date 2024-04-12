@@ -1,14 +1,27 @@
 import './Popup_DeviceConfiguration.css'
-import { IDevice } from "./Device";
+import { IDevice, IDeviceRoute } from "./Device";
 
-function RoutingOptions(prop: {device: IDevice, routingOptions: string | null}) {
-  if(prop.routingOptions == null)
-    return (<div className='routingOptions'>Loading from server...</div>);
+import SvgRouteEntry from './image/route_entry.svg';
+import SvgRouteColon from './image/route_colon.svg';
+import SvgRouteMapsTo from './image/route_maps_to.svg';
 
-  //const routing = device.Routing;
+function Route(route: IDeviceRoute, idx: number)
+{
+  return(
+    <div key={idx} className='route'>
+      <SvgRouteEntry /><span className='routeSourceEvent'>{route.SourceEvent}</span>
+      <SvgRouteMapsTo /><span className='routeTargetAddress'>{route.TargetAddress}</span>
+      <SvgRouteColon /><span className='routeTargetFunctionality'>{route.TargetFunctionality}</span>
+    </div>
+  )
+}
+
+function RoutingOptions(prop: {device: IDevice }) {
+  const device = prop.device;
   return (
     <div className='routingOptions'>
-      {prop.routingOptions}
+      {device.Routing.map((route, idx) => Route(route, idx))}
+      <label className='addNew'>Add New</label>
     </div>
   );
 }
@@ -17,7 +30,6 @@ export function PopUp_DeviceConfiguration(device: IDevice | null) {
   if(device === null)
     return ("Error: No device selected.");
 
-  const routingOptions = null;
   return (
     <div className='Popup.DeviceConfiguration'>
       <div className='title'>{device.Name} [{device.Address}]</div>
@@ -26,7 +38,7 @@ export function PopUp_DeviceConfiguration(device: IDevice | null) {
         <input className='friendlyname' type='text' value={device.Name} onChange={(e) => device.Name = e.target.value} />
         <div className='routing'>
           <label className='label'>Routing:</label>
-          <RoutingOptions device={device} routingOptions={routingOptions} />
+          <RoutingOptions device={device} />
         </div>
       </div>
     
