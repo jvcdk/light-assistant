@@ -1,9 +1,11 @@
 import './Popup_DeviceConfiguration.css'
-import { IDevice, IDeviceRoute } from "./Device";
-
 import SvgRouteEntry from './image/route_entry.svg';
 import SvgRouteColon from './image/route_colon.svg';
 import SvgRouteMapsTo from './image/route_maps_to.svg';
+
+import { IDevice, IDeviceRoute } from "./Device";
+import cloneDeep from 'lodash/cloneDeep';
+import { useEffect, useState } from 'react';
 
 function Route(route: IDeviceRoute, idx: number)
 {
@@ -26,7 +28,13 @@ function RoutingOptions(prop: {device: IDevice }) {
   );
 }
 
-export function PopUp_DeviceConfiguration(device: IDevice | null) {
+export function PopUp_DeviceConfiguration(_device: IDevice | null) {
+  const [device, setDevice] = useState<IDevice|null>(null);
+
+  useEffect(() => {
+    setDevice(cloneDeep(_device));
+  }, [_device]);
+
   if(device === null)
     return ("Error: No device selected.");
 
@@ -35,7 +43,7 @@ export function PopUp_DeviceConfiguration(device: IDevice | null) {
       <div className='title'>{device.Name} [{device.Address}]</div>
       <div className='content'>
         <label className='label'>Friendly Name:</label>
-        <input className='friendlyname' type='text' value={device.Name} onChange={(e) => device.Name = e.target.value} />
+        <input className='friendlyname' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
         <div className='routing'>
           <label className='label'>Routing:</label>
           <RoutingOptions device={device} />
