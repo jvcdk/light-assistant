@@ -55,9 +55,11 @@ internal partial class Controller : IController
 
         string GetInternalEventName(Type ev) => ev.Name.Replace("InternalEvent_", "");
 
-        var providedEvents = deviceInfo.Services.ProvidedEvents.Select(GetInternalEventName).ToList();
+        var providedEvents = deviceInfo.Services.ProvidedEvents
+            .Select(ev => new ProvidedEvent(GetInternalEventName(ev.EventType), ev.Path))
+            .ToList();
         var consumedEvents = deviceInfo.Services.ConsumedEvents
-            .Select(route => new ConsumableEvent(GetInternalEventName(route.Event), route.TargetName))
+            .Select(ev => new ConsumableEvent(GetInternalEventName(ev.EventType), ev.TargetName))
             .ToList();
         return new RoutingOptions(providedEvents, consumedEvents);
     }

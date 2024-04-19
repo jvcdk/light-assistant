@@ -12,9 +12,9 @@ internal partial class Controller
         public string TargetFunctionality { get; } = targetFunctionality;
     }
 
-    private class RoutingOptions(IReadOnlyList<string> providedEvents, IReadOnlyList<IConsumableEvent> consumedEvents) : IRoutingOptions
+    private class RoutingOptions(IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumedEvents) : IRoutingOptions
     {
-        public IReadOnlyList<string> ProvidedEvents { get; } = providedEvents;
+        public IReadOnlyList<IProvidedEvent> ProvidedEvents { get; } = providedEvents;
         public IReadOnlyList<IConsumableEvent> ConsumedEvents { get; } = consumedEvents;
     }
 
@@ -22,5 +22,11 @@ internal partial class Controller
     {
         public string Type { get; } = type;
         public string Functionality { get; } = functionality;
+    }
+
+    private class ProvidedEvent(string type, string eventPath) : IProvidedEvent
+    {
+        public string Type { get; } = type;
+        public string EventPath { get; } = eventPath;
     }
 }

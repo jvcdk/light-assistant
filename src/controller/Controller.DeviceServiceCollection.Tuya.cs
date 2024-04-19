@@ -24,11 +24,10 @@ internal partial class Controller
                 ModeChangeCommand = "some command"
             };
 
-            internal DeviceService.SmartKnobService Default { get; } = new (
-                    push: new DeviceService.PushService { Push = "toggle"},
-                    rotateNormal: new DeviceService.RotateService { RotateLeft = "brightness_step_down", RotateRight = "brightness_step_up" },
-                    rotatePushed: new DeviceService.RotateService { RotateLeft = "color_temperature_step_down", RotateRight = "color_temperature_step_up" }
-                );
+            internal DeviceService.SmartKnobService Default { get; } = new(path: "",
+                actionPush: "toggle",
+                actionNormalRotateLeft: "brightness_step_down", actionNormalRotateRight: "brightness_step_up",
+                actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up");
         }
     }
 }

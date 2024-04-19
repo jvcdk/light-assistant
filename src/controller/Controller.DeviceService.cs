@@ -6,9 +6,11 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract class DeviceService
+    private abstract class DeviceService(string path)
     {
         private const string KeywordAction = "action";
+
+        internal string Path { get; private set; } = path;
 
         internal virtual IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
         {
@@ -22,7 +24,7 @@ internal partial class Controller
         {
             var eligibleServices = EnumerateServices()
                 .Where(service => service.ConsumedEvents.Any(consumable =>
-                    consumable.Event == ev.GetType() &&
+                    consumable.EventType == ev.GetType() &&
                     consumable.TargetName == targetFunctionality
                 ));
 
@@ -39,27 +41,26 @@ internal partial class Controller
             get => EnumerateServices().SelectMany(service => service.ConsumedEvents);
         }
 
-        internal virtual IEnumerable<Type> ProvidedEvents { 
+        internal virtual IEnumerable<InternalEventSource> ProvidedEvents { 
             get => EnumerateServices().SelectMany(service => service.ProvidedEvents);
         }
 
-        internal class DimmableLightService : DeviceService
+
+        internal class DimmableLightService() : DeviceService("")
         {
-            private readonly List<InternalEventSink> _consumedEvents = new() {
-                new InternalEventSink(typeof(InternalEvent_ButtonPush), "ToggleOnOff"),
+            internal override IEnumerable<InternalEventSink> ConsumedEvents => [
+                new InternalEventSink(typeof(InternalEvent_Push), "ToggleOnOff"),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Dim"),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Fade")
-            };
-
-            internal override IEnumerable<InternalEventSink> ConsumedEvents => _consumedEvents;
+            ];
         }
 
-        internal class PushService : DeviceService
+        internal class PushService(string path) : DeviceService(path)
         {
             public string Push { get; set; } = string.Empty;
 
-            internal override IEnumerable<Type> ProvidedEvents => [
-                typeof(InternalEvent_ButtonPush)
+            internal override IEnumerable<InternalEventSource> ProvidedEvents => [
+                new InternalEventSource(typeof(InternalEvent_Push), Path)
             ];
 
             internal override IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
@@ -68,28 +69,35 @@ internal partial class Controller
                     yield break;
 
                 if(data.TryGetValue(KeywordAction, out var value) && value == Push)
-                    yield return new InternalEvent_ButtonPush(sourceDevice.Address);
+                    yield return new InternalEvent_Push(sourceDevice.Address, Path);
             }
         }
 
-        internal class RotateService : DeviceService
+        internal class RotateService(string path) : DeviceService(path)
         {
             public string RotateRight { get; set; } = string.Empty;
             public string RotateLeft { get; set; } = string.Empty;
 
-            internal override IEnumerable<Type> ProvidedEvents => [
-                typeof(InternalEvent_Rotate)
+            internal override IEnumerable<InternalEventSource> ProvidedEvents => [
+                new InternalEventSource(typeof(InternalEvent_Rotate), Path)
             ];
         }
 
-        internal class SmartKnobService(PushService push, RotateService rotateNormal, RotateService rotatePushed) : DeviceService
+        internal class SmartKnobService: DeviceService
         {
-            public PushService Push { get; set; } = push;
-            public RotateService RotateNormal { get; set; } = rotateNormal;
-            public RotateService RotatePushed { get; set; } = rotatePushed;
+            internal SmartKnobService(string path, string actionPush, string actionNormalRotateLeft, string actionNormalRotateRight, string actionPushedRotateLeft, string actionPushedRotateRight) : base(path)
+            {
+                Button = new PushService(nameof(Button)) { Push = actionPush};
+                Normal = new RotateService(nameof(Normal)) { RotateLeft = actionNormalRotateLeft, RotateRight = actionNormalRotateRight };
+                Pushed = new RotateService(nameof(Pushed)) { RotateLeft = actionPushedRotateLeft, RotateRight = actionPushedRotateRight };
+            }
+
+            public PushService Button { get; private set; }
+            public RotateService Normal { get; private set; }
+            public RotateService Pushed { get; private set; }
         }
 
-        internal class AutoModeChangeService : DeviceService
+        internal class AutoModeChangeService() : DeviceService("")
         {
             public string ModeField { get; set; } = string.Empty;
             public string FromMode { get; set; } = string.Empty;

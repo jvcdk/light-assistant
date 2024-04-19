@@ -7,11 +7,16 @@ import { IDevice, IDeviceRoute } from "./Device";
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
 
-function Route(route: IDeviceRoute, idx: number)
+function Route(route: IDeviceRoute, idx: number, routingOptions: string[])
 {
   return(
     <div key={idx} className='route'>
-      <SvgRouteEntry /><span className='routeSourceEvent'>{route.SourceEvent}</span>
+      <SvgRouteEntry />
+      <select className='routeSourceEvent' defaultValue={route.SourceEvent}>
+        <option>&lt;Please select&gt;</option>
+        {routingOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+      </select> 
+      
       <SvgRouteMapsTo /><span className='routeTargetAddress'>{route.TargetAddress}</span>
       <SvgRouteColon /><span className='routeTargetFunctionality'>{route.TargetFunctionality}</span>
     </div>
@@ -20,9 +25,13 @@ function Route(route: IDeviceRoute, idx: number)
 
 function RoutingOptions(prop: {device: IDevice }) {
   const device = prop.device;
+  const routingOptions = device.RoutingOptions;
+  if(routingOptions == undefined)
+    return (<div>Error: No routing options available.</div>);
+
   return (
     <div className='routingOptions'>
-      {device.Routing.map((route, idx) => Route(route, idx))}
+      {device.Routing.map((route, idx) => Route(route, idx, routingOptions.ProvidedEvents))}
       <label className='addNew'>Add New</label>
     </div>
   );
@@ -36,11 +45,12 @@ export function PopUp_DeviceConfiguration(_device: IDevice | null) {
   }, [_device]);
 
   if(device === null)
-    return ("Error: No device selected.");
+    return (<div>Error: No device selected.</div>);
 
   return (
     <div className='Popup.DeviceConfiguration'>
-      <div className='title'>{device.Name} [{device.Address}]</div>
+      <div className='title'>{device.Vendor} / {device.Model} – {device.Description}</div>
+      <div className='subtitle'>(Address: {device.Address})</div>
       <div className='content'>
         <label className='label'>Friendly Name:</label>
         <input className='friendlyname' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
@@ -49,7 +59,6 @@ export function PopUp_DeviceConfiguration(_device: IDevice | null) {
           <RoutingOptions device={device} />
         </div>
       </div>
-    
     </div>
   );
 }

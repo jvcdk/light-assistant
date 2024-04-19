@@ -54,8 +54,8 @@ export interface IDeviceRoutingOptions {
 }
 
 export interface IDeviceConsumableEvent {
-    EventName: string;
-    TargetName: string;
+  EventName: string;
+  TargetName: string;
 }
 
 function DeviceBattery(prop: { battery: number | undefined })

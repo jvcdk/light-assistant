@@ -11,7 +11,7 @@ namespace LightAssistant.Interfaces
 
     internal interface IRoutingOptions
     {
-        internal IReadOnlyList<string> ProvidedEvents { get; }
+        internal IReadOnlyList<IProvidedEvent> ProvidedEvents { get; }
         internal IReadOnlyList<IConsumableEvent> ConsumedEvents { get; }
     }
 
@@ -19,5 +19,11 @@ namespace LightAssistant.Interfaces
     {
         internal string Type { get; }
         internal string Functionality { get; }
+    }
+
+    internal interface IProvidedEvent
+    {
+        internal string Type { get; }
+        internal string EventPath { get; }
     }
 }

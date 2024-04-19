@@ -20,9 +20,10 @@ export function DeviceList() {
   }
   const closeModal = () => setPopupOpen(false);
 
-  const FindDevice: (address: string) => IDevice | undefined = useCallback((address: string) => {
+  type FindDeviceType = (address: string, issueWarningNotFound?: boolean) => IDevice | undefined;
+  const FindDevice: FindDeviceType = useCallback((address: string, issueWarningNotFound: boolean = true) => {
     const result = devices.current.find(device => device.Address === address);
-    if(result == undefined)
+    if(result == undefined && issueWarningNotFound)
       console.log(`Warning: Searched for device ${address} but did not find it.`)
 
     return result;
@@ -42,8 +43,20 @@ export function DeviceList() {
     }
 
     function handleDeviceList(deviceList: IDevice[]) {
+      CopyAdditionalDevInfoFromExistingDevices();
       devices.current = deviceList;
       setDevices(devices.current);
+
+      function CopyAdditionalDevInfoFromExistingDevices() {
+        deviceList.forEach(newDevice => {
+          const existingDevice = FindDevice(newDevice.Address, false);
+          if (existingDevice) {
+            newDevice.Status = existingDevice.Status;
+            newDevice.Routing = existingDevice.Routing;
+            newDevice.RoutingOptions = existingDevice.RoutingOptions;
+          }
+        });
+      }
     }
 
     function handleDeviceRoutingOptions(deviceRoutingOptions: IDeviceRoutingOptions) {
