@@ -26,7 +26,7 @@ internal partial class WebApi
         internal void AddDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing) => 
             Routing = new JsonDeviceRouting(address, routing);
 
-        internal void AddDeviceRoutingOptions(string address, IReadOnlyList<string> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) => 
+        internal void AddDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) => 
             RoutingOptions = new JsonDeviceRoutingOptions(address, providedEvents, consumableEvents);
 
         internal static JsonMessage CreateDeviceStatus(string address, IDeviceStatus deviceStatus) => 
@@ -79,10 +79,10 @@ internal partial class WebApi
         public string TargetFunctionality { get; } = targetFunctionality;
     }
 
-    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<string> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents)
+    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents)
     {
         public string Address { get; } = address;
-        public IReadOnlyList<string> ProvidedEvents { get; } = providedEvents;
+        public IReadOnlyList<JsonDeviceProvidedEvent> ProvidedEvents { get; } = providedEvents;
         public IReadOnlyList<JsonDeviceConsumableEvent> ConsumableEvents { get; } = consumedEvents;
     }
 
@@ -90,5 +90,11 @@ internal partial class WebApi
     {
         public string EventName { get; } = eventName;
         public string TargetName { get; } = targetName;
+    }
+
+    internal class JsonDeviceProvidedEvent(string eventName, string name)
+    {
+        public string EventName { get; } = eventName;
+        public string Name { get; } = name;
     }
 }

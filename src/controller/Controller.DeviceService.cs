@@ -6,11 +6,11 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract class DeviceService(string path)
+    private abstract class DeviceService(string name)
     {
         private const string KeywordAction = "action";
 
-        internal string Path { get; private set; } = path;
+        internal string Name { get; private set; } = name;
 
         internal virtual IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
         {
@@ -60,7 +60,7 @@ internal partial class Controller
             public string Push { get; set; } = string.Empty;
 
             internal override IEnumerable<InternalEventSource> ProvidedEvents => [
-                new InternalEventSource(typeof(InternalEvent_Push), Path)
+                new InternalEventSource(typeof(InternalEvent_Push), Name)
             ];
 
             internal override IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
@@ -69,17 +69,17 @@ internal partial class Controller
                     yield break;
 
                 if(data.TryGetValue(KeywordAction, out var value) && value == Push)
-                    yield return new InternalEvent_Push(sourceDevice.Address, Path);
+                    yield return new InternalEvent_Push(sourceDevice.Address, Name);
             }
         }
 
-        internal class RotateService(string path) : DeviceService(path)
+        internal class RotateService(string name) : DeviceService(name)
         {
             public string RotateRight { get; set; } = string.Empty;
             public string RotateLeft { get; set; } = string.Empty;
 
             internal override IEnumerable<InternalEventSource> ProvidedEvents => [
-                new InternalEventSource(typeof(InternalEvent_Rotate), Path)
+                new InternalEventSource(typeof(InternalEvent_Rotate), Name)
             ];
         }
 
@@ -87,9 +87,9 @@ internal partial class Controller
         {
             internal SmartKnobService(string path, string actionPush, string actionNormalRotateLeft, string actionNormalRotateRight, string actionPushedRotateLeft, string actionPushedRotateRight) : base(path)
             {
-                Button = new PushService(nameof(Button)) { Push = actionPush};
-                Normal = new RotateService(nameof(Normal)) { RotateLeft = actionNormalRotateLeft, RotateRight = actionNormalRotateRight };
-                Pushed = new RotateService(nameof(Pushed)) { RotateLeft = actionPushedRotateLeft, RotateRight = actionPushedRotateRight };
+                Button = new PushService("Push") { Push = actionPush};
+                Normal = new RotateService("Rotate normal") { RotateLeft = actionNormalRotateLeft, RotateRight = actionNormalRotateRight };
+                Pushed = new RotateService("Rotate pushed") { RotateLeft = actionPushedRotateLeft, RotateRight = actionPushedRotateRight };
             }
 
             public PushService Button { get; private set; }

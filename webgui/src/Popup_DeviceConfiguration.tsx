@@ -3,18 +3,18 @@ import SvgRouteEntry from './image/route_entry.svg';
 import SvgRouteColon from './image/route_colon.svg';
 import SvgRouteMapsTo from './image/route_maps_to.svg';
 
-import { IDevice, IDeviceRoute } from "./Device";
+import { IDevice, IDeviceProvidedEvent, IDeviceRoute } from "./Device";
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
 
-function Route(route: IDeviceRoute, idx: number, routingOptions: string[])
+function Route(route: IDeviceRoute, idx: number, routingOptions: IDeviceProvidedEvent[])
 {
   return(
     <div key={idx} className='route'>
       <SvgRouteEntry />
       <select className='routeSourceEvent' defaultValue={route.SourceEvent}>
         <option>&lt;Please select&gt;</option>
-        {routingOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+        {routingOptions.map((option) => <option key={option.Name} value={option.Name}>{option.Name}</option>)}
       </select> 
       
       <SvgRouteMapsTo /><span className='routeTargetAddress'>{route.TargetAddress}</span>

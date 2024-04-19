@@ -49,13 +49,18 @@ export interface IDeviceRoute {
 
 export interface IDeviceRoutingOptions {
     Address: string;
-    ProvidedEvents: string[];
+    ProvidedEvents: IDeviceProvidedEvent[];
     ConsumableEvents: IDeviceConsumableEvent[];
 }
 
 export interface IDeviceConsumableEvent {
-  EventName: string;
+  EventType: string;
   TargetName: string;
+}
+
+export interface IDeviceProvidedEvent {
+  EventType: string;
+  Name: string;
 }
 
 function DeviceBattery(prop: { battery: number | undefined })

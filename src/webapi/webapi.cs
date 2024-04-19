@@ -97,7 +97,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                 var routingOptions = AppController.GetRoutingOptionsFor(device);
                 if(routingOptions != null) {
                     var jsonConsumableEvents = routingOptions.ConsumedEvents.Select(ev => new JsonDeviceConsumableEvent(ev.Type, ev.Functionality)).ToList(); 
-                    var jsonProvidedEvents = routingOptions.ProvidedEvents.Select(ev => $"{ev.EventPath} – {ev.Type}").ToList();
+                    var jsonProvidedEvents = routingOptions.ProvidedEvents.Select(ev => new JsonDeviceProvidedEvent(ev.Type, ev.Name)).ToList();
                     response.AddDeviceRoutingOptions(device.Address, jsonProvidedEvents, jsonConsumableEvents);
                 }
 

@@ -24,9 +24,9 @@ internal partial class Controller
         public string Functionality { get; } = functionality;
     }
 
-    private class ProvidedEvent(string type, string eventPath) : IProvidedEvent
+    private class ProvidedEvent(string type, string name) : IProvidedEvent
     {
         public string Type { get; } = type;
-        public string EventPath { get; } = eventPath;
+        public string Name { get; } = name;
     }
 }

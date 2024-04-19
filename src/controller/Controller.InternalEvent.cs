@@ -45,15 +45,15 @@ internal partial class Controller
     private class InternalEventSource
     {
         internal readonly Type EventType;
-        internal readonly string Path;
+        internal readonly string Name;
 
-        internal InternalEventSource(Type ev, string path)
+        internal InternalEventSource(Type ev, string name)
         {
             if(!ev.IsSubclassOf(typeof(InternalEvent)))
                 throw new Exception("Invalid Source type. It should inherit from InternalEvent.");
 
             EventType = ev;
-            Path = path;
+            Name = name;
         }
     }
 }

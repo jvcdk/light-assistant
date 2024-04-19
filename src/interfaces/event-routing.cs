@@ -24,6 +24,6 @@ namespace LightAssistant.Interfaces
     internal interface IProvidedEvent
     {
         internal string Type { get; }
-        internal string EventPath { get; }
+        internal string Name { get; }
     }
 }
