@@ -12,26 +12,38 @@ interface IRouteConfiguration extends IDeviceRoute {
 }
 
 export type GetTargetRoutingOptionsType = (eventType: string | undefined) => string[] | undefined;
+export type MapTargetAddressToNameType = (targetName: string) => string;
+
+export interface IRoutingOptionsCallbacks {
+  GetTargetRoutingOptions: GetTargetRoutingOptionsType;
+  MapTargetAddressToName: MapTargetAddressToNameType;
+} 
 
 
-function TargetRoutingOptions(prop: {TargetAddress: string, routeTargetOptions: string[] | undefined}) {
-  if(prop.routeTargetOptions === undefined)
+function TargetRoutingOptionsEntry(prop: {targetAddress: string, cb: IRoutingOptionsCallbacks}) {
+  const name = prop.cb.MapTargetAddressToName(prop.targetAddress);
+  console.log(`addr: ${prop.targetAddress} -> ${name}`);
+  return (<option key={prop.targetAddress} value={name}>{name}</option>);
+}
+
+function TargetRoutingOptions(prop: {TargetAddress: string, SourceType: string | undefined, cb: IRoutingOptionsCallbacks}) {
+  const routeTargetOptions = prop.cb.GetTargetRoutingOptions(prop.SourceType);
+
+  if(routeTargetOptions === undefined)
     return null;
 
-  if(prop.routeTargetOptions.length === 0)
+  if(routeTargetOptions.length === 0)
     return (<div>No target devices available.</div>);
 
   return (<div>
     <select className='routeTarget' defaultValue={prop.TargetAddress} onChange={(e) => { console.log(e); }}>
-      <option value={undefined}>&lt;Please select&gt;</option>
-      {prop.routeTargetOptions.map((optionTargetAddress) => <option key={optionTargetAddress} value={optionTargetAddress}>{optionTargetAddress}</option>)}
+      <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
+      {routeTargetOptions.map(targetAddress => <TargetRoutingOptionsEntry targetAddress={targetAddress} cb={prop.cb} />)}
     </select>
   </div>);
 }
 
-function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceProvidedEvent[], getRoutingOptions: GetTargetRoutingOptionsType}) {
-  const getRoutingOptions = prop.getRoutingOptions;
-
+function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceProvidedEvent[], cb: IRoutingOptionsCallbacks}) {
   function getSourceType(sourceEvent: string) : string | undefined {
     const matchingRouteOption = prop.routingOptions.find((el) => el.Name == sourceEvent);
     const result = matchingRouteOption?.EventType;
@@ -51,8 +63,6 @@ function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceP
     SourceType: getSourceType(prop.route.SourceEvent)
   });
 
-  const routeTargetOptions = getRoutingOptions(routeConfig.SourceType);
-
   return(
     <div key={prop.idx} className='route'>
       <SvgRouteEntry />
@@ -62,14 +72,14 @@ function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceP
       </select>      
 
       <SvgRouteMapsTo />
-      <TargetRoutingOptions TargetAddress={routeConfig.TargetAddress} routeTargetOptions={routeTargetOptions} />
+      <TargetRoutingOptions TargetAddress={routeConfig.TargetAddress} SourceType={routeConfig.SourceType} cb={prop.cb} />
 
       <SvgRouteColon /><span className='routeTargetFunctionality'>{routeConfig.TargetFunctionality}</span>
     </div>
   )
 }
 
-function RoutingOptions(prop: {device: IDevice, getRoutingOptions: GetTargetRoutingOptionsType }) {
+function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) {
   const device = prop.device;
   const routingOptions = device.RoutingOptions;
   if(routingOptions == undefined)
@@ -77,13 +87,13 @@ function RoutingOptions(prop: {device: IDevice, getRoutingOptions: GetTargetRout
 
   return (
     <div className='routingOptions'>
-      {device.Routing.map((route, idx) => Route({route: route, idx: idx, routingOptions: routingOptions.ProvidedEvents, getRoutingOptions: prop.getRoutingOptions}))}
+      {device.Routing.map((route, idx) => <Route route={route} idx={idx} routingOptions={routingOptions.ProvidedEvents} cb={prop.cb} />)}
       <label className='addNew'>Add New</label>
     </div>
   );
 }
 
-export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, getRoutingOptions: GetTargetRoutingOptionsType}) {
+export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRoutingOptionsCallbacks}) {
   const [device, setDevice] = useState<IDevice|null>(null);
 
   useEffect(() => {
@@ -102,7 +112,7 @@ export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, getRout
         <input className='friendlyname' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
         <div className='routing'>
           <label className='label'>Routing:</label>
-          <RoutingOptions device={device} getRoutingOptions={prop.getRoutingOptions} />
+          <RoutingOptions device={device} cb={prop.cb} />
         </div>
       </div>
     </div>

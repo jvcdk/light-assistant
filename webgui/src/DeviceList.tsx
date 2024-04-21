@@ -3,7 +3,7 @@ import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from "./Device";
-import { GetTargetRoutingOptionsType, PopUp_DeviceConfiguration } from './Popup_DeviceConfiguration';
+import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, MapTargetAddressToNameType, PopUp_DeviceConfiguration } from './Popup_DeviceConfiguration';
 
 export function DeviceList() {
   const { sendMessage, lastMessage } = useWebSocketContext();
@@ -36,6 +36,11 @@ export function DeviceList() {
     const eligibleDevices = _devices.filter(dev => dev.RoutingOptions?.ConsumableEvents.some(ev => ev.EventType == eventType));
     return eligibleDevices.map(dev => dev.Address);
   }, [_devices]);
+
+  const targetAddressToName: MapTargetAddressToNameType = useCallback((targetName: string) => {
+    const device = FindDevice(targetName);
+    return device?.Name || "<unknown>";
+  }, [FindDevice]);
 
   useEffect(() => {
     function handleDeviceStatus(deviceStatus: IDeviceStatus) {
@@ -92,6 +97,11 @@ export function DeviceList() {
     }
   }, [FindDevice, lastMessage]);
 
+  const cb = {
+    GetTargetRoutingOptions: GetRoutingOptions,
+    MapTargetAddressToName: targetAddressToName,
+  } as IRoutingOptionsCallbacks;
+
   return (
     <div className='DeviceList'>
       <div className='Heading'>
@@ -103,7 +113,7 @@ export function DeviceList() {
       </div>
       {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
       <Popup open={popupOpen} onClose={closeModal} modal>
-        <PopUp_DeviceConfiguration device={selectedDevice} getRoutingOptions={GetRoutingOptions} /> 
+        <PopUp_DeviceConfiguration device={selectedDevice} cb={cb} /> 
       </Popup>
     </div>
   );
