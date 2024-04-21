@@ -86,15 +86,15 @@ internal partial class WebApi
         public IReadOnlyList<JsonDeviceConsumableEvent> ConsumableEvents { get; } = consumedEvents;
     }
 
-    internal class JsonDeviceConsumableEvent(string eventName, string targetName)
+    internal class JsonDeviceConsumableEvent(string eventType, string targetName)
     {
-        public string EventName { get; } = eventName;
+        public string EventType { get; } = eventType;
         public string TargetName { get; } = targetName;
     }
 
-    internal class JsonDeviceProvidedEvent(string eventName, string name)
+    internal class JsonDeviceProvidedEvent(string eventType, string name)
     {
-        public string EventName { get; } = eventName;
+        public string EventType { get; } = eventType;
         public string Name { get; } = name;
     }
 }
