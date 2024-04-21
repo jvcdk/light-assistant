@@ -3,7 +3,7 @@ import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from "./Device";
-import { PopUp_DeviceConfiguration } from './Popup_DeviceConfiguration';
+import { GetTargetRoutingOptionsType, PopUp_DeviceConfiguration } from './Popup_DeviceConfiguration';
 
 export function DeviceList() {
   const { sendMessage, lastMessage } = useWebSocketContext();
@@ -21,13 +21,21 @@ export function DeviceList() {
   const closeModal = () => setPopupOpen(false);
 
   type FindDeviceType = (address: string, issueWarningNotFound?: boolean) => IDevice | undefined;
-  const FindDevice: FindDeviceType = useCallback((address: string, issueWarningNotFound: boolean = true) => {
+  const FindDevice: FindDeviceType = useCallback((address: string, issueWarningNotFound: boolean = true): IDevice | undefined => {
     const result = devices.current.find(device => device.Address === address);
     if(result == undefined && issueWarningNotFound)
       console.log(`Warning: Searched for device ${address} but did not find it.`)
 
     return result;
   }, [devices]);
+
+  const GetRoutingOptions: GetTargetRoutingOptionsType = useCallback((eventType: string | undefined) : string[] | undefined => {
+    if(eventType == undefined)
+      return undefined;
+
+    const eligibleDevices = _devices.filter(dev => dev.RoutingOptions?.ConsumableEvents.some(ev => ev.EventType == eventType));
+    return eligibleDevices.map(dev => dev.Address);
+  }, [_devices]);
 
   useEffect(() => {
     function handleDeviceStatus(deviceStatus: IDeviceStatus) {
@@ -63,7 +71,6 @@ export function DeviceList() {
       const device = FindDevice(deviceRoutingOptions.Address);
       if (device)
         device.RoutingOptions = deviceRoutingOptions;
-      console.log(device);
     }
 
     if (lastMessage == undefined)
@@ -96,7 +103,7 @@ export function DeviceList() {
       </div>
       {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
       <Popup open={popupOpen} onClose={closeModal} modal>
-        {PopUp_DeviceConfiguration(selectedDevice)}
+        <PopUp_DeviceConfiguration device={selectedDevice} getRoutingOptions={GetRoutingOptions} /> 
       </Popup>
     </div>
   );
