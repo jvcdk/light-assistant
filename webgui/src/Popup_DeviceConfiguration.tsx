@@ -26,19 +26,17 @@ function TargetRoutingOptionsEntry(prop: {targetAddress: string, cb: IRoutingOpt
   return (<option key={prop.targetAddress} value={name}>{name}</option>);
 }
 
-function TargetRoutingOptions(prop: {TargetAddress: string, SourceType: string | undefined, cb: IRoutingOptionsCallbacks}) {
-  const routeTargetOptions = prop.cb.GetTargetRoutingOptions(prop.SourceType);
-
-  if(routeTargetOptions === undefined)
+function TargetRoutingOptions(prop: {TargetAddress: string, routeTargetOptions: string[] | undefined, cb: IRoutingOptionsCallbacks}) {
+  if(prop.routeTargetOptions === undefined)
     return null;
 
-  if(routeTargetOptions.length === 0)
+  if(prop.routeTargetOptions.length === 0)
     return (<div>No target devices available.</div>);
 
   return (<div>
     <select className='routeTarget' defaultValue={prop.TargetAddress} onChange={(e) => { console.log(e); }}>
       <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
-      {routeTargetOptions.map(targetAddress => <TargetRoutingOptionsEntry targetAddress={targetAddress} cb={prop.cb} />)}
+      {prop.routeTargetOptions.map(targetAddress => <TargetRoutingOptionsEntry targetAddress={targetAddress} cb={prop.cb} />)}
     </select>
   </div>);
 }
@@ -62,6 +60,8 @@ function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceP
     ...prop.route,
     SourceType: getSourceType(prop.route.SourceEvent)
   });
+  const routeTargetOptions = prop.cb.GetTargetRoutingOptions(routeConfig.SourceType);
+  const showRouteTargetIcon = routeTargetOptions != undefined && routeTargetOptions.length > 0;
 
   return(
     <div key={prop.idx} className='route'>
@@ -71,8 +71,8 @@ function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceP
         {prop.routingOptions.map((optionSourceEvent) => <option key={optionSourceEvent.Name} value={optionSourceEvent.Name}>{optionSourceEvent.Name}</option>)}
       </select>      
 
-      <SvgRouteMapsTo />
-      <TargetRoutingOptions TargetAddress={routeConfig.TargetAddress} SourceType={routeConfig.SourceType} cb={prop.cb} />
+      {showRouteTargetIcon ? <SvgRouteMapsTo /> : null}
+      <TargetRoutingOptions TargetAddress={routeConfig.TargetAddress} routeTargetOptions={routeTargetOptions} cb={prop.cb} />
 
       <SvgRouteColon /><span className='routeTargetFunctionality'>{routeConfig.TargetFunctionality}</span>
     </div>
