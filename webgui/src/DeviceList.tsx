@@ -3,7 +3,7 @@ import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from "./Device";
-import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, MapTargetAddressToNameType, PopUp_DeviceConfiguration } from './Popup_DeviceConfiguration';
+import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, PopUp_DeviceConfiguration, GetTargetFunctionalityOptionsType } from './Popup_DeviceConfiguration';
 
 export function DeviceList() {
   const { sendMessage, lastMessage } = useWebSocketContext();
@@ -14,7 +14,6 @@ export function DeviceList() {
   const [popupOpen, setPopupOpen] = useState(false);
 
   const openPopup = (device: IDevice) => {
-    console.log(device);
     setSelectedDevice(device);
     setPopupOpen(true);
   }
@@ -37,7 +36,22 @@ export function DeviceList() {
     return eligibleDevices.map(dev => dev.Address);
   }, [_devices]);
 
-  const targetAddressToName: MapTargetAddressToNameType = useCallback((targetName: string) => {
+  const GetTargetFunctionalityOptions: GetTargetFunctionalityOptionsType = useCallback((eventType: string | undefined, targetAddress: string | undefined) => {
+    if(targetAddress == undefined || eventType == undefined || targetAddress == undefined)
+      return undefined;
+
+    const device = FindDevice(targetAddress);
+    if(device == undefined)
+      return undefined;
+
+    const consumableEvents = device.RoutingOptions?.ConsumableEvents;
+    if(consumableEvents == undefined)
+      return undefined;
+
+    return consumableEvents.filter(ev => ev.EventType == eventType).map(ev => ev.TargetName);
+  }, [FindDevice]);
+
+  const TargetAddressToName: TargetAddressToNameType = useCallback((targetName: string) => {
     const device = FindDevice(targetName);
     return device?.Name || "<unknown>";
   }, [FindDevice]);
@@ -99,7 +113,8 @@ export function DeviceList() {
 
   const cb = {
     GetTargetRoutingOptions: GetRoutingOptions,
-    MapTargetAddressToName: targetAddressToName,
+    GetTargetFunctionalityOptions: GetTargetFunctionalityOptions,
+    TargetAddressToName: TargetAddressToName,
   } as IRoutingOptionsCallbacks;
 
   return (

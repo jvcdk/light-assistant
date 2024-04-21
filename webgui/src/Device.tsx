@@ -40,24 +40,32 @@ export interface IDeviceRouting {
   Routing: IDeviceRoute[];
 }
 
-
+/**
+ * Should match JsonDeviceRoute
+ */
 export interface IDeviceRoute {
     SourceEvent: string;
     TargetAddress: string;
     TargetFunctionality: string;
 }
-
+/**
+ * Should match JsonDeviceRoutingOptions
+ */
 export interface IDeviceRoutingOptions {
     Address: string;
     ProvidedEvents: IDeviceProvidedEvent[];
     ConsumableEvents: IDeviceConsumableEvent[];
 }
-
+/**
+ * Should match JsonDeviceConsumableEvent
+ */
 export interface IDeviceConsumableEvent {
   EventType: string;
   TargetName: string;
 }
-
+/**
+ * Should match JsonDeviceProvidedEvent
+ */
 export interface IDeviceProvidedEvent {
   EventType: string;
   Name: string;

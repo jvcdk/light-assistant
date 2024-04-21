@@ -7,74 +7,100 @@ import { IDevice, IDeviceProvidedEvent, IDeviceRoute } from "./Device";
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
 
-interface IRouteConfiguration extends IDeviceRoute {
+interface IRouteConfiguration {
+  SourceEvent: string | undefined;
+  TargetAddress: string | undefined;
+  TargetFunctionality: string | undefined;
   SourceType: string | undefined;
 }
 
 export type GetTargetRoutingOptionsType = (eventType: string | undefined) => string[] | undefined;
-export type MapTargetAddressToNameType = (targetName: string) => string;
+export type GetTargetFunctionalityOptionsType = (eventType: string | undefined, targetAddress: string | undefined) => string[] | undefined;
+export type TargetAddressToNameType = (targetName: string) => string;
 
 export interface IRoutingOptionsCallbacks {
   GetTargetRoutingOptions: GetTargetRoutingOptionsType;
-  MapTargetAddressToName: MapTargetAddressToNameType;
+  GetTargetFunctionalityOptions : GetTargetFunctionalityOptionsType;
+  TargetAddressToName: TargetAddressToNameType;
 } 
 
-
-function TargetRoutingOptionsEntry(prop: {targetAddress: string, cb: IRoutingOptionsCallbacks}) {
-  const name = prop.cb.MapTargetAddressToName(prop.targetAddress);
-  console.log(`addr: ${prop.targetAddress} -> ${name}`);
-  return (<option key={prop.targetAddress} value={name}>{name}</option>);
-}
-
-function TargetRoutingOptions(prop: {TargetAddress: string, routeTargetOptions: string[] | undefined, cb: IRoutingOptionsCallbacks}) {
+function TargetRoutingOptions(prop: {targetAddress: string | undefined, routeTargetOptions: string[] | undefined, cb: IRoutingOptionsCallbacks, onChange: (value: string) => void}) {
   if(prop.routeTargetOptions === undefined)
     return null;
 
   if(prop.routeTargetOptions.length === 0)
     return (<div>No target devices available.</div>);
 
-  return (<div>
-    <select className='routeTarget' defaultValue={prop.TargetAddress} onChange={(e) => { console.log(e); }}>
-      <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
-      {prop.routeTargetOptions.map(targetAddress => <TargetRoutingOptionsEntry targetAddress={targetAddress} cb={prop.cb} />)}
-    </select>
-  </div>);
+  return (<select className='routeTarget' defaultValue={prop.targetAddress} onChange={e => prop.onChange(e.target.value)}>
+    <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
+    {prop.routeTargetOptions.map(targetAddress => <option key={targetAddress} value={targetAddress}>{prop.cb.TargetAddressToName(targetAddress)}</option>)}
+  </select>);
+}
+
+function TargetFunctionalityOptions(prop: {targetFunctionality: string | undefined, targetFunctionalityOptions: string[] | undefined, onChange: (value: string) => void}) {
+  if(prop.targetFunctionality === undefined || prop.targetFunctionalityOptions === undefined)
+    return null;
+
+  if(prop.targetFunctionalityOptions.length === 0)
+    return (<div>No target functionality available.</div>);
+
+  return (<select className='routeTargetFunctionality' defaultValue={prop.targetFunctionality} onChange={(e) => prop.onChange(e.target.value) }>
+    <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
+    {prop.targetFunctionalityOptions.map(targetFunc => <option key={targetFunc} value={targetFunc}>{targetFunc}</option>)}    
+  </select>)
 }
 
 function Route(prop: {route: IDeviceRoute, idx: number, routingOptions: IDeviceProvidedEvent[], cb: IRoutingOptionsCallbacks}) {
-  function getSourceType(sourceEvent: string) : string | undefined {
+  function GetSourceType(sourceEvent: string) : string | undefined {
     const matchingRouteOption = prop.routingOptions.find((el) => el.Name == sourceEvent);
     const result = matchingRouteOption?.EventType;
     return result;
   }
 
-  function updateSourceEvent(sourceEvent: string) {
+  function UpdateSourceEvent(sourceEvent: string) {
     setRouteConfig({
       ...routeConfig,
       SourceEvent: sourceEvent,
-      SourceType: getSourceType(sourceEvent)
+      SourceType: GetSourceType(sourceEvent)
+    });
+  }
+
+  function UpdateTarget(targetAddress: string) {
+    setRouteConfig({
+      ...routeConfig,
+      TargetAddress: targetAddress
+    });
+  }
+
+  function UpdateFunctionality(targetFunc: string) {
+    setRouteConfig({
+      ...routeConfig,
+      TargetFunctionality: targetFunc
     });
   }
 
   const [routeConfig, setRouteConfig] = useState<IRouteConfiguration>({
     ...prop.route,
-    SourceType: getSourceType(prop.route.SourceEvent)
+    SourceType: GetSourceType(prop.route.SourceEvent)
   });
   const routeTargetOptions = prop.cb.GetTargetRoutingOptions(routeConfig.SourceType);
-  const showRouteTargetIcon = routeTargetOptions != undefined && routeTargetOptions.length > 0;
+  const showRouteTargetIcon = routeTargetOptions != undefined;
+  const targetFunctionalityOptions = prop.cb.GetTargetFunctionalityOptions(routeConfig.SourceType, routeConfig.TargetAddress);
+  const showTargetFunctinalityIcon = targetFunctionalityOptions != undefined;
 
   return(
     <div key={prop.idx} className='route'>
       <SvgRouteEntry />
-      <select className='routeSourceEvent' defaultValue={routeConfig.SourceEvent} onChange={(e) => { updateSourceEvent(e.target.value); }}>
+      <select className='routeSourceEvent' defaultValue={routeConfig.SourceEvent} onChange={(e) => { UpdateSourceEvent(e.target.value); }}>
         <option value={undefined}>&lt;Please select&gt;</option>
         {prop.routingOptions.map((optionSourceEvent) => <option key={optionSourceEvent.Name} value={optionSourceEvent.Name}>{optionSourceEvent.Name}</option>)}
       </select>      
 
       {showRouteTargetIcon ? <SvgRouteMapsTo /> : null}
-      <TargetRoutingOptions TargetAddress={routeConfig.TargetAddress} routeTargetOptions={routeTargetOptions} cb={prop.cb} />
+      <TargetRoutingOptions targetAddress={routeConfig.TargetAddress} routeTargetOptions={routeTargetOptions} cb={prop.cb} onChange={UpdateTarget} />
 
-      <SvgRouteColon /><span className='routeTargetFunctionality'>{routeConfig.TargetFunctionality}</span>
+      {showTargetFunctinalityIcon ? <SvgRouteColon /> : null}
+      <TargetFunctionalityOptions targetFunctionality={routeConfig.TargetFunctionality} targetFunctionalityOptions={targetFunctionalityOptions} onChange={UpdateFunctionality} />
     </div>
   )
 }
@@ -87,7 +113,7 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) 
 
   return (
     <div className='routingOptions'>
-      {device.Routing.map((route, idx) => <Route route={route} idx={idx} routingOptions={routingOptions.ProvidedEvents} cb={prop.cb} />)}
+      {device.Routing.map((route, idx) => <Route key={idx} route={route} idx={idx} routingOptions={routingOptions.ProvidedEvents} cb={prop.cb} />)}
       <label className='addNew'>Add New</label>
     </div>
   );
