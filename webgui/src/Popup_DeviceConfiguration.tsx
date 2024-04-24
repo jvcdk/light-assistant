@@ -111,6 +111,9 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) 
   if(routingOptions == undefined)
     return (<div>Error: No routing options available.</div>);
 
+  if(routingOptions.ProvidedEvents.length == 0)
+    return (<div>Device does not provide any events.</div>);
+
   return (
     <div className='routingOptions'>
       {device.Routing.map((route, idx) => <Route key={idx} route={route} idx={idx} routingOptions={routingOptions.ProvidedEvents} cb={prop.cb} />)}
