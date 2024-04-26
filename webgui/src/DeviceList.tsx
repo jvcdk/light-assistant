@@ -117,6 +117,12 @@ export function DeviceList() {
     TargetAddressToName: TargetAddressToName,
   } as IRoutingOptionsCallbacks;
 
+  function OnDeviceConfigurationUpdate(device: IDevice | null) {
+    setPopupOpen(false);
+    if(device != null)
+      console.log(device.Routing);
+  }
+
   return (
     <div className='DeviceList'>
       <div className='Heading'>
@@ -128,7 +134,7 @@ export function DeviceList() {
       </div>
       {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
       <Popup open={popupOpen} onClose={closeModal} modal>
-        <PopUp_DeviceConfiguration device={selectedDevice} cb={cb} /> 
+        <PopUp_DeviceConfiguration device={selectedDevice} cb={cb} cbOnClose={OnDeviceConfigurationUpdate} /> 
       </Popup>
     </div>
   );

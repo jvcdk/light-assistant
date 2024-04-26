@@ -108,7 +108,7 @@ function CreateEmptyRoutingWithKey() : IDeviceRouteWithKey {
   } as IDeviceRouteWithKey;
 }
 
-function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) {
+function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks, setDeviceRoute: (route: IDeviceRoute[]) => void }) {
   const device = prop.device;
   const routingOptions = device.RoutingOptions;
 
@@ -138,7 +138,12 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) 
     Object.assign(entry, newRoute);
     result = result.filter(route => providedEvents.find(el => el.Name == route.SourceEvent) != undefined);  
     result.push(CreateEmptyRoutingWithKey());
+ 
+    // We need to both update a local state and a parent (prop.) state.
+    // The local state ensures that the drop-down boxes do not close as new (status) data arrives (from the server) about the device.
+    // The parent state ensures that, well, the parent is up-to-date and can be sent to server when user presses Apply.
     setDeviceRoute(result);
+    prop.setDeviceRoute(result);
   }
 
   return (
@@ -149,12 +154,20 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) 
   );
 }
 
-export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRoutingOptionsCallbacks}) {
+export type CloseDeviceConfigurationType = (device: IDevice | null) => void;
+export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRoutingOptionsCallbacks, cbOnClose: CloseDeviceConfigurationType}) {
   const [device, setDevice] = useState<IDevice|null>(null);
 
   useEffect(() => {
     setDevice(cloneDeep(prop.device));
   }, [prop.device]);
+
+  function UpdateDeviceRoute(route: IDeviceRoute[]) {
+    setDevice({
+      ...device,
+      Routing: route,
+    } as IDevice);
+  }
 
   if(device === null)
     return (<div>Error: No device selected.</div>);
@@ -168,8 +181,12 @@ export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRo
         <input className='friendlyname' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
         <div className='routing'>
           <label className='label'>Routing:</label>
-          <RoutingOptions device={device} cb={prop.cb} />
+          <RoutingOptions device={device} cb={prop.cb} setDeviceRoute={UpdateDeviceRoute} />
         </div>
+      <div className='buttons'>
+        <input className='cancel' type='button' onClick={() => prop.cbOnClose(null)} value="Cancel" />
+        <input className='ok' type='button' onClick={() => prop.cbOnClose(device)} value="Apply" />
+      </div>
       </div>
     </div>
   );
