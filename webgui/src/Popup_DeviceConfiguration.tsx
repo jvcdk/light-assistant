@@ -145,7 +145,6 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks }) 
     <div className='routingOptions'>
       {deviceRoute.map((route, idx) => 
         <Route key={route.key} route={route} idx={idx} routingOptions={providedEvents} cb={prop.cb} onChange={newRoute => updateDeviceRoute(newRoute)} />)}
-      <label className='addNew'>Add New</label>
     </div>
   );
 }
