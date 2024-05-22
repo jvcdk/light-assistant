@@ -2,7 +2,8 @@ import './DeviceList.css'
 import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
-import { Device, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from "./Device";
+import { Device } from "./Device";
+import { IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from './JsonTypes';
 import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, PopUp_DeviceConfiguration, GetTargetFunctionalityOptionsType } from './Popup_DeviceConfiguration';
 
 export function DeviceList() {

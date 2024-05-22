@@ -3,7 +3,7 @@ import SvgRouteEntry from './image/route_entry.svg';
 import SvgRouteColon from './image/route_colon.svg';
 import SvgRouteMapsTo from './image/route_maps_to.svg';
 
-import { IDevice, IDeviceProvidedEvent, IDeviceRoute } from "./Device";
+import { IDevice, IDeviceProvidedEvent, IDeviceRoute } from './JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
 
