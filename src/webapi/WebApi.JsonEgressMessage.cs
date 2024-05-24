@@ -6,7 +6,7 @@ namespace LightAssistant.WebApi;
 
 internal partial class WebApi
 {
-    public class JsonMessage
+    public class JsonEgressMessage
     {
         internal byte[] Serialize() => UTF8.GetBytes(JsonConvert.SerializeObject(this));
 
@@ -15,7 +15,7 @@ internal partial class WebApi
         public JsonDeviceRouting? Routing { get; private set; }
         public JsonDeviceRoutingOptions? RoutingOptions { get; private set; }
 
-        internal static JsonMessage CreateDeviceList(IReadOnlyList<IDevice> devices) =>
+        internal static JsonEgressMessage CreateDeviceList(IReadOnlyList<IDevice> devices) =>
             new() {
                 Devices = devices.Select(JsonDevice.FromIDevice).ToList()
             };
@@ -29,7 +29,7 @@ internal partial class WebApi
         internal void AddDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) => 
             RoutingOptions = new JsonDeviceRoutingOptions(address, providedEvents, consumableEvents);
 
-        internal static JsonMessage CreateDeviceStatus(string address, IDeviceStatus deviceStatus) => 
+        internal static JsonEgressMessage CreateDeviceStatus(string address, IDeviceStatus deviceStatus) => 
             new() { DeviceStatus = new JsonDeviceStatus(address, deviceStatus)};
     }
 
@@ -72,7 +72,7 @@ internal partial class WebApi
         public IReadOnlyList<JsonDeviceRoute> Routing = routing;
     }
 
-    public class JsonDeviceRoute(string sourceEvent, string targetAddress, string targetFunctionality)
+    public class JsonDeviceRoute(string sourceEvent, string targetAddress, string targetFunctionality) : IEventRoute
     {
         public string SourceEvent { get; } = sourceEvent;
         public string TargetAddress { get; } = targetAddress;

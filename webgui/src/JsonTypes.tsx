@@ -1,6 +1,7 @@
 /**
  * Should match JsonDevice
  */
+// TODO JVC: Refactor this; split it out. It should be renamed to ClientToHost message. Or IngressEvent. Or something.
 export interface IDevice {
   Name: string;
   Address: string;
@@ -70,4 +71,26 @@ export interface IDeviceConsumableEvent {
 export interface IDeviceProvidedEvent {
   EventType: string;
   Name: string;
+}
+
+/**
+ * Should match JsonDeviceConfigurationChange
+ */
+export class DeviceConfigurationChange {
+  Address: string;
+  Name: string;
+  Route: IDeviceRoute[];
+
+  constructor(address: string, name: string, route: IDeviceRoute[]) {
+    this.Address = address;
+    this.Name = name;
+    this.Route = route;
+  }
+}
+
+/**
+ * Should match JsonIngressMessage
+ */
+export class ClientToServerMessage {
+  DeviceConfigurationChange: DeviceConfigurationChange | undefined;
 }

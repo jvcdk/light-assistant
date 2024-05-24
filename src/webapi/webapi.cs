@@ -59,16 +59,46 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         return DeviceListUpdated(context);
     }
 
-    private static async Task SendMessage(IWebSocketContext context, JsonMessage msg)
+    private static async Task SendMessage(IWebSocketContext context, JsonEgressMessage msg)
     {
         await context.WebSocket.SendAsync(msg.Serialize(), true);
     }
 
     protected override async Task OnMessageReceivedAsync(IWebSocketContext context, byte[] buffer, IWebSocketReceiveResult result)
     {
-        var inMsg = UTF8.GetString(buffer);
-        var msg = $"Got the following '{inMsg}' from client.";
-        await context.WebSocket.SendAsync(UTF8.GetBytes(msg), true);
+        var str = UTF8.GetString(buffer);
+        if(string.IsNullOrWhiteSpace(str)) {
+            _consoleOutput.ErrorLine("Message from client was empty.");
+            return;
+        }
+
+        try {
+            var msg = JsonIngressMessageParser.ParseMessage(str);
+            if(msg == null) {
+                _consoleOutput.ErrorLine("Could not parse message from client. Null object returned.");
+                return;
+            }
+
+            if(msg.DeviceConfigurationChange != null)
+                await HandleDeviceConfigurationChange(msg.DeviceConfigurationChange);
+        }
+        catch(Exception ex) {
+            _consoleOutput.ErrorLine("Could not parse message from client. Error message: " + ex);
+            return;
+        }
+    }
+
+    private async Task HandleDeviceConfigurationChange(JsonDeviceConfigurationChange ev)
+    {
+        Debug.Assert(AppController != null);
+
+        var device = AppController.GetDeviceList().FirstOrDefault(entry => entry.Address == ev.Address);
+        if(device == null) {
+            _consoleOutput.ErrorLine($"Address '{ev.Address}' given by client does not match a device.");
+            return;
+        }
+
+        await AppController.SetRoutingFor(device, ev.Route);
     }
 
     private async Task DeviceListUpdated(IWebSocketContext? context)
@@ -79,14 +109,14 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         var contexts = context != null ? EnumerableExt.Wrap(context) : ActiveContexts;
 
         var devices = AppController.GetDeviceList();
-        var response = JsonMessage.CreateDeviceList(devices);
+        var response = JsonEgressMessage.CreateDeviceList(devices);
         foreach(var inner in contexts)
             await SendMessage(inner, response);
 
         foreach(var device in devices) {
             if(AppController.TryGetDeviceStatus(device, out var status)) {
                 Debug.Assert(status != null);
-                response = new JsonMessage();
+                response = new JsonEgressMessage();
                 response.AddDeviceStatus(device.Address, status);
 
                 var routes = AppController.GetRoutingFor(device).Select(route =>
@@ -114,7 +144,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         if(AppController == null)
             return;
         
-        var message = JsonMessage.CreateDeviceStatus(address, deviceStatus);
+        var message = JsonEgressMessage.CreateDeviceStatus(address, deviceStatus);
         foreach(var context in ActiveContexts)
             await SendMessage(context, message);
     }

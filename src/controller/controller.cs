@@ -8,8 +8,8 @@ internal partial class Controller : IController
     private readonly IDeviceBusConnection _deviceBus;
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
-    private readonly Dictionary<IDevice, DeviceInfo> _devices = new();
-    private readonly List<EventRoute> _routes = new();
+    private readonly Dictionary<IDevice, DeviceInfo> _devices = [];
+    private readonly Dictionary<string, List<EventRoute>> _routes = [];
 
     public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp)
     {
@@ -23,9 +23,13 @@ internal partial class Controller : IController
         _guiApp.AppController = this;
 
         // Temp - dummy TODO JVC: Implement interface to configure these; save them in a persistent file.
-        _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Push", "target_1", "on/off"));
-        _routes.Add(new EventRoute("0x4c5bb3fffe2e8acb", "Toggle", "0x94deb8fffe6aa0be", "Flip"));
-        _routes.Add(new EventRoute("0x94deb8fffe6aa0be", "Nope", "target_2", "brightness"));
+        _routes.Add("0x4c5bb3fffe2e8acb", [
+            new EventRoute("Push", "target_1", "on/off"),
+            new EventRoute("Toggle", "0x94deb8fffe6aa0be", "Flip")
+        ]);
+        _routes.Add("0x94deb8fffe6aa0be", [
+            new EventRoute("Nope", "target_2", "brightness"),
+        ]);
     }
 
     public IReadOnlyList<IDevice> GetDeviceList()
@@ -84,7 +88,10 @@ internal partial class Controller : IController
     private void RouteInternalEvents(IEnumerable<InternalEvent> events)
     {
         foreach(var ev in events) {
-            foreach(var route in _routes.Where(route => route.SourceAddress == ev.SourceAddress && route.SourceEvent == ev.Type)) {
+            if(!_routes.TryGetValue(ev.SourceAddress, out var routes))
+                continue;
+
+            foreach(var route in routes.Where(route => route.SourceEvent == ev.Type)) {
                 foreach(var (targetDevice, targetInfo) in _devices) {
                     if(targetDevice.Address != route.TargetAddress)
                         continue;
@@ -124,6 +131,33 @@ internal partial class Controller : IController
 
     public IEnumerable<IEventRoute> GetRoutingFor(IDevice device)
     {
-        return _routes.Where(routing => routing.SourceAddress == device.Address);
+        if(_routes.TryGetValue(device.Address, out var result))
+            return result;
+        
+        return [];
+    }
+
+    public async Task SetRoutingFor(IDevice device, IEnumerable<IEventRoute> routes)
+    {
+        var newRoutes = routes
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.SourceEvent)) // Silently ignore any invalid configurations
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.TargetAddress)) // Silently ignore any invalid configurations
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.TargetFunctionality)) // Silently ignore any invalid configurations
+            .Select(entry => new EventRoute(entry)).ToList();
+
+        if(newRoutes.Count == 0)
+            _consoleOutput.InfoLine($"Clearing all routes for device {device.Address}.");
+        else {
+            _consoleOutput.InfoLine($"Setting routes for device {device.Address}:");
+            foreach(var route in newRoutes)
+                _consoleOutput.InfoLine($" - {route.SourceEvent} -> {route.TargetAddress}::{route.TargetFunctionality}");
+        }
+        _routes[device.Address] = newRoutes;
+
+        // TODO JVC:
+        // Update name
+        // Save to Disk
+        // Reply back
+        await Task.Delay(1000);
     }
 }

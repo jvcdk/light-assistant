@@ -3,7 +3,7 @@ import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device } from "./Device";
-import { IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from './JsonTypes';
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from './JsonTypes';
 import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, PopUp_DeviceConfiguration, GetTargetFunctionalityOptionsType } from './Popup_DeviceConfiguration';
 
 export function DeviceList() {
@@ -120,8 +120,12 @@ export function DeviceList() {
 
   function OnDeviceConfigurationUpdate(device: IDevice | null) {
     setPopupOpen(false);
-    if(device != null)
-      console.log(device.Routing);
+    if(device == null)
+      return;
+
+    const msg = new ClientToServerMessage();
+    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, device.Routing);
+    sendMessage(JSON.stringify(msg));
   }
 
   return (

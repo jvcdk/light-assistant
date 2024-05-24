@@ -29,7 +29,7 @@ function TargetRoutingOptions(prop: {targetAddress: string | undefined, routeTar
     return (<div>No target devices available.</div>);
 
   return (<select className='routeTarget' defaultValue={prop.cb.TargetAddressToName(prop.targetAddress || "")} onChange={e => prop.onChange(e.target.value)}>
-    <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
+    <option key="__unselected__" value="">&lt;Please select&gt;</option>
     {prop.routeTargetOptions.map(targetAddress => <option key={targetAddress} value={targetAddress}>{prop.cb.TargetAddressToName(targetAddress)}</option>)}
   </select>);
 }
@@ -42,7 +42,7 @@ function TargetFunctionalityOptions(prop: {targetFunctionality: string | undefin
     return (<div>No target functionality available.</div>);
 
   return (<select className='routeTargetFunctionality' defaultValue={prop.targetFunctionality} onChange={(e) => prop.onChange(e.target.value) }>
-    <option key="__unselected__" value={undefined}>&lt;Please select&gt;</option>
+    <option key="__unselected__" value="">&lt;Please select&gt;</option>
     {prop.targetFunctionalityOptions.map(targetFunc => <option key={targetFunc} value={targetFunc}>{targetFunc}</option>)}    
   </select>)
 }
@@ -85,7 +85,7 @@ function Route(prop: {route: IDeviceRouteWithKey, idx: number, routingOptions: I
     <div key={prop.idx} className='route'>
       <SvgRouteEntry />
       <select className='routeSourceEvent' defaultValue={prop.route.SourceEvent} onChange={(e) => { UpdateSourceEvent(e.target.value); }}>
-        <option value={undefined}>&lt;Please select&gt;</option>
+        <option value="">&lt;Please select&gt;</option>
         {prop.routingOptions.map((optionSourceEvent) => <option key={optionSourceEvent.Name} value={optionSourceEvent.Name}>{optionSourceEvent.Name}</option>)}
       </select>      
 

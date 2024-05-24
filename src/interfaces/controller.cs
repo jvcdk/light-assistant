@@ -4,6 +4,7 @@ namespace LightAssistant.Interfaces
     {
         IReadOnlyList<IDevice> GetDeviceList();
         IEnumerable<IEventRoute> GetRoutingFor(IDevice device);
+        Task SetRoutingFor(IDevice device, IEnumerable<IEventRoute> routes);
         IRoutingOptions? GetRoutingOptionsFor(IDevice device);
         bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status);
     }
