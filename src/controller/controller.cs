@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using LightAssistant.Interfaces;
+using LightAssistant.Utils;
 
 namespace LightAssistant.Controller;
 
@@ -8,8 +10,12 @@ internal partial class Controller : IController
     private readonly IDeviceBusConnection _deviceBus;
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
+
+    // Protected data
     private readonly Dictionary<IDevice, DeviceInfo> _devices = [];
+    private readonly SlimReadWriteLock _devicesLock = new();
     private readonly Dictionary<string, List<EventRoute>> _routes = [];
+    private readonly SlimReadWriteLock _routesLock = new();
 
     public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp)
     {
@@ -34,24 +40,27 @@ internal partial class Controller : IController
 
     public IReadOnlyList<IDevice> GetDeviceList()
     {
-        lock(_devices)
-            return new List<IDevice>(_devices.Keys);
+        using var _ = _devicesLock.ObtainReadLock();
+        return new List<IDevice>(_devices.Keys);
     }
 
     public bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status)
     {
-        lock(_devices) {
-            if(_devices.TryGetValue(device, out var entry)) {
-                status = entry.Status;
-                return true;
-            }
+        using var _ = _devicesLock.ObtainReadLock();
+
+        if(_devices.TryGetValue(device, out var entry)) {
+            status = entry.Status;
+            return true;
         }
+
         status = null;
         return false;
     }
 
     public IRoutingOptions? GetRoutingOptionsFor(IDevice device)
     {
+        using var _ = _devicesLock.ObtainReadLock();
+
         if(!_devices.TryGetValue(device, out var deviceInfo)) {
             _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
             return null;
@@ -70,50 +79,102 @@ internal partial class Controller : IController
 
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
     {
-        if(!_devices.TryGetValue(device, out var deviceInfo)) {
-            _consoleOutput.ErrorLine($"Got Device Action from unknown device '{device.Name}'.");
-            return;            
+        bool didUpdate;
+        DeviceStatus newStatus;
+        DeviceServiceCollection services;
+        using(var _ = _devicesLock.ObtainWriteLock()) {
+            if(!_devices.TryGetValue(device, out var deviceInfo)) {
+                _consoleOutput.ErrorLine($"Got Device Action from unknown device '{device.Name}'.");
+                return;            
+            }
+
+            services = deviceInfo.Services;
+
+            newStatus = deviceInfo.Status.Clone(); // Clone to avoid race conditions
+            didUpdate = newStatus.UpdateFrom(data);
+            if(didUpdate)
+                deviceInfo.Status = newStatus;
         }
 
-        var didUpdate = deviceInfo.Status.UpdateFrom(data);
         if(didUpdate)
-            _guiApp.DeviceStateUpdated(device.Address, deviceInfo.Status);
+            _guiApp.DeviceStateUpdated(device.Address, newStatus);
 
-        var internalEvents = deviceInfo.Services.ProcessExternalEvent(device, data);
+        var internalEvents = services.ProcessExternalEvent(device, data);
         RouteInternalEvents(internalEvents);
 
         _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
     }
 
+    /// Helper struct for function RouteInternalEvents to avoid locking two locks simultaneously.
+    private readonly struct RouteInternalEvents_Workspace(InternalEvent @event, List<EventRoute>? routesFromSourceAddress)
+    {
+        internal InternalEvent Event { get; } = @event;
+        internal List<EventRoute>? RoutesFromSourceAddress { get; } = routesFromSourceAddress;
+        internal List<RouteInternalEvents_Workspace2> RoutesWithDestination { get; } = [];
+    }
+    private struct RouteInternalEvents_Workspace2
+    {
+        internal DeviceServiceCollection Services { get; set; }
+        internal string TargetFunctionality { get; set; }
+    }
+
     private void RouteInternalEvents(IEnumerable<InternalEvent> events)
     {
-        foreach(var ev in events) {
-            if(!_routes.TryGetValue(ev.SourceAddress, out var routes))
-                continue;
+        var routes = RouteInternalEvents_GetEligibleRoutes(events);
 
-            foreach(var route in routes.Where(route => route.SourceEvent == ev.Type)) {
-                foreach(var (targetDevice, targetInfo) in _devices) {
-                    if(targetDevice.Address != route.TargetAddress)
+        if (routes.Count == 0)
+            return;
+
+        AugmentRoutesWithDestination(routes);
+
+        foreach (var entry in routes)
+            foreach (var route in entry.RoutesWithDestination)
+                route.Services.ProcessInternalEvent(entry.Event, route.TargetFunctionality);
+    }
+
+    private void AugmentRoutesWithDestination(List<RouteInternalEvents_Workspace> routes)
+    {
+        using var _ = _devicesLock.ObtainReadLock();
+
+        foreach (var entry in routes) {
+            Debug.Assert(entry.RoutesFromSourceAddress != null);
+            foreach (var route in entry.RoutesFromSourceAddress) {
+                foreach (var (targetDevice, targetInfo) in _devices) {
+                    if (targetDevice.Address != route.TargetAddress)
                         continue;
 
-                    targetInfo.Services.ProcessInternalEvent(ev, route.TargetFunctionality);
+                    entry.RoutesWithDestination.Add(new RouteInternalEvents_Workspace2 {
+                        Services = targetInfo.Services,
+                        TargetFunctionality = route.TargetFunctionality,
+                    });
                 }
             }
         }
     }
 
-    private void HandleDeviceDiscovered(IDevice device)
+    private List<RouteInternalEvents_Workspace> RouteInternalEvents_GetEligibleRoutes(IEnumerable<InternalEvent> events)
     {
-        bool deviceIsNew;
-        lock(_devices) {
-            deviceIsNew = !_devices.ContainsKey(device);
-            if(deviceIsNew)
-                _devices.Add(device, CreateDeviceInfo(device));
-        }
-        if(deviceIsNew)
-            _guiApp.DeviceListUpdated();
+        using var _ = _routesLock.ObtainReadLock();
+        return events.Select(ev => {
+            if (!_routes.TryGetValue(ev.SourceAddress, out var routes))
+                routes = null;
 
+            return new RouteInternalEvents_Workspace(ev, routes?.Where(route => route.SourceEvent == ev.Type).ToList());
+        })
+        .Where(el => el.RoutesFromSourceAddress != null && el.RoutesFromSourceAddress.Count > 0)
+        .ToList();
+    }
+
+    private async void HandleDeviceDiscovered(IDevice device)
+    {
         _consoleOutput.ErrorLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
+        using(var _ = _devicesLock.ObtainWriteLock()) {
+            if(_devices.ContainsKey(device))
+                return; // Not new
+
+            _devices.Add(device, CreateDeviceInfo(device));
+        }
+        await _guiApp.DeviceListUpdated();
     }
 
     private DeviceInfo CreateDeviceInfo(IDevice device)
@@ -131,6 +192,8 @@ internal partial class Controller : IController
 
     public IEnumerable<IEventRoute> GetRoutingFor(IDevice device)
     {
+        using var _ = _routesLock.ObtainReadLock();
+
         if(_routes.TryGetValue(device.Address, out var result))
             return result;
         
@@ -152,12 +215,13 @@ internal partial class Controller : IController
             foreach(var route in newRoutes)
                 _consoleOutput.InfoLine($" - {route.SourceEvent} -> {route.TargetAddress}::{route.TargetFunctionality}");
         }
-        _routes[device.Address] = newRoutes;
+
+        using(_ = _routesLock.ObtainWriteLock())
+            _routes[device.Address] = newRoutes;
 
         // TODO JVC:
-        // Update name
         // Save to Disk
         // Reply back
-        await Task.Delay(1000);
+        await Task.CompletedTask;
     }
 }

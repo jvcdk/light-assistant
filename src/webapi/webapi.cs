@@ -99,6 +99,8 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         }
 
         await AppController.SetRoutingFor(device, ev.Route);
+        // TODO JVC:
+        // Update name
     }
 
     private async Task DeviceListUpdated(IWebSocketContext? context)

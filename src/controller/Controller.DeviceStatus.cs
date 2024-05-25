@@ -16,9 +16,20 @@ internal partial class Controller
         public int? Brightness => _brightness;
 
         private bool? _state;
+
+        public DeviceStatus Clone()
+        {
+            var result = new DeviceStatus();
+            result._linkQuality = _linkQuality;
+            result._battery = _battery;
+            result._brightness = _brightness;
+            result._state = _state;
+            return result;
+    }
+
         public bool? State => _state;
 
-        private bool UpdateFrom(Dictionary<string, string> source, string propName, ref int? dst)
+        private static bool UpdateFrom(Dictionary<string, string> source, string propName, ref int? dst)
         {
             if(source.TryGetValue(propName, out var str) &&
                 int.TryParse(str, out var value) &&
