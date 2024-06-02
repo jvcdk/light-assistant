@@ -10,6 +10,7 @@ internal partial class Controller : IController
     private readonly IDeviceBusConnection _deviceBus;
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
+    private readonly string _dataPath;
 
     // Protected data
     private readonly Dictionary<IDevice, DeviceInfo> _devices = [];
@@ -17,31 +18,75 @@ internal partial class Controller : IController
     private readonly Dictionary<string, List<EventRoute>> _routes = [];
     private readonly SlimReadWriteLock _routesLock = new();
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp)
+    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp, string dataPath)
     {
         _consoleOutput = consoleOutput;
         _deviceBus = deviceBus;
         _guiApp = guiApp;
         _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
+        _dataPath = dataPath;
 
         _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
         _deviceBus.DeviceAction += HandleDeviceAction;
         _guiApp.AppController = this;
 
-        // Temp - dummy TODO JVC: Implement interface to configure these; save them in a persistent file.
-        _routes.Add("0x4c5bb3fffe2e8acb", [
-            new EventRoute("Push", "target_1", "on/off"),
-            new EventRoute("Toggle", "0x94deb8fffe6aa0be", "Flip")
-        ]);
-        _routes.Add("0x94deb8fffe6aa0be", [
-            new EventRoute("Nope", "target_2", "brightness"),
-        ]);
+        LoadData();
+    }
+
+    private void SaveData()
+    {
+        if(string.IsNullOrWhiteSpace(_dataPath))
+            return; // Error written in LoadData
+
+        try {
+            RunTimeData data;
+            using(var _ = _routesLock.ObtainReadLock()) {
+                data = new RunTimeData(_routes);
+            }
+            data.SaveToFile(_dataPath);
+        }
+        catch(Exception ex) {
+            _consoleOutput.ErrorLine("Could not save runtime data. Message: " + ex.Message);
+        }
+    }
+
+    private void LoadData()
+    {
+        if(string.IsNullOrWhiteSpace(_dataPath)) {
+            _consoleOutput.ErrorLine("DataPath (specified in config file) was empty or whitespace. This does not work.");
+            _consoleOutput.ErrorLine("WARNING: Configuration data will not be saved!!!");
+            return;
+        }
+
+        RunTimeData? data;
+        string errMsg = "Unknown reason.";
+        try {
+            data = RunTimeData.LoadFromFile(_dataPath);
+        }
+        catch(Exception ex) {
+            errMsg = ex.Message;
+            data = null;
+        }
+
+        if(data == null) {
+            _consoleOutput.ErrorLine($"Could not configuration data from file '{_dataPath}'. Message:" + errMsg);
+            return;
+        }
+
+        using var _ = _routesLock.ObtainWriteLock();
+        data.PopulateRoutes(_routes);
     }
 
     public IReadOnlyList<IDevice> GetDeviceList()
     {
         using var _ = _devicesLock.ObtainReadLock();
         return new List<IDevice>(_devices.Keys);
+    }
+
+    public IDevice? TryGetDevice(string address)
+    {
+        using var _ = _devicesLock.ObtainReadLock();
+        return _devices.Keys.FirstOrDefault(entry => entry.Address == address);
     }
 
     public bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status)
@@ -219,9 +264,8 @@ internal partial class Controller : IController
         using(_ = _routesLock.ObtainWriteLock())
             _routes[device.Address] = newRoutes;
 
-        // TODO JVC:
-        // Save to Disk
-        // Reply back
-        await Task.CompletedTask;
+        SaveData();
+
+        await _guiApp.RoutingDataUpdated(device);
     }
 }

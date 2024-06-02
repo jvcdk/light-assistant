@@ -7,6 +7,7 @@ internal interface IUserInterface
 
     Task DeviceListUpdated();
     Task DeviceStateUpdated(string address, IDeviceStatus deviceStatus);
+    Task RoutingDataUpdated(IDevice device);
     Task Run();
 }
 

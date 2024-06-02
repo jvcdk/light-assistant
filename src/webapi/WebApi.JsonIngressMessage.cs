@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using static System.Text.Encoding;
 
 namespace LightAssistant.WebApi;
 

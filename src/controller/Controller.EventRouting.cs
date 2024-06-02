@@ -4,7 +4,7 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private class EventRoute(string sourceEvent, string targetAddress, string targetFunctionality) : IEventRoute
+    internal class EventRoute(string sourceEvent, string targetAddress, string targetFunctionality) : IEventRoute
     {
         public EventRoute(IEventRoute source) : this(source.SourceEvent, source.TargetAddress, source.TargetFunctionality) { }
 

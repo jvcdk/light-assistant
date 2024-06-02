@@ -5,17 +5,16 @@ using LightAssistant.WebApi;
 namespace LightAssistantOffline;
 
 public static class OfflineApp {
-    private const string WebApiHostAddress = "*";
-    private const int WebApiHostPort = 8081;
     private static int result = 0;
 
     public static int Main(string[] args)
     {
         try {
+            var defaultConfig = new Config();
             var consoleOutput = new ConsoleOutput() { Verbose = true };
             var mqttClient = new MqttEmulatedClient();
-            var guiApp = new WebApi(consoleOutput, WebApiHostAddress, WebApiHostPort);
-            var controller = new Controller(consoleOutput, mqttClient, guiApp);
+            var guiApp = new WebApi(consoleOutput, defaultConfig.WebApiHostAddress, defaultConfig.WebApiPort);
+            var controller = new Controller(consoleOutput, mqttClient, guiApp, defaultConfig.DataPath);
             controller.Run().Wait();
             return result;
         }

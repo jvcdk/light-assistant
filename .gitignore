@@ -4,5 +4,6 @@ bin/
 # VS Code plugin crashes!?!?!?
 .mono
 
-# Don'g commit config file
+# Don't commit config and data files
 light-assistant.conf
+light-assistant-data.json

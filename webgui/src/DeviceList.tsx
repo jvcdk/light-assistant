@@ -38,7 +38,8 @@ export function DeviceList() {
   }, [_devices]);
 
   const GetTargetFunctionalityOptions: GetTargetFunctionalityOptionsType = useCallback((eventType: string | undefined, targetAddress: string | undefined) => {
-    if(targetAddress == undefined || eventType == undefined || targetAddress == undefined)
+    const paramsOk = targetAddress && eventType;
+    if(!paramsOk)
       return undefined;
 
     const device = FindDevice(targetAddress);
@@ -53,7 +54,10 @@ export function DeviceList() {
   }, [FindDevice]);
 
   const TargetAddressToName: TargetAddressToNameType = useCallback((targetName: string) => {
-    const device = FindDevice(targetName);
+    let device = null;
+    if(targetName)
+      device = FindDevice(targetName);
+
     return device?.Name || "<unknown>";
   }, [FindDevice]);
 
@@ -67,7 +71,7 @@ export function DeviceList() {
     function handleDeviceRouting(deviceRouting: IDeviceRouting) {
       const device = FindDevice(deviceRouting.Address);
       if (device)
-        device.Routing = deviceRouting.Routing;
+        device.Routing = deviceRouting.Routing || [];
     }
 
     function handleDeviceList(deviceList: IDevice[]) {

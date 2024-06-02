@@ -1,6 +1,6 @@
 
-using LightAssistant.Interfaces;
 using Newtonsoft.Json;
+using LightAssistant.Interfaces;
 
 namespace LightAssistant.Zigbee;
 
@@ -11,9 +11,9 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
     public event Action<IDevice> DeviceDiscovered = (device) => { };
     public event Action<IDevice, Dictionary<string, string>> DeviceAction = (device, action) => { };
 
-    private IConsoleOutput _consoleOutput;
-    private ZigbeeConnection _connection;
-    private readonly List<IDevice> _knownDevices = new();
+    private readonly IConsoleOutput _consoleOutput;
+    private readonly ZigbeeConnection _connection;
+    private readonly List<IDevice> _knownDevices = [];
 
     internal Zigbee2MqttClient(ZigbeeConnection connection, IConsoleOutput consoleOutput)
     {
@@ -79,7 +79,7 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
             return;
         }
 
-        var command = list.First();
+        var command = list[0];
         switch(command) {
             case "devices":
                 HandleBridgeDevicesMessage(message);

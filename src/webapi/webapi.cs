@@ -92,15 +92,28 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
     {
         Debug.Assert(AppController != null);
 
-        var device = AppController.GetDeviceList().FirstOrDefault(entry => entry.Address == ev.Address);
+        var device = AppController.TryGetDevice(ev.Address);
         if(device == null) {
             _consoleOutput.ErrorLine($"Address '{ev.Address}' given by client does not match a device.");
             return;
         }
 
         await AppController.SetRoutingFor(device, ev.Route);
-        // TODO JVC:
-        // Update name
+    }
+
+    public async Task RoutingDataUpdated(IDevice device)
+    {
+        if(AppController == null)
+            return;
+
+        var response = new JsonEgressMessage();
+        var routes = AppController.GetRoutingFor(device).Select(route =>
+            new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
+        ).ToList();
+        response.AddDeviceRouting(device.Address, routes);
+
+        foreach(var inner in ActiveContexts)
+            await SendMessage(inner, response);
     }
 
     private async Task DeviceListUpdated(IWebSocketContext? context)

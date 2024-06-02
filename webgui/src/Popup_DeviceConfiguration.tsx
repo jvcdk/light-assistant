@@ -28,7 +28,7 @@ function TargetRoutingOptions(prop: {targetAddress: string | undefined, routeTar
   if(prop.routeTargetOptions.length === 0)
     return (<div>No target devices available.</div>);
 
-  return (<select className='routeTarget' defaultValue={prop.cb.TargetAddressToName(prop.targetAddress || "")} onChange={e => prop.onChange(e.target.value)}>
+  return (<select className='routeTarget' defaultValue={prop.targetAddress || ""} onChange={e => prop.onChange(e.target.value)}>
     <option key="__unselected__" value="">&lt;Please select&gt;</option>
     {prop.routeTargetOptions.map(targetAddress => <option key={targetAddress} value={targetAddress}>{prop.cb.TargetAddressToName(targetAddress)}</option>)}
   </select>);
