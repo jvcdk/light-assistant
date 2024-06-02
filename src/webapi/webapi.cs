@@ -99,6 +99,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         }
 
         await AppController.SetRoutingFor(device, ev.Route);
+        await AppController.SetDeviceName(device, ev.Name);
     }
 
     public async Task RoutingDataUpdated(IDevice device)

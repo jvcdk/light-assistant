@@ -50,6 +50,17 @@ internal partial class Zigbee2MqttClient
 
         [JsonIgnore]
         public bool BatteryPowered => PowerSource == "Battery";
+
+        bool IDevice.Equals(IDevice other)
+        {
+            return
+                Name == other.Name &&
+                Address == other.Address &&
+                Vendor == other.Vendor &&
+                Model == other.Model &&
+                Description == other.Description &&
+                BatteryPowered == other.BatteryPowered;
+        }
     }
 
     public class DeviceDefinition
@@ -61,5 +72,24 @@ internal partial class Zigbee2MqttClient
             get => _description;
             set => _description = value ?? "";
          }
+    }
+
+    public class GenericMqttResponse
+    {
+        private Dictionary<string, string> _data = [];
+
+        [JsonProperty("data")]
+        public Dictionary<string, string> Data {
+            get => _data;
+            set => _data = value ?? [];
+        }
+
+        private string _status = "";
+
+        [JsonProperty("status")]
+        public string Status {
+            get => _status;
+            set => _status = value ?? "";
+        }
     }
 }

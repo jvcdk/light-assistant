@@ -7,7 +7,7 @@ namespace LightAssistant.Controller;
 internal partial class Controller : IController
 {
     private readonly IConsoleOutput _consoleOutput;
-    private readonly IDeviceBusConnection _deviceBus;
+    private readonly IDeviceBus _deviceBus;
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
     private readonly string _dataPath;
@@ -18,7 +18,7 @@ internal partial class Controller : IController
     private readonly Dictionary<string, List<EventRoute>> _routes = [];
     private readonly SlimReadWriteLock _routesLock = new();
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBusConnection deviceBus, IUserInterface guiApp, string dataPath)
+    public Controller(IConsoleOutput consoleOutput, IDeviceBus deviceBus, IUserInterface guiApp, string dataPath)
     {
         _consoleOutput = consoleOutput;
         _deviceBus = deviceBus;
@@ -27,6 +27,7 @@ internal partial class Controller : IController
         _dataPath = dataPath;
 
         _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
+        _deviceBus.DeviceUpdated += HandleDeviceUpdated;
         _deviceBus.DeviceAction += HandleDeviceAction;
         _guiApp.AppController = this;
 
@@ -222,6 +223,22 @@ internal partial class Controller : IController
         await _guiApp.DeviceListUpdated();
     }
 
+    private async void HandleDeviceUpdated(IDevice device)
+    {
+        using(var _ = _devicesLock.ObtainWriteLock()) {
+            var existing = _devices.Keys.FirstOrDefault(entry => entry.Address == device.Address);
+            if (existing == default) {
+                _consoleOutput.ErrorLine($"Error updating device. Device '{device.Address}' did not seem to exist.");
+                return;
+            }
+
+            var data = _devices[existing];
+            _devices.Remove(existing);
+            _devices[device] = data;
+        }
+        await _guiApp.DeviceListUpdated();
+    }
+
     private DeviceInfo CreateDeviceInfo(IDevice device)
     {
         return new DeviceInfo {
@@ -267,5 +284,11 @@ internal partial class Controller : IController
         SaveData();
 
         await _guiApp.RoutingDataUpdated(device);
+    }
+
+    public async Task SetDeviceName(IDevice device, string name)
+    {
+        if(name != device.Name)
+            await _deviceBus.SetDeviceName(device.Address, name);
     }
 }

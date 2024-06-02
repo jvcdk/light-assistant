@@ -3,10 +3,11 @@ using static LightAssistant.Zigbee.Zigbee2MqttClient;
 
 namespace LightAssistantOffline;
 
-internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
+internal class MqttEmulatedClient : IDeviceBus, IDisposable
 {
     public event Action<IDevice> DeviceDiscovered = delegate { };
     public event Action<IDevice, Dictionary<string, string>> DeviceAction = delegate { };
+    public event Action<IDevice> DeviceUpdated  = delegate { };
 
     public MqttEmulatedClient()
     {
@@ -101,6 +102,11 @@ internal class MqttEmulatedClient : IDeviceBusConnection, IDisposable
     public void Dispose()
     {
         _disposed = true;
+    }
+
+    public Task SetDeviceName(string address, string name)
+    {
+        throw new NotImplementedException();
     }
 }
 

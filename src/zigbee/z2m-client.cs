@@ -1,14 +1,16 @@
 
 using Newtonsoft.Json;
 using LightAssistant.Interfaces;
+using System.Diagnostics;
 
 namespace LightAssistant.Zigbee;
 
-internal partial class Zigbee2MqttClient : IDeviceBusConnection
+internal partial class Zigbee2MqttClient : IDeviceBus
 {
     private const string BASE_TOPIC = "zigbee2mqtt";
 
     public event Action<IDevice> DeviceDiscovered = (device) => { };
+    public event Action<IDevice> DeviceUpdated = (device) => { };
     public event Action<IDevice, Dictionary<string, string>> DeviceAction = (device, action) => { };
 
     private readonly IConsoleOutput _consoleOutput;
@@ -24,6 +26,11 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
 
     private void HandleMessage(IReadOnlyCollection<string> topics, string message)
     {
+        // Sometimes mqtt gives an empty message. I suspect this is an artifact of suppressing
+        // the re-broadcast of client-sent messages. That is; the NoLocal feature of mqtt.
+        if(string.IsNullOrWhiteSpace(message))
+            return;
+
         if(topics.Count == 0) {
             _consoleOutput.ErrorLine($"Error: Unexpected empty in {nameof(Zigbee2MqttClient)}.");
             return;
@@ -35,14 +42,15 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
         }
 
         var deviceAddr = topics.ElementAt(1);
+        var additionalTopics = topics.Skip(2).ToList();
         switch(deviceAddr) {
             case "bridge":
-                HandleBridgeMessage(topics.Skip(2).ToList(), message);
+                HandleBridgeMessage(additionalTopics, message);
                 break;
             default:
                 var device = _knownDevices.FirstOrDefault(d => d.Address == deviceAddr);
                 if (device != null)
-                    HandleDeviceMessage(deviceAddr, message);
+                    HandleDeviceMessage(deviceAddr, additionalTopics, message);
                 else
                     _consoleOutput.ErrorLine($"Error: Unexpected device {deviceAddr} in {nameof(Zigbee2MqttClient)}.");
 
@@ -50,7 +58,7 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
         }
     }
 
-    private void HandleDeviceMessage(string deviceAddr, string message)
+    private void HandleDeviceMessage(string deviceAddr, List<string> additionalTopics, string message)
     {
         var device = _knownDevices.FirstOrDefault(d => d.Address == deviceAddr);
         if(device == null) {
@@ -58,9 +66,21 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
             return;
         }
 
-        var deviceMessage = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
+        if(additionalTopics.Count != 0) {
+            _consoleOutput.ErrorLine($"Unsupported: We don't yet support additional topics '{string.Join('/', additionalTopics)}'.");
+            return;
+        }
+
+        Dictionary<string, string>? deviceMessage;
+        try {
+            deviceMessage = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
+        }
+        catch(Exception ex) {
+            _consoleOutput.ErrorLine($"Error: Could not parse device message in {nameof(Zigbee2MqttClient)}. Mqtt Message: {message}. Exception: {ex.Message}");
+            return;
+        }
         if(deviceMessage == null) {
-            _consoleOutput.ErrorLine($"Error: Could not parse device message in {nameof(Zigbee2MqttClient)}. Message: {message}.");
+            _consoleOutput.ErrorLine($"Error: Parsed device message in {nameof(Zigbee2MqttClient)} was null. Mqtt Message: {message}.");
             return;
         }
 
@@ -72,18 +92,23 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
         _consoleOutput.ErrorLine($"Device message. Device: {deviceAddr}. Message: {message}");
     }
 
-    private void HandleBridgeMessage(IReadOnlyList<string> list, string message)
+    private void HandleBridgeMessage(IReadOnlyList<string> commandPath, string message)
     {
-        if(list.Count == 0) {
+        if(commandPath.Count == 0) {
             _consoleOutput.ErrorLine($"Error: Unexpected empty in {nameof(Zigbee2MqttClient)}.");
             return;
         }
 
-        var command = list[0];
+        var command = commandPath[0];
         switch(command) {
             case "devices":
                 HandleBridgeDevicesMessage(message);
                 break;
+
+            case "response":
+                HandleBridgeResponseMessage(commandPath.Skip(1).ToList(), message);
+                break;
+
             case "groups":
             case "info":
             case "state":
@@ -91,10 +116,59 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
             case "logging":
                 HandleBridgeIgnoredMessage(command, message);
                 break;
+
             default:
-                _consoleOutput.ErrorLine($"Error: Unexpected bridge command {command} in {nameof(Zigbee2MqttClient)}.");
+                _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commandPath)}' => '{message}' in {nameof(Zigbee2MqttClient)}.");
                 break;
         }
+    }
+
+    private void HandleBridgeResponseMessage(List<string> commands, string message)
+    {
+        if(commands.Count == 0) {
+            _consoleOutput.ErrorLine($"Unexpected empty 'command' in response from mqtt.");
+            return;
+        }
+
+        GenericMqttResponse? parsedMessage = null;
+        try {
+            parsedMessage = JsonConvert.DeserializeObject<GenericMqttResponse>(message);
+        }
+        catch(Exception ex) {
+            _consoleOutput.ErrorLine($"Could not parse bridge response message. Error msg.: " + ex.Message);
+            return;
+        }
+
+        if(parsedMessage == null) {
+            _consoleOutput.ErrorLine($"Could not parse bridge response message. Message was empty.");
+            return;
+        }
+
+        var command = commands[0];
+        var additionalCommands = commands.Skip(1).ToList();
+        switch(command) {
+            case "device":
+                HandleBridgeResponseDeviceMessage(additionalCommands, parsedMessage);
+                return;
+        }
+
+        _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commands)}' => '{message}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
+    }
+
+    private void HandleBridgeResponseDeviceMessage(List<string> commands, GenericMqttResponse parsedMessage)
+    {
+        if(commands.Count == 0) {
+            _consoleOutput.ErrorLine($"Unexpected empty 'command' in response from mqtt.");
+            return;
+        }
+
+        var command = commands[0];
+        switch(command) {
+            case "rename":
+                return; // Do nothing; the rename command arrives *after* new device enumeration list, so we already know about the rename
+        }
+
+        _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commands)}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
     }
 
     private void HandleBridgeIgnoredMessage(string command, string message)
@@ -111,14 +185,39 @@ internal partial class Zigbee2MqttClient : IDeviceBusConnection
                 return;
             }
             foreach(var device in devices) {
-                DeviceDiscovered(device);
-                var existingDevice = _knownDevices.FirstOrDefault(d => d.Address == device.Address);
-                if(existingDevice == null)
+                IDevice? existingDevice = null;
+                int idx;
+                for(idx = 0; idx < _knownDevices.Count; idx++) {
+                    existingDevice = _knownDevices[idx];
+                    if(existingDevice.Address == device.Address)
+                        break;
+                }
+
+                var foundExisting = idx < _knownDevices.Count;
+                if(foundExisting) {
+                    Debug.Assert(existingDevice != null);
+                    if(!existingDevice.Equals(device)) {
+                        _knownDevices[idx] = device;
+                        DeviceUpdated(device);
+                    }
+                }
+                else {
+                    DeviceDiscovered(device);
                     _knownDevices.Add(device);
+                }
             }
         }
         catch(Exception e) {
             _consoleOutput.ErrorLine($"Error: {e.Message}");
         }
+    }
+
+    public async Task SetDeviceName(string address, string name)
+    {
+        var data = new Dictionary<string, string>();
+        data["from"] = address;
+        data["to"] = name;
+        var message = JsonConvert.SerializeObject(data);
+        await _connection.Publish($"{BASE_TOPIC}/bridge/request/device/rename", message);
     }
 }

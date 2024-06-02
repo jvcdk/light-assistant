@@ -4,12 +4,12 @@ using MQTTnet.Client;
 
 namespace LightAssistant.Zigbee;
 
-internal class ZigbeeConnection : IDeviceBus, IDisposable
+internal class ZigbeeConnection : IDisposable
 {
     private const int MQTT_TIMEOUT = 1500;
 
-    private IMqttClient? mqttClient;
-    private MqttFactory? mqttFactory;
+    private IMqttClient? _mqttClient;
+    private MqttFactory? _mqttFactory;
     private IConsoleOutput ConsoleOutput { get; }
     private string Host { get; }
     private int Port { get; }
@@ -27,26 +27,27 @@ internal class ZigbeeConnection : IDeviceBus, IDisposable
 
     public async Task ConnectAsync()
     {
-        mqttFactory = new MqttFactory();
+        _mqttFactory = new MqttFactory();
         var mqttClientOptions = new MqttClientOptionsBuilder()
             .WithClientId(ClientId)
             .WithTcpServer(Host, Port)
+            .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
             .Build();
         
-        mqttClient = mqttFactory.CreateMqttClient();
+        _mqttClient = _mqttFactory.CreateMqttClient();
         var ct = new CancellationTokenSource(MQTT_TIMEOUT).Token;
-        var response = await mqttClient.ConnectAsync(mqttClientOptions, ct);
+        var response = await _mqttClient.ConnectAsync(mqttClientOptions, ct);
 
         if(!response.ResultCode.Equals(MqttClientConnectResultCode.Success))
             throw new Exception($"Failed to connect to MQTT server {Host}:{Port}");
 
-        mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessage;
+        _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessage;
 
-        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicFilter(f => f.WithTopic($"#"))
+        var mqttSubscribeOptions = _mqttFactory.CreateSubscribeOptionsBuilder()
+                .WithTopicFilter(f => f.WithTopic($"#").WithNoLocal())
                 .Build();
 
-        await mqttClient.SubscribeAsync(mqttSubscribeOptions, ct);
+        await _mqttClient.SubscribeAsync(mqttSubscribeOptions, ct);
 
         ConsoleOutput.MessageLine($"Connected to MQTT server {Host}:{Port}");
     }
@@ -74,45 +75,31 @@ internal class ZigbeeConnection : IDeviceBus, IDisposable
         _subscriptions[topic] = callback;
     }
 
-//    private void Publish(string topic, string message)
-//    {
-//        if(mqttClient == null)
-//            throw new InvalidOperationException("Not connected to MQTT server");
-//
-//        var applicationMessage = new MqttApplicationMessageBuilder()
-//                .WithTopic($"{BaseTopic}/{topic}")
-//                .WithPayload(message)
-//                .Build();
-//
-//        // Fire and forget
-//        mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-//    }
+    internal async Task Publish(string topic, string message)
+    {
+        if(_mqttClient == null)
+            throw new InvalidOperationException("Not connected to MQTT server");
 
-//    public async Task Subscribe(string topic, Action<string, string> callback)
-//    {
-//        if(mqttClient == null || mqttFactory == null)
-//            throw new InvalidOperationException("Not connected to MQTT server");
-//
-//        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-//                .WithTopicFilter(f => f.WithTopic($"{BaseTopic}/{topic}"))
-//                .Build();
-//
-//        _subscriptions[$"{BaseTopic}/{topic}"] = callback;
-//        await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
-//    }
+        var applicationMessage = new MqttApplicationMessageBuilder()
+                .WithTopic(topic)
+                .WithPayload(message)
+                .Build();
+
+        await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+    }
 
     public async void Dispose()
     {
-        if(mqttFactory == null || mqttClient == null)
+        if(_mqttFactory == null || _mqttClient == null)
             return;
 
-        var mqttClientDisconnectOptions = mqttFactory
+        var mqttClientDisconnectOptions = _mqttFactory
             .CreateClientDisconnectOptionsBuilder()
             .Build();
-        await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
+        await _mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
 
-        mqttClient.Dispose();
-        mqttClient = null;
-        mqttFactory = null;
+        _mqttClient.Dispose();
+        _mqttClient = null;
+        _mqttFactory = null;
     }
 }
