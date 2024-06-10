@@ -1,15 +1,15 @@
 .Heading,
 .Device {
     display: table-row;
-    background-color: var(--light-assistant-highligh-tr1);
+    background-color: var(--light-assistant-highlight-tr1);
 }
 
 .Device:nth-child(2n) {
-    background-color: var(--light-assistant-highligh-tr2);
+    background-color: var(--light-assistant-highlight-tr2);
 }
 
 .Device:hover {
-    background-color: var(--light-assistant-highligh-2);
+    background-color: var(--light-assistant-highlight-2);
 }
 
 .Heading > div,

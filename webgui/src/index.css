@@ -1,10 +1,10 @@
 :root {
   --light-assistant-primary: rgba(255, 255, 255, 0.87);
   --light-assistant-background: #242424;
-  --light-assistant-highligh-1: #444480;
-  --light-assistant-highligh-2: #446044;
-  --light-assistant-highligh-tr1: #343434;
-  --light-assistant-highligh-tr2: #444444;
+  --light-assistant-highlight-1: #444480;
+  --light-assistant-highlight-2: #446044;
+  --light-assistant-highlight-tr1: #343434;
+  --light-assistant-highlight-tr2: #444444;
   
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
