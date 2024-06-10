@@ -1,0 +1,64 @@
+.Popup_DeviceConfiguration .Title {
+    font-size: 120%;
+    font-weight: bold;
+    text-align: center;
+    width: 25em;
+    margin: auto;
+}
+
+.Popup_DeviceConfiguration .SubTitle {
+    font-size: 100%;
+    padding-bottom: 0.5em;
+    text-align: center;
+    width: 20em;
+    margin: auto;
+}
+
+.Popup_DeviceConfiguration .Content {
+    padding: 0.5em;
+}
+
+.Popup_DeviceConfiguration .Label {
+    margin-right: 0.25em;
+}
+
+.Popup_DeviceConfiguration .FriendlyName {
+    border: none;
+    border-bottom: 1px solid var(--light-assistant-primary);
+    outline: none;
+    padding: 0.25em;
+    color: var(--light-assistant-primary);
+    background: none;
+    font-size: 100%;
+}
+
+.Popup_DeviceConfiguration .Routing {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.Popup_DeviceConfiguration .Buttons {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 0.5em;
+    padding-bottom: 0.25em;
+}
+
+.Popup_DeviceConfiguration .Cancel,
+.Popup_DeviceConfiguration .Ok {
+    background-color: transparent;
+    color: var(--light-assistant-primary);;
+    border: 1px solid var(--light-assistant-primary);
+    padding: 0.25em 0.75em;
+    border-radius: 0.25em;
+    font-size: 100%;
+    cursor: pointer;
+}
+
+.Popup_DeviceConfiguration .Cancel {
+    margin-right: 0.5em;
+}
+
+.Popup_DeviceConfiguration .Ok {
+    margin-left: 0.5em;
+}

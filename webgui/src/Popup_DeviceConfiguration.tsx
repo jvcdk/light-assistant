@@ -28,7 +28,7 @@ function TargetRoutingOptions(prop: {targetAddress: string | undefined, routeTar
   if(prop.routeTargetOptions.length === 0)
     return (<div>No target devices available.</div>);
 
-  return (<select className='routeTarget' defaultValue={prop.targetAddress || ""} onChange={e => prop.onChange(e.target.value)}>
+  return (<select className='RouteTarget' defaultValue={prop.targetAddress || ""} onChange={e => prop.onChange(e.target.value)}>
     <option key="__unselected__" value="">&lt;Please select&gt;</option>
     {prop.routeTargetOptions.map(targetAddress => <option key={targetAddress} value={targetAddress}>{prop.cb.TargetAddressToName(targetAddress)}</option>)}
   </select>);
@@ -41,7 +41,7 @@ function TargetFunctionalityOptions(prop: {targetFunctionality: string | undefin
   if(prop.targetFunctionalityOptions.length === 0)
     return (<div>No target functionality available.</div>);
 
-  return (<select className='routeTargetFunctionality' defaultValue={prop.targetFunctionality} onChange={(e) => prop.onChange(e.target.value) }>
+  return (<select className='RouteTargetFunctionality' defaultValue={prop.targetFunctionality} onChange={(e) => prop.onChange(e.target.value) }>
     <option key="__unselected__" value="">&lt;Please select&gt;</option>
     {prop.targetFunctionalityOptions.map(targetFunc => <option key={targetFunc} value={targetFunc}>{targetFunc}</option>)}    
   </select>)
@@ -82,9 +82,9 @@ function Route(prop: {route: IDeviceRouteWithKey, idx: number, routingOptions: I
   const showTargetFunctinalityIcon = targetFunctionalityOptions != undefined;
 
   return(
-    <div key={prop.idx} className='route'>
+    <div key={prop.idx} className='Route'>
       <SvgRouteEntry />
-      <select className='routeSourceEvent' defaultValue={prop.route.SourceEvent} onChange={(e) => { UpdateSourceEvent(e.target.value); }}>
+      <select className='RouteSourceEvent' defaultValue={prop.route.SourceEvent} onChange={(e) => { UpdateSourceEvent(e.target.value); }}>
         <option value="">&lt;Please select&gt;</option>
         {prop.routingOptions.map((optionSourceEvent) => <option key={optionSourceEvent.Name} value={optionSourceEvent.Name}>{optionSourceEvent.Name}</option>)}
       </select>      
@@ -147,7 +147,7 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks, se
   }
 
   return (
-    <div className='routingOptions'>
+    <div className='RoutingOptions'>
       {deviceRoute.map((route, idx) => 
         <Route key={route.key} route={route} idx={idx} routingOptions={providedEvents} cb={prop.cb} onChange={newRoute => updateDeviceRoute(newRoute)} />)}
     </div>
@@ -173,19 +173,19 @@ export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRo
     return (<div>Error: No device selected.</div>);
 
   return (
-    <div className='Popup.DeviceConfiguration'>
-      <div className='title'>{device.Vendor} / {device.Model} – {device.Description}</div>
-      <div className='subtitle'>(Address: {device.Address})</div>
-      <div className='content'>
-        <label className='label'>Friendly Name:</label>
-        <input className='friendlyname' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
-        <div className='routing'>
-          <label className='label'>Routing:</label>
+    <div className='Popup_DeviceConfiguration'>
+      <div className='Title'>{device.Vendor} / {device.Model} – {device.Description}</div>
+      <div className='SubTitle'>(Address: {device.Address})</div>
+      <div className='Content'>
+        <label className='Label'>Friendly Name:</label>
+        <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
+        <div className='Routing'>
+          <label className='Label'>Routing:</label>
           <RoutingOptions device={device} cb={prop.cb} setDeviceRoute={UpdateDeviceRoute} />
         </div>
-      <div className='buttons'>
-        <input className='cancel' type='button' onClick={() => prop.cbOnClose(null)} value="Cancel" />
-        <input className='ok' type='button' onClick={() => prop.cbOnClose(device)} value="Apply" />
+      <div className='Buttons'>
+        <input className='Cancel' type='button' onClick={() => prop.cbOnClose(null)} value="Cancel" />
+        <input className='Ok' type='button' onClick={() => prop.cbOnClose(device)} value="Apply" />
       </div>
       </div>
     </div>

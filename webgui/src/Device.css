@@ -32,22 +32,26 @@
 }
 
 .Device .Battery::before {
-    content: "Battery: ";
+    content: "\2022 \00A0 Battery: ";
 }
 
 .Device .LinkQuality::before {
-    content: "Link quality: ";
+    content: "\2022 \00A0 Link quality: ";
 }
 
 .Device .Brightness::before {
-    content: "Brightness: ";
+    content: "\2022 \00A0 Brightness: ";
 }
 
 .Device .State::before {
-    content: "State: ";
+    content: "\2022 \00A0 State: ";
 }
 
 .Device .Route {
-    display: inline-block;
+    display: block;
     white-space: nowrap;
+}
+
+.Device .Route::before {
+    content: "\2022 \00A0";
 }
