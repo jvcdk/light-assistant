@@ -142,7 +142,7 @@ export function DeviceList() {
         <div className='Routing'>Routing</div>
       </div>
       {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
-      <Popup open={popupOpen} onClose={closeModal} modal>
+      <Popup open={popupOpen} onClose={closeModal} modal closeOnDocumentClick={false}>
         <PopUp_DeviceConfiguration device={selectedDevice} cb={cb} cbOnClose={OnDeviceConfigurationUpdate} /> 
       </Popup>
     </div>
