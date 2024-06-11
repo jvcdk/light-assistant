@@ -37,6 +37,25 @@
     margin-bottom: 0.5em;
 }
 
+.Popup_DeviceConfiguration .Routing .Route {
+    margin-bottom: 0.25em;
+    margin-left: 0.5em;
+}
+
+.Popup_DeviceConfiguration .Routing .Route svg {
+    vertical-align: middle;
+}
+
+.Popup_DeviceConfiguration .Routing .Route select {
+    background-color: var(--light-assistant-highlight-tr2);
+    color: var(--light-assistant-primary);
+    border: 1px solid var(--light-assistant-primary);
+    padding: 0.25em 0.75em;
+    border-radius: 0.25em;
+    font-size: 100%;
+    width: 8.5em;
+}
+
 .Popup_DeviceConfiguration .Buttons {
     display: flex;
     justify-content: space-between;
@@ -46,7 +65,6 @@
 
 .Popup_DeviceConfiguration .Cancel,
 .Popup_DeviceConfiguration .Ok {
-    background-color: transparent;
     color: var(--light-assistant-primary);;
     border: 1px solid var(--light-assistant-primary);
     padding: 0.25em 0.75em;
@@ -56,9 +74,11 @@
 }
 
 .Popup_DeviceConfiguration .Cancel {
+    background-color: var(--light-assistant-button-cancel);
     margin-right: 0.5em;
 }
 
 .Popup_DeviceConfiguration .Ok {
+    background-color: var(--light-assistant-button-ok);
     margin-left: 0.5em;
 }

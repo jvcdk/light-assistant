@@ -4,7 +4,9 @@
   --light-assistant-highlight-1: #444480;
   --light-assistant-highlight-2: #446044;
   --light-assistant-highlight-tr1: #343434;
-  --light-assistant-highlight-tr2: #444444;
+  --light-assistant-highlight-tr2: hsl(0, 0%, 27%);
+  --light-assistant-button-ok: #008500;
+  --light-assistant-button-cancel: #740d0d;
   
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
