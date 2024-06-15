@@ -41,31 +41,25 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             return;
         }
 
-        var deviceAddr = topics.ElementAt(1);
+        var deviceName = topics.ElementAt(1);
         var additionalTopics = topics.Skip(2).ToList();
-        switch(deviceAddr) {
+        switch(deviceName) {
             case "bridge":
                 HandleBridgeMessage(additionalTopics, message);
                 break;
             default:
-                var device = _knownDevices.FirstOrDefault(d => d.Address == deviceAddr);
+                var device = _knownDevices.FirstOrDefault(d => d.Name == deviceName);
                 if (device != null)
-                    HandleDeviceMessage(deviceAddr, additionalTopics, message);
+                    HandleDeviceMessage(device, additionalTopics, message);
                 else
-                    _consoleOutput.ErrorLine($"Error: Unexpected device {deviceAddr} in {nameof(Zigbee2MqttClient)}.");
+                    _consoleOutput.ErrorLine($"Error: Unexpected device {deviceName} in {nameof(Zigbee2MqttClient)}.");
 
                 break;
         }
     }
 
-    private void HandleDeviceMessage(string deviceAddr, List<string> additionalTopics, string message)
+    private void HandleDeviceMessage(IDevice device, List<string> additionalTopics, string message)
     {
-        var device = _knownDevices.FirstOrDefault(d => d.Address == deviceAddr);
-        if(device == null) {
-            _consoleOutput.ErrorLine($"Error: Unexpected device {deviceAddr} in {nameof(Zigbee2MqttClient)}.");
-            return;
-        }
-
         if(additionalTopics.Count != 0) {
             _consoleOutput.ErrorLine($"Unsupported: We don't yet support additional topics '{string.Join('/', additionalTopics)}'.");
             return;
@@ -76,7 +70,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             deviceMessage = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
         }
         catch(Exception ex) {
-            _consoleOutput.ErrorLine($"Error: Could not parse device message in {nameof(Zigbee2MqttClient)}. Mqtt Message: {message}. Exception: {ex.Message}");
+            _consoleOutput.ErrorLine($"Error: Could not parse device message in {nameof(Zigbee2MqttClient)}. Topics: '{string.Join('/', additionalTopics)}'. Mqtt Message: {message}. Exception: {ex.Message}");
             return;
         }
         if(deviceMessage == null) {
@@ -89,7 +83,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             return;
         }
 
-        _consoleOutput.ErrorLine($"Device message. Device: {deviceAddr}. Message: {message}");
+        _consoleOutput.ErrorLine($"Device message. Device: {device.Name}. Topics: '{string.Join('/', additionalTopics)}'. Message: {message}");
     }
 
     private void HandleBridgeMessage(IReadOnlyList<string> commandPath, string message)
