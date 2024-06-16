@@ -14,6 +14,7 @@ internal partial class WebApi
         public JsonDeviceStatus? DeviceStatus { get; private set; }
         public JsonDeviceRouting? Routing { get; private set; }
         public JsonDeviceRoutingOptions? RoutingOptions { get; private set; }
+        public JsonOpenNetworkStatus? OpenNetworkStatus { get; private set; }
 
         internal static JsonServerToClientMessage Empty() => new();
 
@@ -35,7 +36,12 @@ internal partial class WebApi
         internal JsonServerToClientMessage WithDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) {
             RoutingOptions = new JsonDeviceRoutingOptions(address, providedEvents, consumableEvents);
             return this;
-        } 
+        }
+
+        internal JsonServerToClientMessage WithOpenNetworkStatus(bool status, int time) {
+            OpenNetworkStatus = new JsonOpenNetworkStatus(status, time);
+            return this;
+        }
     }
 
     /// <summary>
@@ -101,5 +107,11 @@ internal partial class WebApi
     {
         public string EventType { get; } = eventType;
         public string Name { get; } = name;
+    }
+
+    internal class JsonOpenNetworkStatus(bool status, int time)
+    {
+        public bool Status { get; } = status;
+        public int Time { get; } = time;
     }
 }

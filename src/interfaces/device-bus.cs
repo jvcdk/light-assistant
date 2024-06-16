@@ -5,6 +5,9 @@ internal interface IDeviceBus
     event Action<IDevice> DeviceDiscovered;
     event Action<IDevice> DeviceUpdated;
     event Action<IDevice, Dictionary<string, string>> DeviceAction;
+    event Action<bool, int> NetworkOpenStatus;
+
+    Task RequestOpenNetwork(int openNetworkTimeSeconds);
     Task SetDeviceName(string address, string name);
 }
 

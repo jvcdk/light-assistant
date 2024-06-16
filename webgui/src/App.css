@@ -9,7 +9,7 @@ h1 {
 }
 
 input[type=button] {
-  color: var(--light-assistant-primary);;
+  color: var(--light-assistant-primary);
   border: 1px solid var(--light-assistant-primary);
   padding: 0.25em 0.75em;
   border-radius: 0.25em;
@@ -20,4 +20,12 @@ input[type=button] {
 input[type=button]:active {
   border-radius: 0.4em;
   border-style: dashed;
+}
+
+input[type=button]:disabled  {
+  border-radius: 0.25em; /* same as non-active button */
+  color: var(--light-assistant-button-disabled);
+  border: 1px solid var(--light-assistant-button-disabled-border);
+  background-color: var(--light-assistant-button-disabled-background);
+  cursor: auto;
 }

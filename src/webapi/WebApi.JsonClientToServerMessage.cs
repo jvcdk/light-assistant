@@ -7,6 +7,7 @@ internal partial class WebApi
     public class JsonClientToServerMessage
     {
         public JsonDeviceConfigurationChange? DeviceConfigurationChange { get; set; }
+        public bool RequestOpenNetwork { get; set; }
     }
 
     public class JsonDeviceConfigurationChange

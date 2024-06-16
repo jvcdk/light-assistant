@@ -81,11 +81,26 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
 
             if(msg.DeviceConfigurationChange != null)
                 await HandleDeviceConfigurationChange(msg.DeviceConfigurationChange);
+            if(msg.RequestOpenNetwork)
+                await HandleOpenNetworkRequest();
         }
         catch(Exception ex) {
             _consoleOutput.ErrorLine("Could not parse message from client. Error message: " + ex);
             return;
         }
+    }
+
+    private async Task HandleOpenNetworkRequest()
+    {
+        Debug.Assert(AppController != null);
+        await AppController.RequestOpenNetwork();
+    }
+
+    public async void NetworkOpenStatusChanged(bool status, int time)
+    {
+        var response = JsonServerToClientMessage.Empty()
+            .WithOpenNetworkStatus(status, time);
+        await SendMessageToAllClients(response);
     }
 
     private async Task HandleDeviceConfigurationChange(JsonDeviceConfigurationChange ev)
@@ -113,8 +128,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         ).ToList();
         response.WithDeviceRouting(device.Address, routes);
 
-        foreach(var inner in ActiveContexts)
-            await SendMessage(inner, response);
+        await SendMessageToAllClients(response);
     }
 
     private async Task DeviceListUpdated(IWebSocketContext? context)
@@ -163,5 +177,11 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         var message = JsonServerToClientMessage.Empty().WithDeviceStatus(address, deviceStatus);
         foreach(var context in ActiveContexts)
             await SendMessage(context, message);
+    }
+
+    private async Task SendMessageToAllClients(JsonServerToClientMessage msg)
+    {
+        foreach (var inner in ActiveContexts)
+            await SendMessage(inner, msg);
     }
 }

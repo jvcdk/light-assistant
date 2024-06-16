@@ -55,7 +55,7 @@ public static class MainApp {
             var zigbeeConnection = new ZigbeeConnection(consoleOutput, config.MqttHost, config.MqttPort, APP_NAME);
             var mqttClient = new Zigbee2MqttClient(zigbeeConnection, consoleOutput);
             var guiApp = new WebApi.WebApi(consoleOutput, config.WebApiHostAddress, config.WebApiPort);
-            var controller = new Controller.Controller(consoleOutput, mqttClient, guiApp, config.DataPath);
+            var controller = new Controller.Controller(consoleOutput, mqttClient, guiApp, config.DataPath, config.OpenNetworkTimeSeconds);
             await zigbeeConnection.ConnectAsync();
             await controller.Run();
         }

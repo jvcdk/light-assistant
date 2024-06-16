@@ -10,6 +10,7 @@ internal class Config
     public string WebApiHostAddress { get; set; } = "*";
     public int WebApiPort { get; set; } = 8081;
     public string DataPath { get; set; } = "light-assistant-data.json";
+    public int OpenNetworkTimeSeconds { get; set; } = 30;
 
     public Config() { }
 

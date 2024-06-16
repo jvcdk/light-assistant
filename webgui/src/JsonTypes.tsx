@@ -6,6 +6,7 @@ export interface IServerToClientMessage {
   DeviceStatus: IDeviceStatus | undefined;
   Routing: IDeviceRouting;
   RoutingOptions: IDeviceRoutingOptions | undefined;
+  OpenNetworkStatus : IOpenNetworkStatus | undefined;
 }
 
 
@@ -75,6 +76,14 @@ export interface IDeviceProvidedEvent {
 }
 
 /**
+ * Should match JsonOpenNetworkStatus
+ */
+export interface IOpenNetworkStatus {
+  Status: boolean;
+  Time: number;
+}
+
+/**
  * Should match JsonDeviceConfigurationChange
  */
 export class DeviceConfigurationChange {
@@ -94,4 +103,5 @@ export class DeviceConfigurationChange {
  */
 export class ClientToServerMessage {
   DeviceConfigurationChange: DeviceConfigurationChange | undefined;
+  RequestOpenNetwork: boolean = false;
 }

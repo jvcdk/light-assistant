@@ -11,6 +11,7 @@ internal partial class Controller : IController
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
     private readonly string _dataPath;
+    private readonly int _openNetworkTimeSeconds;
 
     // Protected data
     private readonly Dictionary<IDevice, DeviceInfo> _devices = [];
@@ -18,17 +19,19 @@ internal partial class Controller : IController
     private readonly Dictionary<string, List<EventRoute>> _routes = [];
     private readonly SlimReadWriteLock _routesLock = new();
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBus deviceBus, IUserInterface guiApp, string dataPath)
+    public Controller(IConsoleOutput consoleOutput, IDeviceBus deviceBus, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
     {
         _consoleOutput = consoleOutput;
         _deviceBus = deviceBus;
         _guiApp = guiApp;
         _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
         _dataPath = dataPath;
+        _openNetworkTimeSeconds = openNetworkTimeSeconds;
 
         _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
         _deviceBus.DeviceUpdated += HandleDeviceUpdated;
         _deviceBus.DeviceAction += HandleDeviceAction;
+        _deviceBus.NetworkOpenStatus += _guiApp.NetworkOpenStatusChanged;
         _guiApp.AppController = this;
 
         LoadData();
@@ -290,5 +293,10 @@ internal partial class Controller : IController
     {
         if(name != device.Name)
             await _deviceBus.SetDeviceName(device.Address, name);
+    }
+
+    public async Task RequestOpenNetwork()
+    {
+        await _deviceBus.RequestOpenNetwork(_openNetworkTimeSeconds);
     }
 }

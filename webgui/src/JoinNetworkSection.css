@@ -1,0 +1,15 @@
+.JoinNetwork {
+    margin-top: 1rem;
+    border-left: 2px solid var(--light-assistant-border);
+    border-top: 2px solid var(--light-assistant-border);
+    padding: 1rem;
+    display: inline-block;
+}
+
+.JoinNetwork .Label {
+    padding-right: 0.25em;
+}
+
+.JoinNetwork input {
+    background-color: var(--light-assistant-button-ok);
+}

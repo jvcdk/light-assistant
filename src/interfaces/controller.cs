@@ -9,5 +9,6 @@ namespace LightAssistant.Interfaces
         Task SetDeviceName(IDevice device, string name);
         IRoutingOptions? GetRoutingOptionsFor(IDevice device);
         bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status);
+        Task RequestOpenNetwork();
     }
 }

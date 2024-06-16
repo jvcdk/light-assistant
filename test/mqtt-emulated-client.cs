@@ -8,6 +8,7 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
     public event Action<IDevice> DeviceDiscovered = delegate { };
     public event Action<IDevice, Dictionary<string, string>> DeviceAction = delegate { };
     public event Action<IDevice> DeviceUpdated  = delegate { };
+    public event Action<bool, int> NetworkOpenStatus = delegate { };
 
     public MqttEmulatedClient()
     {
@@ -105,6 +106,11 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
     }
 
     public Task SetDeviceName(string address, string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task RequestOpenNetwork(int openNetworkTimeSeconds)
     {
         throw new NotImplementedException();
     }

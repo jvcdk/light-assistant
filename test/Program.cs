@@ -14,7 +14,7 @@ public static class OfflineApp {
             var consoleOutput = new ConsoleOutput() { Verbose = true };
             var mqttClient = new MqttEmulatedClient();
             var guiApp = new WebApi(consoleOutput, defaultConfig.WebApiHostAddress, defaultConfig.WebApiPort);
-            var controller = new Controller(consoleOutput, mqttClient, guiApp, defaultConfig.DataPath);
+            var controller = new Controller(consoleOutput, mqttClient, guiApp, defaultConfig.DataPath, defaultConfig.OpenNetworkTimeSeconds);
             controller.Run().Wait();
             return result;
         }

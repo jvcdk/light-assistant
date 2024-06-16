@@ -9,9 +9,10 @@ internal partial class Zigbee2MqttClient : IDeviceBus
 {
     private const string BASE_TOPIC = "zigbee2mqtt";
 
-    public event Action<IDevice> DeviceDiscovered = (device) => { };
-    public event Action<IDevice> DeviceUpdated = (device) => { };
-    public event Action<IDevice, Dictionary<string, string>> DeviceAction = (device, action) => { };
+    public event Action<IDevice> DeviceDiscovered = delegate { };
+    public event Action<IDevice> DeviceUpdated = delegate { };
+    public event Action<IDevice, Dictionary<string, string>> DeviceAction = delegate { };
+    public event Action<bool, int> NetworkOpenStatus = delegate { };
 
     private readonly IConsoleOutput _consoleOutput;
     private readonly ZigbeeConnection _connection;
@@ -144,9 +145,47 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             case "device":
                 HandleBridgeResponseDeviceMessage(additionalCommands, parsedMessage);
                 return;
+            
+            case "permit_join":
+                HandleBridgeResponsePermitJoinMessage(additionalCommands, parsedMessage);
+                return;
+
         }
 
         _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commands)}' => '{message}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
+    }
+
+    private void HandleBridgeResponsePermitJoinMessage(List<string> additionalCommands, GenericMqttResponse parsedMessage)
+    {
+        if(parsedMessage.Status != "ok") {
+            _consoleOutput.ErrorLine("Permit Join request failed.");
+            return;
+        }
+
+        if(!parsedMessage.Data.TryGetValue("value", out var valueStr)) {
+            _consoleOutput.ErrorLine("Permit Join request did not contain a 'value' parameter.");
+            return;
+        }
+
+        if(!bool.TryParse(valueStr, out var value)) {
+            _consoleOutput.ErrorLine("Permit Join request did not have a valid 'value' parameter.");
+            return;
+        }
+
+        int time = 0;
+        if(value) {
+            if(!parsedMessage.Data.TryGetValue("time", out var timeStr)) {
+                _consoleOutput.ErrorLine("Permit Join request did not contain a 'time' parameter.");
+                return;
+            }
+
+            if(!int.TryParse(timeStr, out time)) {
+                _consoleOutput.ErrorLine("Permit Join request did not have a valid 'time' parameter.");
+                return;
+            }
+        }
+
+        NetworkOpenStatus(value, time);
     }
 
     private void HandleBridgeResponseDeviceMessage(List<string> commands, GenericMqttResponse parsedMessage)
@@ -208,10 +247,21 @@ internal partial class Zigbee2MqttClient : IDeviceBus
 
     public async Task SetDeviceName(string address, string name)
     {
-        var data = new Dictionary<string, string>();
-        data["from"] = address;
-        data["to"] = name;
+        var data = new Dictionary<string, string> {
+            ["from"] = address,
+            ["to"] = name
+        };
         var message = JsonConvert.SerializeObject(data);
         await _connection.Publish($"{BASE_TOPIC}/bridge/request/device/rename", message);
+    }
+
+    public async Task RequestOpenNetwork(int openNetworkTimeSeconds)
+    {
+        var data = new Dictionary<string, string> {
+            ["value"] = "true",
+            ["time"] = $"{openNetworkTimeSeconds}"
+        };
+        var message = JsonConvert.SerializeObject(data);
+        await _connection.Publish($"{BASE_TOPIC}/bridge/request/permit_join", message);
     }
 }
