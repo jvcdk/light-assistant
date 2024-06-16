@@ -3,8 +3,8 @@
  */
 export interface IServerToClientMessage {
   Devices: IDevice[];
-  Status: IDeviceStatus | undefined;
-  Routing: IDeviceRoute[];
+  DeviceStatus: IDeviceStatus | undefined;
+  Routing: IDeviceRouting;
   RoutingOptions: IDeviceRoutingOptions | undefined;
 }
 

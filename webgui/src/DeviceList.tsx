@@ -3,12 +3,12 @@ import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device } from "./Device";
-import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from './JsonTypes';
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IServerToClientMessage } from './JsonTypes';
 import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, PopUp_DeviceConfiguration, GetTargetFunctionalityOptionsType } from './Popup_DeviceConfiguration';
 import { DeviceData, FindDeviceDataType } from './DeviceData';
 
 export function DeviceList() {
-  const { sendMessage, lastMessage } = useWebSocketContext();
+  const { sendJsonMessage, lastJsonMessage } = useWebSocketContext();
   const [_deviceData, setDeviceData] = useState<DeviceData[]>([]);
   const deviceData = useRef(_deviceData);
 
@@ -94,24 +94,23 @@ export function DeviceList() {
         devData.RoutingOptions = deviceRoutingOptions;
     }
 
-    if (lastMessage == undefined)
+    if (lastJsonMessage == undefined)
       return
 
     try {
-      const data = JSON.parse(lastMessage.data)
-      if (data["Devices"])
-        handleDeviceList(data["Devices"]);
-      if (data["DeviceStatus"])
-        handleDeviceStatus(data["DeviceStatus"]);
-      if (data["Routing"])
-        handleDeviceRouting(data["Routing"]);
-      if(data["RoutingOptions"])
-        handleDeviceRoutingOptions(data["RoutingOptions"]);
+      const message = lastJsonMessage as IServerToClientMessage;
+      if (message.Devices)
+        handleDeviceList(message.Devices);
+      if (message.DeviceStatus)
+        handleDeviceStatus(message.DeviceStatus);
+      if (message.Routing)
+        handleDeviceRouting(message.Routing);
+      if(message.RoutingOptions)
+        handleDeviceRoutingOptions(message.RoutingOptions);
     } catch (error) {
-      console.log(`Error: Could not parse data '${lastMessage.data}'`)
       console.log(`Error message: ${error}`)
     }
-  }, [FindDeviceData, lastMessage]);
+  }, [FindDeviceData, lastJsonMessage]);
 
   const cb = {
     GetTargetRoutingOptions: GetRoutingOptions,
@@ -127,7 +126,7 @@ export function DeviceList() {
     const device = devData.Device;
     const msg = new ClientToServerMessage();
     msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, devData.Routing);
-    sendMessage(JSON.stringify(msg));
+    sendJsonMessage(msg);
   }
 
   return (

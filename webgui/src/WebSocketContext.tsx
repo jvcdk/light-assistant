@@ -1,11 +1,12 @@
 // WebSocketContext.tsx
 import React, { createContext, useContext } from 'react';
 import useWebSocket from 'react-use-websocket';
+import { SendJsonMessage } from 'react-use-websocket/dist/lib/types';
 
 // Define the context type
 interface WebSocketContextType {
-  sendMessage: (message: string | ArrayBufferLike | Blob | ArrayBufferView) => void;
-  lastMessage: MessageEvent | null;
+  sendJsonMessage: SendJsonMessage;
+  lastJsonMessage: unknown;
   readyState: WebSocket['readyState'];
 }
 
@@ -18,12 +19,12 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
-  const { sendMessage, lastMessage, readyState } = useWebSocket('ws://' + location.hostname + ':8081', {
+  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket('ws://' + location.hostname + ':8081', {
     shouldReconnect: () => true,
   });
 
   // The value provided to the context consumers
-  const value = { sendMessage, lastMessage, readyState };
+  const value = { sendJsonMessage, lastJsonMessage, readyState };
 
   return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
 };
