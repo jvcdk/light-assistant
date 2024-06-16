@@ -6,7 +6,7 @@ namespace LightAssistant.WebApi;
 
 internal partial class WebApi
 {
-    public class JsonEgressMessage
+    public class JsonServerToClientMessage
     {
         internal byte[] Serialize() => UTF8.GetBytes(JsonConvert.SerializeObject(this));
 
@@ -15,22 +15,27 @@ internal partial class WebApi
         public JsonDeviceRouting? Routing { get; private set; }
         public JsonDeviceRoutingOptions? RoutingOptions { get; private set; }
 
-        internal static JsonEgressMessage CreateDeviceList(IReadOnlyList<IDevice> devices) =>
-            new() {
-                Devices = devices.Select(JsonDevice.FromIDevice).ToList()
-            };
+        internal static JsonServerToClientMessage Empty() => new();
 
-        internal void AddDeviceStatus(string address, IDeviceStatus status) => 
+        internal JsonServerToClientMessage WithDeviceList(IReadOnlyList<IDevice> devices) {
+            Devices = devices.Select(JsonDevice.FromIDevice).ToList();
+            return this;
+        }
+
+        internal JsonServerToClientMessage WithDeviceStatus(string address, IDeviceStatus status) {
             DeviceStatus = new JsonDeviceStatus(address, status);
+            return this;
+        }
 
-        internal void AddDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing) => 
+        internal JsonServerToClientMessage WithDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing) {
             Routing = new JsonDeviceRouting(address, routing);
+            return this;
+        }
 
-        internal void AddDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) => 
+        internal JsonServerToClientMessage WithDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) {
             RoutingOptions = new JsonDeviceRoutingOptions(address, providedEvents, consumableEvents);
-
-        internal static JsonEgressMessage CreateDeviceStatus(string address, IDeviceStatus deviceStatus) => 
-            new() { DeviceStatus = new JsonDeviceStatus(address, deviceStatus)};
+            return this;
+        } 
     }
 
     /// <summary>

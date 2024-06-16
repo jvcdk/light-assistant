@@ -4,8 +4,7 @@ namespace LightAssistant.WebApi;
 
 internal partial class WebApi
 {
-    // TODO JVC: Align with tsx code
-    public class JsonIngressMessage
+    public class JsonClientToServerMessage
     {
         public JsonDeviceConfigurationChange? DeviceConfigurationChange { get; set; }
     }
@@ -19,9 +18,9 @@ internal partial class WebApi
 
     public static class JsonIngressMessageParser
     {
-        public static JsonIngressMessage? ParseMessage(string msg)
+        public static JsonClientToServerMessage? ParseMessage(string msg)
         {
-            return JsonConvert.DeserializeObject<JsonIngressMessage>(msg);
+            return JsonConvert.DeserializeObject<JsonClientToServerMessage>(msg);
         }
     }
 }

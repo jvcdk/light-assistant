@@ -59,7 +59,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         return DeviceListUpdated(context);
     }
 
-    private static async Task SendMessage(IWebSocketContext context, JsonEgressMessage msg)
+    private static async Task SendMessage(IWebSocketContext context, JsonServerToClientMessage msg)
     {
         await context.WebSocket.SendAsync(msg.Serialize(), true);
     }
@@ -107,11 +107,11 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         if(AppController == null)
             return;
 
-        var response = new JsonEgressMessage();
+        var response = new JsonServerToClientMessage();
         var routes = AppController.GetRoutingFor(device).Select(route =>
             new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
         ).ToList();
-        response.AddDeviceRouting(device.Address, routes);
+        response.WithDeviceRouting(device.Address, routes);
 
         foreach(var inner in ActiveContexts)
             await SendMessage(inner, response);
@@ -125,26 +125,26 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         var contexts = context != null ? EnumerableExt.Wrap(context) : ActiveContexts;
 
         var devices = AppController.GetDeviceList();
-        var response = JsonEgressMessage.CreateDeviceList(devices);
+        var response = JsonServerToClientMessage.Empty().WithDeviceList(devices);
         foreach(var inner in contexts)
             await SendMessage(inner, response);
 
         foreach(var device in devices) {
             if(AppController.TryGetDeviceStatus(device, out var status)) {
                 Debug.Assert(status != null);
-                response = new JsonEgressMessage();
-                response.AddDeviceStatus(device.Address, status);
+                response = JsonServerToClientMessage.Empty()
+                    .WithDeviceStatus(device.Address, status);
 
                 var routes = AppController.GetRoutingFor(device).Select(route =>
                     new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
                 ).ToList();
-                response.AddDeviceRouting(device.Address, routes);
+                response = response.WithDeviceRouting(device.Address, routes);
 
                 var routingOptions = AppController.GetRoutingOptionsFor(device);
                 if(routingOptions != null) {
                     var jsonConsumableEvents = routingOptions.ConsumedEvents.Select(ev => new JsonDeviceConsumableEvent(ev.Type, ev.Functionality)).ToList(); 
                     var jsonProvidedEvents = routingOptions.ProvidedEvents.Select(ev => new JsonDeviceProvidedEvent(ev.Type, ev.Name)).ToList();
-                    response.AddDeviceRoutingOptions(device.Address, jsonProvidedEvents, jsonConsumableEvents);
+                    response = response.WithDeviceRoutingOptions(device.Address, jsonProvidedEvents, jsonConsumableEvents);
                 }
 
                 foreach(var inner in contexts)
@@ -160,7 +160,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         if(AppController == null)
             return;
         
-        var message = JsonEgressMessage.CreateDeviceStatus(address, deviceStatus);
+        var message = JsonServerToClientMessage.Empty().WithDeviceStatus(address, deviceStatus);
         foreach(var context in ActiveContexts)
             await SendMessage(context, message);
     }

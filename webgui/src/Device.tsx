@@ -1,5 +1,6 @@
 import './Device.css'
-import { IDeviceRoute, IDevice } from './JsonTypes';
+import { DeviceData, FindDeviceDataType } from './DeviceData';
+import { IDeviceRoute } from './JsonTypes';
 
 function DeviceBattery(prop: { battery: number | undefined })
 {
@@ -41,15 +42,15 @@ function DeviceOnState(prop: { onState: boolean | undefined })
     )
 }
 
-function Route(route: IDeviceRoute, idx: number, findDevice: (address: string) => IDevice | undefined)
+function Route(route: IDeviceRoute, idx: number, findDevice: FindDeviceDataType)
 {
-  const targetName = findDevice(route.TargetAddress)?.Name || route.TargetAddress;
+  const targetName = findDevice(route.TargetAddress)?.Device.Name || route.TargetAddress;
   return (
     <div key={idx} className='Route'>{route.SourceEvent} -&gt; {targetName}:{route.TargetFunctionality}</div>
   )
 }
 
-function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: (address: string) => IDevice | undefined })
+function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceDataType })
 {
   const routing = prop.routing || [];
     return (
@@ -59,9 +60,10 @@ function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: (address: st
     )
 }
 
-export function Device(device: IDevice, openPopup: () => void, findDevice: (address: string) => IDevice | undefined) {
-  const status = device.Status;
-  const routing = device.Routing;
+export function Device(devData: DeviceData, openPopup: () => void, findDevice: FindDeviceDataType) {
+  const device = devData.Device;
+  const status = devData.Status;
+  const routing = devData.Routing;
   return (
     <div onClick={openPopup} className='Device' key={device.Address}>
       <div className='NameAddress'>

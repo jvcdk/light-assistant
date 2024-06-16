@@ -1,7 +1,17 @@
 /**
+ * Should match JsonServerToClientMessage
+ */
+export interface IServerToClientMessage {
+  Devices: IDevice[];
+  Status: IDeviceStatus | undefined;
+  Routing: IDeviceRoute[];
+  RoutingOptions: IDeviceRoutingOptions | undefined;
+}
+
+
+/**
  * Should match JsonDevice
  */
-// TODO JVC: Refactor this; split it out. It should be renamed to ClientToHost message. Or IngressEvent. Or something.
 export interface IDevice {
   Name: string;
   Address: string;
@@ -9,15 +19,6 @@ export interface IDevice {
   Model: string;
   Description: string;
   BatteryPowered: boolean;
-
-  /**
-   * Additional device info that is sent seperately (not part of JsonDevice)
-   * but sent in their own message types and attached client side to this
-   * device object.
-   */
-  Status: IDeviceStatus | undefined;
-  Routing: IDeviceRoute[];
-  RoutingOptions: IDeviceRoutingOptions | undefined;
 }
 
 /**

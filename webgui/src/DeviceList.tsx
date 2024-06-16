@@ -5,96 +5,93 @@ import { useWebSocketContext } from "./WebSocketContext";
 import { Device } from "./Device";
 import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus } from './JsonTypes';
 import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, PopUp_DeviceConfiguration, GetTargetFunctionalityOptionsType } from './Popup_DeviceConfiguration';
+import { DeviceData, FindDeviceDataType } from './DeviceData';
 
 export function DeviceList() {
   const { sendMessage, lastMessage } = useWebSocketContext();
-  const [_devices, setDevices] = useState<IDevice[]>([]);
-  const devices = useRef(_devices);
+  const [_deviceData, setDeviceData] = useState<DeviceData[]>([]);
+  const deviceData = useRef(_deviceData);
 
-  const [selectedDevice, setSelectedDevice] = useState<IDevice | null>(null);
+  const [selectedDeviceData, setSelectedDeviceData] = useState<DeviceData | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
 
-  const openPopup = (device: IDevice) => {
-    setSelectedDevice(device);
+  const openPopup = (device: DeviceData) => {
+    setSelectedDeviceData(device);
     setPopupOpen(true);
   }
   const closeModal = () => setPopupOpen(false);
 
-  type FindDeviceType = (address: string, issueWarningNotFound?: boolean) => IDevice | undefined;
-  const FindDevice: FindDeviceType = useCallback((address: string, issueWarningNotFound: boolean = true): IDevice | undefined => {
-    const result = devices.current.find(device => device.Address === address);
+  const FindDeviceData: FindDeviceDataType = useCallback((address: string, issueWarningNotFound: boolean = true): DeviceData | undefined => {
+    const result = deviceData.current.find(entry => entry.Device.Address === address);
     if(result == undefined && issueWarningNotFound)
       console.log(`Warning: Searched for device ${address} but did not find it.`)
 
     return result;
-  }, [devices]);
+  }, [deviceData]);
 
   const GetRoutingOptions: GetTargetRoutingOptionsType = useCallback((eventType: string | undefined) : string[] | undefined => {
     if(eventType == undefined)
       return undefined;
 
-    const eligibleDevices = _devices.filter(dev => dev.RoutingOptions?.ConsumableEvents.some(ev => ev.EventType == eventType));
-    return eligibleDevices.map(dev => dev.Address);
-  }, [_devices]);
+    const eligibleDevices = _deviceData.filter(entry => entry.RoutingOptions?.ConsumableEvents.some(ev => ev.EventType == eventType));
+    return eligibleDevices.map(entry => entry.Device.Address);
+  }, [_deviceData]);
 
   const GetTargetFunctionalityOptions: GetTargetFunctionalityOptionsType = useCallback((eventType: string | undefined, targetAddress: string | undefined) => {
     const paramsOk = targetAddress && eventType;
     if(!paramsOk)
       return undefined;
 
-    const device = FindDevice(targetAddress);
-    if(device == undefined)
+    const devData = FindDeviceData(targetAddress);
+    if(devData == undefined)
       return undefined;
 
-    const consumableEvents = device.RoutingOptions?.ConsumableEvents;
+    const consumableEvents = devData.RoutingOptions?.ConsumableEvents;
     if(consumableEvents == undefined)
       return undefined;
 
     return consumableEvents.filter(ev => ev.EventType == eventType).map(ev => ev.TargetName);
-  }, [FindDevice]);
+  }, [FindDeviceData]);
 
   const TargetAddressToName: TargetAddressToNameType = useCallback((targetName: string) => {
-    let device = null;
+    let devData = null;
     if(targetName)
-      device = FindDevice(targetName);
+      devData = FindDeviceData(targetName);
 
-    return device?.Name || "<unknown>";
-  }, [FindDevice]);
+    return devData?.Device.Name || "<unknown>";
+  }, [FindDeviceData]);
 
   useEffect(() => {
     function handleDeviceStatus(deviceStatus: IDeviceStatus) {
-      const device = FindDevice(deviceStatus.Address);
-      if (device)
-        device.Status = deviceStatus;
+      const devData = FindDeviceData(deviceStatus.Address);
+      if (devData)
+        devData.Status = deviceStatus;
     }
 
     function handleDeviceRouting(deviceRouting: IDeviceRouting) {
-      const device = FindDevice(deviceRouting.Address);
-      if (device)
-        device.Routing = deviceRouting.Routing || [];
+      const devData = FindDeviceData(deviceRouting.Address);
+      if (devData)
+        devData.Routing = deviceRouting.Routing || [];
     }
 
     function handleDeviceList(deviceList: IDevice[]) {
-      CopyAdditionalDevInfoFromExistingDevices();
-      devices.current = deviceList;
-      setDevices(devices.current);
-
-      function CopyAdditionalDevInfoFromExistingDevices() {
-        deviceList.forEach(newDevice => {
-          const existingDevice = FindDevice(newDevice.Address, false);
-          if (existingDevice) {
-            newDevice.Status = existingDevice.Status;
-            newDevice.Routing = existingDevice.Routing;
-            newDevice.RoutingOptions = existingDevice.RoutingOptions;
-          }
-        });
-      }
+      deviceData.current = deviceList.map(entry => {
+        let result = FindDeviceData(entry.Address, false);
+        if(result) {
+          result.Device = entry;
+        }
+        else {
+          result = new DeviceData(entry);
+        }
+        return result;
+      });
+      setDeviceData(deviceData.current);
     }
 
     function handleDeviceRoutingOptions(deviceRoutingOptions: IDeviceRoutingOptions) {
-      const device = FindDevice(deviceRoutingOptions.Address);
-      if (device)
-        device.RoutingOptions = deviceRoutingOptions;
+      const devData = FindDeviceData(deviceRoutingOptions.Address);
+      if (devData)
+        devData.RoutingOptions = deviceRoutingOptions;
     }
 
     if (lastMessage == undefined)
@@ -114,7 +111,7 @@ export function DeviceList() {
       console.log(`Error: Could not parse data '${lastMessage.data}'`)
       console.log(`Error message: ${error}`)
     }
-  }, [FindDevice, lastMessage]);
+  }, [FindDeviceData, lastMessage]);
 
   const cb = {
     GetTargetRoutingOptions: GetRoutingOptions,
@@ -122,13 +119,14 @@ export function DeviceList() {
     TargetAddressToName: TargetAddressToName,
   } as IRoutingOptionsCallbacks;
 
-  function OnDeviceConfigurationUpdate(device: IDevice | null) {
+  function OnDeviceConfigurationUpdate(devData: DeviceData | null) {
     setPopupOpen(false);
-    if(device == null)
+    if(devData == null)
       return;
 
+    const device = devData.Device;
     const msg = new ClientToServerMessage();
-    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, device.Routing);
+    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, devData.Routing);
     sendMessage(JSON.stringify(msg));
   }
 
@@ -141,9 +139,9 @@ export function DeviceList() {
         <div className='Status'>Status</div>
         <div className='Routing'>Routing</div>
       </div>
-      {devices.current.map(device => Device(device, () => openPopup(device), FindDevice))}
+      {deviceData.current.map(device => Device(device, () => openPopup(device), FindDeviceData))}
       <Popup open={popupOpen} onClose={closeModal} modal closeOnDocumentClick={false}>
-        <PopUp_DeviceConfiguration device={selectedDevice} cb={cb} cbOnClose={OnDeviceConfigurationUpdate} /> 
+        <PopUp_DeviceConfiguration devData={selectedDeviceData} cb={cb} cbOnClose={OnDeviceConfigurationUpdate} /> 
       </Popup>
     </div>
   );

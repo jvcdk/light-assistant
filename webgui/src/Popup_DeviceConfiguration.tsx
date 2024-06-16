@@ -3,9 +3,10 @@ import SvgRouteEntry from './image/route_entry.svg';
 import SvgRouteColon from './image/route_colon.svg';
 import SvgRouteMapsTo from './image/route_maps_to.svg';
 
-import { IDevice, IDeviceProvidedEvent, IDeviceRoute } from './JsonTypes';
+import { IDeviceProvidedEvent, IDeviceRoute } from './JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
+import { DeviceData } from './DeviceData';
 
 interface IDeviceRouteWithKey extends IDeviceRoute {
   key: number;
@@ -108,11 +109,11 @@ function CreateEmptyRoutingWithKey() : IDeviceRouteWithKey {
   } as IDeviceRouteWithKey;
 }
 
-function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks, setDeviceRoute: (route: IDeviceRoute[]) => void }) {
-  const device = prop.device;
-  const routingOptions = device.RoutingOptions;
+function RoutingOptions(prop: {devData: DeviceData, cb: IRoutingOptionsCallbacks, setDeviceRoute: (route: IDeviceRoute[]) => void }) {
+  const devData = prop.devData;
+  const routingOptions = devData.RoutingOptions;
 
-  const routingWithKey = device.Routing.map(route => { return {
+  const routingWithKey = devData.Routing.map(route => { return {
     ...route,
     key: routingKey++,
   } as IDeviceRouteWithKey})
@@ -154,24 +155,25 @@ function RoutingOptions(prop: {device: IDevice, cb: IRoutingOptionsCallbacks, se
   );
 }
 
-export type CloseDeviceConfigurationType = (device: IDevice | null) => void;
-export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRoutingOptionsCallbacks, cbOnClose: CloseDeviceConfigurationType}) {
-  const [device, setDevice] = useState<IDevice|null>(null);
+export type CloseDeviceConfigurationType = (devData: DeviceData | null) => void;
+export function PopUp_DeviceConfiguration(prop: {devData: DeviceData | null, cb: IRoutingOptionsCallbacks, cbOnClose: CloseDeviceConfigurationType}) {
+  const [devData, setDevData] = useState<DeviceData|null>(null);
 
   useEffect(() => {
-    setDevice(cloneDeep(prop.device));
-  }, [prop.device]);
+    setDevData(cloneDeep(prop.devData));
+  }, [prop.devData]);
 
   function UpdateDeviceRoute(route: IDeviceRoute[]) {
-    setDevice({
-      ...device,
+    setDevData({
+      ...devData,
       Routing: route,
-    } as IDevice);
+    } as DeviceData);
   }
 
-  if(device === null)
+  if(devData === null)
     return (<div>Error: No device selected.</div>);
 
+  const device = devData.Device;
   return (
     <div className='Popup_DeviceConfiguration'>
       <div className='Title'>{device.Vendor} / {device.Model} – {device.Description}</div>
@@ -181,11 +183,11 @@ export function PopUp_DeviceConfiguration(prop: {device: IDevice | null, cb: IRo
         <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
         <div className='Routing'>
           <label className='Label'>Routing:</label>
-          <RoutingOptions device={device} cb={prop.cb} setDeviceRoute={UpdateDeviceRoute} />
+          <RoutingOptions devData={devData} cb={prop.cb} setDeviceRoute={UpdateDeviceRoute} />
         </div>
       <div className='Buttons'>
         <input className='Cancel' type='button' onClick={() => prop.cbOnClose(null)} value="Cancel" />
-        <input className='Ok' type='button' onClick={() => prop.cbOnClose(device)} value="Apply" />
+        <input className='Ok' type='button' onClick={() => prop.cbOnClose(devData)} value="Apply" />
       </div>
       </div>
     </div>
