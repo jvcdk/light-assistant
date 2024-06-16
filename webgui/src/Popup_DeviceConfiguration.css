@@ -63,16 +63,6 @@
     padding-bottom: 0.25em;
 }
 
-.Popup_DeviceConfiguration .Cancel,
-.Popup_DeviceConfiguration .Ok {
-    color: var(--light-assistant-primary);;
-    border: 1px solid var(--light-assistant-primary);
-    padding: 0.25em 0.75em;
-    border-radius: 0.25em;
-    font-size: 100%;
-    cursor: pointer;
-}
-
 .Popup_DeviceConfiguration .Cancel {
     background-color: var(--light-assistant-button-cancel);
     margin-right: 0.5em;
