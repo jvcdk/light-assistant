@@ -15,7 +15,7 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
         Task.Run(() => ThreadMain());
     }
 
-    private void ThreadMain()
+    private async void ThreadMain()
     {
         Thread.Sleep(1000);
         var smartKnob = new Device() {
@@ -45,42 +45,38 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
 
         var rnd = new Random();
         while (!_disposed) {
-            var sleepTime = rnd.Next(900) + 100;
+            var sleepTime = rnd.Next(5000) + 1000;
             Thread.Sleep(sleepTime);
 
-            var action = rnd.Next(3);
+            var action = rnd.Next(2);
             switch (action) {
                 case 0: {
-                    var brightness = rnd.Next(10) * 10;
-                    var state = brightness == 0 ? "OFF" : "ON";
-                    DeviceAction(ledDriver,
-                        new Dictionary<string, string>() {
-                            {"brightness", brightness.ToString()},
-                            {"level_config", "{\"on_level\":\"previous\"}"},
-                            {"state", state}
-                        });
-                    break;
-                }
-                case 1: {
-                    var stepSize = (rnd.Next(5) * 12).ToString();
                     var btnAction = rnd.Next(2) == 0 ? "color_temperature_step_" : "brightness_step_";
                     var direction = rnd.Next(2) == 0? "down" : "up";
-                    var battery = rnd.Next(100).ToString();
-                    var linkquality = rnd.Next(255).ToString();
-                    DeviceAction(smartKnob,
-                        new Dictionary<string, string>() {
-                            {"action", btnAction + direction},
-                            {"action_step_size", stepSize},
-                            {"action_transition_time", "0.01"},
-                            {"battery", battery},
-                            {"linkquality", linkquality},
-                            {"operation_mode", "command"},
-                            {"voltage", "3000"}
-                        });
+                    var nSteps = rnd.Next(3) + 1;
+                    for(var i = 0; i < nSteps; i++) {
+                        var stepSize = ((rnd.Next(2) + 1) * 12).ToString();
+                        var battery = rnd.Next(100).ToString();
+                        var linkquality = rnd.Next(255).ToString();
+
+                        DeviceAction(smartKnob,
+                            new Dictionary<string, string>() {
+                                {"action", btnAction + direction},
+                                {"action_step_size", stepSize},
+                                {"action_transition_time", "0.01"},
+                                {"battery", battery},
+                                {"linkquality", linkquality},
+                                {"operation_mode", "command"},
+                                {"voltage", "3000"}
+                            });
+                        }
+
+                        var wait = rnd.Next(250);
+                        await Task.Delay(wait);
                     break;
                 }
 
-                case 2: {
+                case 1: {
                     var battery = rnd.Next(100).ToString();
                     var linkquality = rnd.Next(255).ToString();
                     DeviceAction(smartKnob,
