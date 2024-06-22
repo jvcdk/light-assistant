@@ -25,20 +25,24 @@ internal partial class Controller
 
     private class InternalEvent_Rotate(string sourceAddress, string eventPath) : InternalEvent(sourceAddress, eventPath)
     {
+        internal int StepSize { get; init; }
+        internal bool IsUp { get; init; } // Else: Down
     }
 
     private class InternalEventSink
     {
         internal readonly Type EventType;
         internal readonly string TargetName;
+        internal readonly Action<InternalEvent> Handler;
 
-        internal InternalEventSink(Type ev, string target)
+        internal InternalEventSink(Type ev, string target, Action<InternalEvent> handler)
         {
             if(!ev.IsSubclassOf(typeof(InternalEvent)))
                 throw new Exception("Invalid Sink type. It should inherit from InternalEvent.");
 
             EventType = ev;
             TargetName = target;
+            Handler = handler;
         }
     }
 

@@ -1,5 +1,5 @@
-using System.Reflection;
 using LightAssistant.Interfaces;
+using LightAssistant.Utils;
 
 namespace LightAssistant.Controller;
 
@@ -21,16 +21,13 @@ internal partial class Controller
                 service.ProcessInternalEvent(ev, targetFunctionality);
         }
 
+        private IEnumerable<DeviceService> EnumerateServices() => this.EnumeratePropertiesOfType<DeviceService>();
+
         internal IEnumerable<InternalEventSink> ConsumedEvents =>
             EnumerateServices().SelectMany(service => service.ConsumedEvents);
 
         internal IEnumerable<InternalEventSource> ProvidedEvents =>
             EnumerateServices().SelectMany(service => service.ProvidedEvents);
-
-        private IEnumerable<DeviceService> EnumerateServices() => GetType()
-                .GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Select(p => p.GetValue(this))
-                .OfType<DeviceService>();
     }
 
     private class EmptyDeviceServiceCollection : DeviceServiceCollection { }

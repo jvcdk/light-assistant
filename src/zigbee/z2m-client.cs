@@ -214,6 +214,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
                 return;
             }
             foreach(var device in devices) {
+                device.SendToBus = SendDataToDevice;
                 IDevice? existingDevice = null;
                 int idx;
                 for(idx = 0; idx < _knownDevices.Count; idx++) {
@@ -241,14 +242,19 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         }
     }
 
+    private async Task SendDataToDevice(string path, Dictionary<string, string> data)
+    {
+        var message = JsonConvert.SerializeObject(data);
+        await _connection.Publish($"{BASE_TOPIC}/{path}", message);
+    }
+
     public async Task SetDeviceName(string address, string name)
     {
         var data = new Dictionary<string, string> {
             ["from"] = address,
             ["to"] = name
         };
-        var message = JsonConvert.SerializeObject(data);
-        await _connection.Publish($"{BASE_TOPIC}/bridge/request/device/rename", message);
+        await SendDataToDevice("bridge/request/device/rename", data);
     }
 
     public async Task RequestOpenNetwork(int openNetworkTimeSeconds)
@@ -257,7 +263,6 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             ["value"] = "true",
             ["time"] = $"{openNetworkTimeSeconds}"
         };
-        var message = JsonConvert.SerializeObject(data);
-        await _connection.Publish($"{BASE_TOPIC}/bridge/request/permit_join", message);
+        await SendDataToDevice("bridge/request/permit_join", data);
     }
 }

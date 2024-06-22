@@ -61,6 +61,23 @@ internal partial class Zigbee2MqttClient
                 Description == other.Description &&
                 BatteryPowered == other.BatteryPowered;
         }
+
+        internal Func<string, Dictionary<string, string>, Task>? SendToBus { get; set; } 
+
+        public void SendBrightnessTransition(int brightness, int transitionTime)
+        {
+            var data = new Dictionary<string, string> {
+                ["transition"] = transitionTime.ToString(), 
+            };
+
+            if(brightness == 0)
+                data["state"] = "OFF";
+            else {
+                data["brightness"] = brightness.ToString();
+                data["state"] = "ON";
+            }
+            SendToBus?.Invoke($"{Address}/set", data);
+        }
     }
 
     public class DeviceDefinition

@@ -1,3 +1,6 @@
+
+using LightAssistant.Interfaces;
+
 namespace LightAssistant.Controller;
 
 internal partial class Controller
@@ -16,18 +19,26 @@ internal partial class Controller
 
         private class TuyaSmartKnob : DeviceServiceCollection
         {
-            internal static DeviceServiceCollection Create() => new TuyaSmartKnob();
+            public TuyaSmartKnob(IDevice device)
+            {
+                AutoModeChange = new(device) {
+                    ModeField = "operation_mode",
+                    FromMode = "event",
+                    ModeChangeCommand = "some command"
+                };
 
-            internal DeviceService.AutoModeChangeService AutoModeChange { get; } = new() {
-                ModeField = "operation_mode",
-                FromMode = "event",
-                ModeChangeCommand = "some command"
-            };
+                Default = new(device,
+                    path: "",
+                    actionPush: "toggle",
+                    actionNormalRotateLeft: "brightness_step_down", actionNormalRotateRight: "brightness_step_up",
+                    actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up");
+            }
 
-            internal DeviceService.SmartKnobService Default { get; } = new(path: "",
-                actionPush: "toggle",
-                actionNormalRotateLeft: "brightness_step_down", actionNormalRotateRight: "brightness_step_up",
-                actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up");
+            internal static DeviceServiceCollection Create(IDevice device) => new TuyaSmartKnob(device);
+
+            internal DeviceService.AutoModeChangeService AutoModeChange { get; }
+
+            internal DeviceService.SmartKnobService Default { get; }
         }
     }
 }

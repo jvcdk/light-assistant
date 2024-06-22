@@ -15,6 +15,8 @@ internal interface IDevice
 {
     bool Equals(IDevice other);
 
+    void SendBrightnessTransition(int brightness, int defaultTransitionTime);
+
     string Name { get; }
     string Address { get; }
     string Vendor { get; }
