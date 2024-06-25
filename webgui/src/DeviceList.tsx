@@ -1,6 +1,6 @@
 import './DeviceList.css'
 import Popup from 'reactjs-popup';
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "./WebSocketContext";
 import { Device } from "./Device";
 import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IServerToClientMessage } from './JsonTypes';
@@ -8,6 +8,7 @@ import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToN
 import { DeviceData, FindDeviceDataType } from './DeviceData';
 
 export function DeviceList() {
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
   const { sendJsonMessage, lastJsonMessage } = useWebSocketContext();
   const [_deviceData, setDeviceData] = useState<DeviceData[]>([]);
   const deviceData = useRef(_deviceData);
@@ -64,14 +65,18 @@ export function DeviceList() {
   useEffect(() => {
     function handleDeviceStatus(deviceStatus: IDeviceStatus) {
       const devData = FindDeviceData(deviceStatus.Address);
-      if (devData)
+      if (devData) {
         devData.Status = deviceStatus;
+        forceUpdate();
+      }
     }
 
     function handleDeviceRouting(deviceRouting: IDeviceRouting) {
       const devData = FindDeviceData(deviceRouting.Address);
-      if (devData)
+      if (devData) {
         devData.Routing = deviceRouting.Routing || [];
+        forceUpdate();
+      }
     }
 
     function handleDeviceList(deviceList: IDevice[]) {
