@@ -49,7 +49,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
                 HandleBridgeMessage(additionalTopics, message);
                 break;
             default:
-                var device = _knownDevices.FirstOrDefault(d => d.Name == deviceName);
+                var device = _knownDevices.FirstOrDefault(d => d.Name == deviceName || d.Address == deviceName);
                 if (device != null)
                     HandleDeviceMessage(device, additionalTopics, message);
                 else
@@ -68,7 +68,8 @@ internal partial class Zigbee2MqttClient : IDeviceBus
 
         Dictionary<string, string>? deviceMessage;
         try {
-            deviceMessage = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
+            var messageObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(message);
+            deviceMessage = messageObj?.ToDictionary(kv => kv.Key, kv => kv.Value.ToString() ?? "");
         }
         catch(Exception ex) {
             _consoleOutput.ErrorLine($"Error: Could not parse device message in {nameof(Zigbee2MqttClient)}. Topics: '{string.Join('/', additionalTopics)}'. Mqtt Message: {message}. Exception: {ex.Message}");
@@ -79,12 +80,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             return;
         }
 
-        if(deviceMessage.ContainsKey("action")) {
-            DeviceAction(device, deviceMessage);
-            return;
-        }
-
-        _consoleOutput.ErrorLine($"Device message. Device: {device.Name}. Topics: '{string.Join('/', additionalTopics)}'. Message: {message}");
+        DeviceAction(device, deviceMessage);
     }
 
     private void HandleBridgeMessage(IReadOnlyList<string> commandPath, string message)
