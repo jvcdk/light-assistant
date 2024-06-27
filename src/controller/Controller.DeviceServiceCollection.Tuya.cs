@@ -31,7 +31,8 @@ internal partial class Controller
                     path: "",
                     actionPush: "toggle",
                     actionNormalRotateLeft: "brightness_step_down", actionNormalRotateRight: "brightness_step_up",
-                    actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up");
+                    actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up",
+                    unitStepSize: 12);
             }
 
             internal static DeviceServiceCollection Create(IDevice device) => new TuyaSmartKnob(device);

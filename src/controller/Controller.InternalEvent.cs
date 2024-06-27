@@ -2,10 +2,10 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract class InternalEvent(string sourceAddress, string eventPath)
+    private abstract class InternalEvent(string sourceAddress, string serviceName)
     {
         public string SourceAddress { get; } = sourceAddress;
-        public string EventPath { get; } = eventPath;
+        public string ServiceName { get; } = serviceName;
 
         public string Type {
             get {
@@ -19,13 +19,13 @@ internal partial class Controller
         }
     }
 
-    private class InternalEvent_Push(string sourceAddress, string eventPath) : InternalEvent(sourceAddress, eventPath)
+    private class InternalEvent_Push(string sourceAddress, string serviceName) : InternalEvent(sourceAddress, serviceName)
     {
     }
 
-    private class InternalEvent_Rotate(string sourceAddress, string eventPath) : InternalEvent(sourceAddress, eventPath)
+    private class InternalEvent_Rotate(string sourceAddress, string serviceName) : InternalEvent(sourceAddress, serviceName)
     {
-        internal int StepSize { get; init; }
+        internal double StepSize { get; init; }
         internal bool IsUp { get; init; } // Else: Down
     }
 

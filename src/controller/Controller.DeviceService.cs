@@ -1,6 +1,4 @@
-using System.Data;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using LightAssistant.Interfaces;
 using LightAssistant.Utils;
 
@@ -78,12 +76,17 @@ internal partial class Controller
 
         internal class DimmableLightService(IDevice device, int maxBrightness) : DeviceService("", device)
         {
-            private const int DefaultTransitionTime = 2; // s
-            private const int DefaultBrightnessStep = 5;
+            private const double FastTransitionTime = 0.25; // s
+            private const double SlowTransitionTime = 1.25; // s
+            private const int LastStepTimeConstantMs = 350;
+            private const int StepSizeScaling = 100;
 
-            private readonly int _maxBrightness = maxBrightness;
-            private int _brightness = 0;
-            private int _lastSteadyStateBrightess = maxBrightness;
+            private readonly int MaxBrightness = maxBrightness;
+            private int Brightness => (int) Math.Round(_brightness * MaxBrightness);
+
+            private double _brightness = 0.0;
+            private double _lastSteadyStateBrightess = 1.0;
+
 
             internal override IEnumerable<InternalEventSink> ConsumedEvents => [
                 new InternalEventSink(typeof(InternalEvent_Push), "ToggleOnOff", HandleToggleOnOff),
@@ -95,16 +98,21 @@ internal partial class Controller
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
 
-                if(IsOn) {
+                var oldBrightness = _brightness;
+                if (IsOn) {
                     _lastSteadyStateBrightess = _brightness;
                     _brightness = 0;
                 }
                 else {
                     _brightness = _lastSteadyStateBrightess;
                 }
-                Device.SendBrightnessTransition(_brightness, DefaultTransitionTime);
+                Device.SendBrightnessTransition(Brightness, CalcTransitionTime(oldBrightness, SlowTransitionTime));
             }
 
+            private double CalcTransitionTime(double oldBrightness, double maxTransitionTime) => Math.Abs(oldBrightness - _brightness) * maxTransitionTime;
+
+            private long _lastRotateEvent = 0;
+            private double _brightnessStep = 0;
             private void HandleDim(InternalEvent ev)
             {
                 if(ev is not InternalEvent_Rotate evRotate) {
@@ -112,17 +120,27 @@ internal partial class Controller
                     return;
                 }
 
+                var lastDirectionUp = _brightnessStep > 0;
+                var isSameDirection = evRotate.IsUp == lastDirectionUp;
+                var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if(isSameDirection) {
+                    var deltaMs = now - _lastRotateEvent;
+                    _brightnessStep *= Math.Exp(-deltaMs / LastStepTimeConstantMs);
+                }
+                else
+                    _brightnessStep = 0;
+                _lastRotateEvent = now;
+
                 if(evRotate.IsUp) {
-                    _brightness += DefaultBrightnessStep;
-                    if(_brightness > _maxBrightness)
-                        _brightness = _maxBrightness;
+                    _brightnessStep += evRotate.StepSize;
+                    _brightness = Math.Min(_brightness + _brightnessStep / StepSizeScaling, 1.0);
                 }
                 else {
-                    _brightness -= DefaultBrightnessStep;
-                    if(_brightness < 0)
-                        _brightness = 0;
+                    _brightnessStep -= evRotate.StepSize;
+                    _brightness = Math.Max(_brightness + _brightnessStep / StepSizeScaling, 0.0);
                 }
-                Device.SendBrightnessTransition(_brightness, DefaultTransitionTime);
+
+                Device.SendBrightnessTransition(Brightness, FastTransitionTime);
             }
 
             private void HandleFade(InternalEvent ev)
@@ -152,8 +170,9 @@ internal partial class Controller
 
         internal class RotateService(string name, IDevice device) : DeviceService(name, device)
         {
-            public string RotateRight { get; set; } = string.Empty;
-            public string RotateLeft { get; set; } = string.Empty;
+            public string RotateRight { get; init; } = string.Empty;
+            public string RotateLeft { get; init; } = string.Empty;
+            public double UnitStepSize { get; init; }
 
             internal override IEnumerable<InternalEventSource> ProvidedEvents => [
                 new InternalEventSource(typeof(InternalEvent_Rotate), Name)
@@ -164,9 +183,10 @@ internal partial class Controller
                 if(!data.TryGetValue(KeywordActionStepSize, out var stepSizeStr))
                     yield break;;
 
-                if(!int.TryParse(stepSizeStr, out var stepSize))
+                if(!int.TryParse(stepSizeStr, out var stepSizeInt))
                     yield break;;
 
+                var stepSize = stepSizeInt / UnitStepSize;
                 if(Match(data, RotateRight))
                     yield return new InternalEvent_Rotate(sourceDevice.Address, Name) {
                         StepSize = stepSize,
@@ -189,11 +209,14 @@ internal partial class Controller
 
         internal class SmartKnobService: DeviceService
         {
-            internal SmartKnobService(IDevice device, string path, string actionPush, string actionNormalRotateLeft, string actionNormalRotateRight, string actionPushedRotateLeft, string actionPushedRotateRight) : base(path, device)
+            internal SmartKnobService(IDevice device, string path, string actionPush, 
+                string actionNormalRotateLeft, string actionNormalRotateRight,
+                string actionPushedRotateLeft, string actionPushedRotateRight,
+                double unitStepSize) : base(path, device)
             {
                 Button = new PushService("Push", device) { Push = actionPush};
-                Normal = new RotateService("Rotate normal", device) { RotateLeft = actionNormalRotateLeft, RotateRight = actionNormalRotateRight };
-                Pushed = new RotateService("Rotate pushed", device) { RotateLeft = actionPushedRotateLeft, RotateRight = actionPushedRotateRight };
+                Normal = new RotateService("Rotate normal", device) { RotateLeft = actionNormalRotateLeft, RotateRight = actionNormalRotateRight, UnitStepSize = unitStepSize };
+                Pushed = new RotateService("Rotate pushed", device) { RotateLeft = actionPushedRotateLeft, RotateRight = actionPushedRotateRight, UnitStepSize = unitStepSize };
             }
 
             public PushService Button { get; private set; }

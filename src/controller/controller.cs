@@ -208,7 +208,7 @@ internal partial class Controller : IController
             if (!_routes.TryGetValue(ev.SourceAddress, out var routes))
                 routes = null;
 
-            return new RouteInternalEvents_Workspace(ev, routes?.Where(route => route.SourceEvent == ev.Type).ToList());
+            return new RouteInternalEvents_Workspace(ev, routes?.Where(route => route.SourceEvent == ev.ServiceName).ToList());
         })
         .Where(el => el.RoutesFromSourceAddress != null && el.RoutesFromSourceAddress.Count > 0)
         .ToList();

@@ -64,7 +64,7 @@ internal partial class Zigbee2MqttClient
 
         internal Func<string, Dictionary<string, string>, Task>? SendToBus { get; set; } 
 
-        public void SendBrightnessTransition(int brightness, int transitionTime)
+        public void SendBrightnessTransition(int brightness, double transitionTime)
         {
             var data = new Dictionary<string, string> {
                 ["transition"] = transitionTime.ToString(), 
