@@ -11,7 +11,8 @@
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": "build"
         },
         {
             "label": "publish",
@@ -22,22 +23,27 @@
                 "${workspaceFolder}/light-assistant.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign",
-                "-r", "linux-x64",
-                "--self-contained", "true"
+                "-r",
+                "linux-x64",
+                "--self-contained",
+                "true"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": "build"
         },
         {
-            "label": "watch",
-            "command": "dotnet",
+            "label": "Run web server",
+            "command": "npm",
             "type": "process",
             "args": [
-                "watch",
                 "run",
-                "--project",
-                "${workspaceFolder}/light-assistant.slnj"
+                "dev"
             ],
-            "problemMatcher": "$msCompile"
+            "options": {
+                "cwd": "${workspaceFolder}/webgui"
+            },
+            "problemMatcher": [],
+            "group": "build"
         }
     ]
 }
