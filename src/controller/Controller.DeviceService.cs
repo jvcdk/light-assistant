@@ -82,10 +82,26 @@ internal partial class Controller
             private const int StepSizeScaling = 100;
 
             private readonly int MaxBrightness = maxBrightness;
-            private int Brightness => (int) Math.Round(_brightness * MaxBrightness);
+            private int Brightness => (int)Math.Round(Math.Pow(_brightness, _gamma) * MaxBrightness);
 
-            private double _brightness = 0.0;
+            private double _brightness = 0.0; // Don't set this directly; use SetPrivateBrightness
             private double _lastSteadyStateBrightess = 1.0;
+
+            private double _gamma = 1; // Range: _gamma > double.Epsilon.
+            internal double Gamma {    // Range: Gamma <= 1.0 || Gamma >= 1.0
+                get {
+                    if(_gamma >= 1.0)
+                        return _gamma;
+                    return -1.0 / _gamma;
+                }
+                set {
+                    var absValue = Math.Max(Math.Abs(value), 1.0);
+                    if(value >= 0)
+                        _gamma = absValue;
+                    else
+                        _gamma = 1.0 / absValue;
+                }
+            }
 
 
             internal override IEnumerable<InternalEventSink> ConsumedEvents => [
@@ -93,6 +109,21 @@ internal partial class Controller
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Dim", HandleDim),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Fade", HandleFade)
             ];
+
+            private void SetPrivateBrightness(double value, bool directionIsUp)
+            {
+                if(directionIsUp) {
+                    _brightness = Math.Min(value, 1.0);
+                    if(Brightness == 0)
+                        _brightness = Math.Pow(1.0 / MaxBrightness, 1.0 / _gamma);
+                }
+                else {
+                    _brightness = Math.Max(value, 0.0);
+                    if(Brightness == 0)
+                        _brightness = 0;
+                }
+
+            }
 
             private void HandleToggleOnOff(InternalEvent ev)
             {
@@ -131,14 +162,12 @@ internal partial class Controller
                     _brightnessStep = 0;
                 _lastRotateEvent = now;
 
-                if(evRotate.IsUp) {
+                if(evRotate.IsUp)
                     _brightnessStep += evRotate.StepSize;
-                    _brightness = Math.Min(_brightness + _brightnessStep / StepSizeScaling, 1.0);
-                }
-                else {
+                else
                     _brightnessStep -= evRotate.StepSize;
-                    _brightness = Math.Max(_brightness + _brightnessStep / StepSizeScaling, 0.0);
-                }
+
+                SetPrivateBrightness(_brightness + _brightnessStep / StepSizeScaling, evRotate.IsUp);
 
                 Device.SendBrightnessTransition(Brightness, FastTransitionTime);
             }
