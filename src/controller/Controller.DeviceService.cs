@@ -87,7 +87,7 @@ internal partial class Controller
             private double _brightness = 0.0; // Don't set this directly; use SetPrivateBrightness
             private double _lastSteadyStateBrightess = 1.0;
 
-            private double _gamma = 1; // Range: _gamma > double.Epsilon.
+            private double _gamma = 10; // Range: _gamma > double.Epsilon. TODO: Make a user interface for configuring gamma.
             internal double Gamma {    // Range: Gamma <= 1.0 || Gamma >= 1.0
                 get {
                     if(_gamma >= 1.0)
