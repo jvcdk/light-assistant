@@ -1,3 +1,4 @@
+using LightAssistant;
 using LightAssistant.Interfaces;
 using static LightAssistant.Zigbee.Zigbee2MqttClient;
 
@@ -10,12 +11,17 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
     public event Action<IDevice> DeviceUpdated  = delegate { };
     public event Action<bool, int> NetworkOpenStatus = delegate { };
 
-    public MqttEmulatedClient()
+    private readonly ConsoleOutput _consoleOutput;
+
+    public MqttEmulatedClient(ConsoleOutput consoleOutput)
     {
-        Task.Run(() => ThreadMain());
+        _consoleOutput = consoleOutput;
+        var thread = new Thread(ThreadMain);
+        thread.Name = "MqttEmulatedClient";
+        thread.Start();
     }
 
-    private async void ThreadMain()
+    private void ThreadMain()
     {
         Thread.Sleep(1000);
         var smartKnob = new Device() {
@@ -28,8 +34,14 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
             },
             PowerSource = "Battery",
         };
+        smartKnob.SendToBus += (deviceId, data) => {
+            _consoleOutput.MessageLine($"TX to Tuya Smart Knob sent data: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+            return Task.CompletedTask;
+        };
         DeviceDiscovered(smartKnob);
+
         Thread.Sleep(100);
+
         var ledDriver = new Device() {
             Name = "Led Driver",
             Address = "0x94deb8fffe6aa0be",
@@ -39,6 +51,10 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
                 Description = "Constant Current Zigbee LED dimmable driver"
             },
             PowerSource = "Mains (single phase)",
+        };
+        ledDriver.SendToBus += (deviceId, data) => {
+            _consoleOutput.MessageLine($"TX to Led Driver sent data: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+            return Task.CompletedTask;
         };
         DeviceDiscovered(ledDriver);
 
@@ -70,9 +86,6 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
                                 {"voltage", "3000"}
                             });
                         }
-
-                        var wait = rnd.Next(250);
-                        await Task.Delay(wait);
                     break;
                 }
 
@@ -95,7 +108,6 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
     }
 
     private bool _disposed;
-
     public void Dispose()
     {
         _disposed = true;
