@@ -7,3 +7,6 @@ bin/
 # Don't commit config and data files
 light-assistant.conf
 light-assistant-data.json
+
+# Release
+build.tar.bz2

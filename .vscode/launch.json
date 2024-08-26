@@ -8,7 +8,7 @@
             "name": "LightAssistant Offline",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build dotnet",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/test/bin/Debug/net8.0/light-assistant-offline",
             "args": [],
@@ -24,7 +24,7 @@
             "name": "LightAssistant Online",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build dotnet",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/test/bin/Debug/net8.0/light-assistant",
             "args": [],

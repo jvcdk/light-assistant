@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build dotnet",
             "command": "dotnet",
             "type": "process",
             "args": [
@@ -15,21 +15,22 @@
             "group": "build"
         },
         {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/light-assistant.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign",
-                "-r",
-                "linux-x64",
-                "--self-contained",
-                "true"
+            "label": "publish all arm",
+            "group": "build",
+            "dependsOn":[
+                "build node webgui",
+                "publish dotnet linux-arm",
             ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
+            "type": "process",
+            "command": "tar",
+            "args": [
+                "cjf", "build.tar.bz2",
+                "--transform", "s,src/bin/Release/net8.0/linux-arm/publish,light-assistant/backend,", "src/bin/Release/net8.0/linux-arm/publish/",
+                "--transform", "s,webgui/dist,light-assistant/frontend,", "webgui/dist/"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/"
+            },
         },
         {
             "label": "Run web server",
@@ -44,6 +45,35 @@
             },
             "problemMatcher": [],
             "group": "build"
+        },
+        {
+            "label": "publish dotnet linux-arm",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/light-assistant.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign",
+                "-r",
+                "linux-arm",
+                "--self-contained",
+                "true"
+            ],
+            "problemMatcher": "$msCompile",
+        },
+        {
+            "label": "build node webgui",
+            "command": "npm",
+            "type": "process",
+            "args": [
+                "run",
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/webgui"
+            },
+            "problemMatcher": [],
         }
     ]
 }
