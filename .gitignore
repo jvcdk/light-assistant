@@ -10,3 +10,6 @@ light-assistant-data.json
 
 # Release
 build.tar.bz2
+
+# Python env created by VS code
+.venv/
