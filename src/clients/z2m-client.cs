@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using LightAssistant.Interfaces;
 using System.Diagnostics;
 
-namespace LightAssistant.Zigbee;
+namespace LightAssistant.Clients;
 
 internal partial class Zigbee2MqttClient : IDeviceBus
 {
@@ -15,10 +15,10 @@ internal partial class Zigbee2MqttClient : IDeviceBus
     public event Action<bool, int> NetworkOpenStatus = delegate { };
 
     private readonly IConsoleOutput _consoleOutput;
-    private readonly ZigbeeConnection _connection;
+    private readonly MqttConnection _connection;
     private readonly List<IDevice> _knownDevices = [];
 
-    internal Zigbee2MqttClient(ZigbeeConnection connection, IConsoleOutput consoleOutput)
+    internal Zigbee2MqttClient(MqttConnection connection, IConsoleOutput consoleOutput)
     {
         _consoleOutput = consoleOutput;
         _connection = connection;
@@ -105,6 +105,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             case "state":
             case "extensions":
             case "logging":
+            case "definitions":
                 HandleBridgeIgnoredMessage(command, message);
                 break;
 
@@ -148,7 +149,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
 
         }
 
-        _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commands)}' => '{message}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
+        _consoleOutput.ErrorLine($"Error: Unhandled bridge response command '{string.Join('/', commands)}' => '{message}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
     }
 
     private void HandleBridgeResponsePermitJoinMessage(IReadOnlyList<string> additionalCommands, GenericMqttResponse parsedMessage)
@@ -197,7 +198,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
                 return; // Do nothing; the rename command arrives *after* new device enumeration list, so we already know about the rename
         }
 
-        _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commands)}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
+        _consoleOutput.ErrorLine($"Error: Unhandled bridge device-response command '{string.Join('/', commands)}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
     }
 
     private void HandleBridgeIgnoredMessage(string command, string message)
@@ -248,15 +249,6 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         await _connection.Publish($"{BASE_TOPIC}/{path}", message);
     }
 
-    public async Task SetDeviceName(string address, string name)
-    {
-        var data = new Dictionary<string, string> {
-            ["from"] = address,
-            ["to"] = name
-        };
-        await SendDataToDevice("bridge/request/device/rename", data);
-    }
-
     public async Task RequestOpenNetwork(int openNetworkTimeSeconds)
     {
         var data = new Dictionary<string, string> {
@@ -265,4 +257,6 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         };
         await SendDataToDevice("bridge/request/permit_join", data);
     }
+
+    public async Task Connect() => await _connection.ConnectAsync();
 }

@@ -1,6 +1,8 @@
 
+using System.Runtime.CompilerServices;
 using CommandLine;
-using LightAssistant.Zigbee;
+using LightAssistant.Clients;
+using LightAssistant.Interfaces;
 
 namespace LightAssistant;
 
@@ -51,18 +53,51 @@ public static class MainApp {
         try {
             var config = new Config(options.ConfigFile, hasConfigFile);
             options.Verbose |= config.Verbose;
+            if(config.Clients.Count == 0) {
+                Console.Error.WriteLine("No clients configured. Use --save-config to create a default configuration file.");
+                result = 1;
+                return;
+            }
+
             var consoleOutput = new ConsoleOutput() { Verbose = options.Verbose };
-            var zigbeeConnection = new ZigbeeConnection(consoleOutput, config.MqttHost, config.MqttPort, APP_NAME);
-            var mqttClient = new Zigbee2MqttClient(zigbeeConnection, consoleOutput);
+            var clients = config.Clients.Select(clientConfig => CreateClientConnection(clientConfig, consoleOutput)).ToList();
             var guiApp = new WebApi.WebApi(consoleOutput, config.WebApiHostAddress, config.WebApiPort);
-            var controller = new Controller.Controller(consoleOutput, mqttClient, guiApp, config.DataPath, config.OpenNetworkTimeSeconds);
-            await zigbeeConnection.ConnectAsync();
+            var controller = new Controller.Controller(consoleOutput, clients, guiApp, config.DataPath, config.OpenNetworkTimeSeconds);
+
             await controller.Run();
         }
         catch(Exception e) {
             Console.WriteLine($"Error: {e.Message}");
             result = 127;
         }
+    }
+
+    private static readonly Dictionary<string, MqttConnection> _mqttConnections = new();
+
+    private static MqttConnection GetMqttConnection(string host, int port, ConsoleOutput consoleOutput)
+    {
+        var key = $"{host}:{port}";
+        if(_mqttConnections.TryGetValue(key, out MqttConnection? value))
+            return value;
+
+        value = new MqttConnection(consoleOutput, host, port, APP_NAME);
+        _mqttConnections[key] = value;
+        return value;
+    }
+
+    private static IDeviceBus CreateClientConnection(Config.ClientConnection config, ConsoleOutput consoleOutput)
+    {
+        config.Type = config.Type.ToLower();
+        if(config.Type == Config.ClientType.Zigbee2Mqtt) {
+            var connection = GetMqttConnection(config.Host, config.Port, consoleOutput);
+            return new Zigbee2MqttClient(connection, consoleOutput);
+        }
+        else if(config.Type == Config.ClientType.PiPwm) {
+            var connection = GetMqttConnection(config.Host, config.Port, consoleOutput);
+            return new PiPwmClient(connection, consoleOutput);
+        }
+        else
+            throw new ArgumentException($"Unknown client type: {config.Type}");
     }
 
     private static void SaveConfigFile(Options options)

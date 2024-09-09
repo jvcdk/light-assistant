@@ -1,10 +1,11 @@
 using LightAssistant.Interfaces;
+using LightAssistant.Utils;
 using MQTTnet;
 using MQTTnet.Client;
 
-namespace LightAssistant.Zigbee;
+namespace LightAssistant.Clients;
 
-internal class ZigbeeConnection : IDisposable
+internal class MqttConnection : IDisposable
 {
     private const int MQTT_TIMEOUT = 1500;
 
@@ -14,10 +15,11 @@ internal class ZigbeeConnection : IDisposable
     private string Host { get; }
     private int Port { get; }
     private string ClientId { get; }
+    private readonly InitGuard _connectedCalled = new();
 
     private readonly Dictionary<string, Action<IReadOnlyList<string>, string>> _subscriptions = [];
 
-    internal ZigbeeConnection(IConsoleOutput consoleOutput, string host, int port, string clientId)
+    internal MqttConnection(IConsoleOutput consoleOutput, string host, int port, string clientId)
     {
         ConsoleOutput = consoleOutput;
         Host = host;
@@ -27,6 +29,9 @@ internal class ZigbeeConnection : IDisposable
 
     public async Task ConnectAsync()
     {
+        if(_connectedCalled.Check())
+            return;
+
         _mqttFactory = new MqttFactory();
         var mqttClientOptions = new MqttClientOptionsBuilder()
             .WithClientId(ClientId)

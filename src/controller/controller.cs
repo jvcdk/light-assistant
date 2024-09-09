@@ -7,7 +7,7 @@ namespace LightAssistant.Controller;
 internal partial class Controller : IController
 {
     private readonly IConsoleOutput _consoleOutput;
-    private readonly IDeviceBus _deviceBus;
+    private readonly List<IDeviceBus> _deviceBuses;
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
     private readonly string _dataPath;
@@ -19,19 +19,21 @@ internal partial class Controller : IController
     private readonly Dictionary<string, List<EventRoute>> _routes = [];
     private readonly SlimReadWriteLock _routesLock = new();
 
-    public Controller(IConsoleOutput consoleOutput, IDeviceBus deviceBus, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
+    public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
     {
         _consoleOutput = consoleOutput;
-        _deviceBus = deviceBus;
+        _deviceBuses = deviceBuses;
         _guiApp = guiApp;
         _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
         _dataPath = dataPath;
         _openNetworkTimeSeconds = openNetworkTimeSeconds;
 
-        _deviceBus.DeviceDiscovered += HandleDeviceDiscovered;
-        _deviceBus.DeviceUpdated += HandleDeviceUpdated;
-        _deviceBus.DeviceAction += HandleDeviceAction;
-        _deviceBus.NetworkOpenStatus += _guiApp.NetworkOpenStatusChanged;
+        foreach(var bus in _deviceBuses) {
+            bus.DeviceDiscovered += HandleDeviceDiscovered;
+            bus.DeviceUpdated += HandleDeviceUpdated;
+            bus.DeviceAction += HandleDeviceAction;
+            bus.NetworkOpenStatus += _guiApp.NetworkOpenStatusChanged; // TODO: This should be specific for each client. Also reflected in the UI.
+        }
         _guiApp.AppController = this;
 
         LoadData();
@@ -252,6 +254,9 @@ internal partial class Controller : IController
     public async Task Run()
     {
         _consoleOutput.InfoLine("Controller running.");
+        foreach(var bus in _deviceBuses)
+            await bus.Connect();
+
         await _guiApp.Run();
     }
 
@@ -289,14 +294,12 @@ internal partial class Controller : IController
         await _guiApp.RoutingDataUpdated(device);
     }
 
-    public async Task SetDeviceName(IDevice device, string name)
-    {
-        if(name != device.Name)
-            await _deviceBus.SetDeviceName(device.Address, name);
-    }
+    public async Task SetDeviceName(IDevice device, string name) => await device.SetName(name);
 
     public async Task RequestOpenNetwork()
     {
-        await _deviceBus.RequestOpenNetwork(_openNetworkTimeSeconds);
+        // TODO: The UI should make it possible to open up for each client individually. Also, the client should be able to indicate whether it supports this or not.
+        var tasks = _deviceBuses.Select(bus => bus.RequestOpenNetwork(_openNetworkTimeSeconds)).ToArray();
+        await Task.WhenAll(tasks);
     }
 }

@@ -1,7 +1,7 @@
 using LightAssistant.Interfaces;
 using Newtonsoft.Json;
 
-namespace LightAssistant.Zigbee;
+namespace LightAssistant.Clients;
 
 internal partial class Zigbee2MqttClient
 {
@@ -77,6 +77,15 @@ internal partial class Zigbee2MqttClient
                 data["state"] = "ON";
             }
             SendToBus?.Invoke($"{Address}/set", data);
+        }
+
+        public Task SetName(string name)
+        {
+            var data = new Dictionary<string, string> {
+                ["from"] = Address,
+                ["to"] = name
+            };
+            return SendToBus?.Invoke("bridge/request/device/rename", data) ?? Task.CompletedTask;
         }
     }
 

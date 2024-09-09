@@ -1,5 +1,6 @@
 ﻿using LightAssistant;
 using LightAssistant.Controller;
+using LightAssistant.Interfaces;
 using LightAssistant.WebApi;
 
 namespace LightAssistantOffline;
@@ -12,9 +13,11 @@ public static class OfflineApp {
         try {
             var defaultConfig = new Config();
             var consoleOutput = new ConsoleOutput() { Verbose = true };
-            var mqttClient = new MqttEmulatedClient(consoleOutput);
+            var mqttClients = new List<IDeviceBus> {
+                new MqttEmulatedClient(consoleOutput)
+            };
             var guiApp = new WebApi(consoleOutput, defaultConfig.WebApiHostAddress, defaultConfig.WebApiPort);
-            var controller = new Controller(consoleOutput, mqttClient, guiApp, defaultConfig.DataPath, defaultConfig.OpenNetworkTimeSeconds);
+            var controller = new Controller(consoleOutput, mqttClients, guiApp, defaultConfig.DataPath, defaultConfig.OpenNetworkTimeSeconds);
             controller.Run().Wait();
             return result;
         }
