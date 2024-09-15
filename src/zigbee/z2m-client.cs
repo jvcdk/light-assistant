@@ -25,7 +25,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         connection.SubscribeToTopic($"{BASE_TOPIC}", HandleMessage);
     }
 
-    private void HandleMessage(IReadOnlyCollection<string> topics, string message)
+    private void HandleMessage(IReadOnlyList<string> topics, string message)
     {
         // Sometimes mqtt gives an empty message. I suspect this is an artifact of suppressing
         // the re-broadcast of client-sent messages. That is; the NoLocal feature of mqtt.
@@ -37,12 +37,12 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             return;
         }
 
-        if(topics.Count < 2 || topics.First() != BASE_TOPIC) {
+        if(topics.Count < 2 || topics[0] != BASE_TOPIC) {
             _consoleOutput.ErrorLine($"Error: Unexpected topic {string.Join('/', topics)} in {nameof(Zigbee2MqttClient)}.");
             return;
         }
 
-        var deviceName = topics.ElementAt(1);
+        var deviceName = topics[1];
         var additionalTopics = topics.Skip(2).ToList();
         switch(deviceName) {
             case "bridge":
@@ -59,7 +59,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         }
     }
 
-    private void HandleDeviceMessage(IDevice device, List<string> additionalTopics, string message)
+    private void HandleDeviceMessage(IDevice device, IReadOnlyList<string> additionalTopics, string message)
     {
         if(additionalTopics.Count != 0) {
             _consoleOutput.ErrorLine($"Unsupported: We don't yet support additional topics '{string.Join('/', additionalTopics)}'.");
@@ -114,7 +114,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         }
     }
 
-    private void HandleBridgeResponseMessage(List<string> commands, string message)
+    private void HandleBridgeResponseMessage(IReadOnlyList<string> commands, string message)
     {
         if(commands.Count == 0) {
             _consoleOutput.ErrorLine($"Unexpected empty 'command' in response from mqtt.");
@@ -151,7 +151,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         _consoleOutput.ErrorLine($"Error: Unhandled bridge command '{string.Join('/', commands)}' => '{message}' in {nameof(HandleBridgeResponseDeviceMessage)}.");
     }
 
-    private void HandleBridgeResponsePermitJoinMessage(List<string> additionalCommands, GenericMqttResponse parsedMessage)
+    private void HandleBridgeResponsePermitJoinMessage(IReadOnlyList<string> additionalCommands, GenericMqttResponse parsedMessage)
     {
         if(parsedMessage.Status != "ok") {
             _consoleOutput.ErrorLine("Permit Join request failed.");
@@ -184,7 +184,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
         NetworkOpenStatus(value, time);
     }
 
-    private void HandleBridgeResponseDeviceMessage(List<string> commands, GenericMqttResponse parsedMessage)
+    private void HandleBridgeResponseDeviceMessage(IReadOnlyList<string> commands, GenericMqttResponse parsedMessage)
     {
         if(commands.Count == 0) {
             _consoleOutput.ErrorLine($"Unexpected empty 'command' in response from mqtt.");

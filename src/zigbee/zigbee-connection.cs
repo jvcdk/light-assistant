@@ -15,7 +15,7 @@ internal class ZigbeeConnection : IDisposable
     private int Port { get; }
     private string ClientId { get; }
 
-    private readonly Dictionary<string, Action<IReadOnlyCollection<string>, string>> _subscriptions = new();
+    private readonly Dictionary<string, Action<IReadOnlyList<string>, string>> _subscriptions = [];
 
     internal ZigbeeConnection(IConsoleOutput consoleOutput, string host, int port, string clientId)
     {
@@ -70,7 +70,7 @@ internal class ZigbeeConnection : IDisposable
         return Task.CompletedTask;
     }
 
-    internal void SubscribeToTopic(string topic, Action<IReadOnlyCollection<string>, string> callback)
+    internal void SubscribeToTopic(string topic, Action<IReadOnlyList<string>, string> callback)
     {
         _subscriptions[topic] = callback;
     }
