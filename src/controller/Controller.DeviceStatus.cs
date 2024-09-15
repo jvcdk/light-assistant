@@ -19,11 +19,12 @@ internal partial class Controller
 
         public DeviceStatus Clone()
         {
-            var result = new DeviceStatus();
-            result._linkQuality = _linkQuality;
-            result._battery = _battery;
-            result._brightness = _brightness;
-            result._state = _state;
+            var result = new DeviceStatus {
+                _linkQuality = _linkQuality,
+                _battery = _battery,
+                _brightness = _brightness,
+                _state = _state
+            };
             return result;
     }
 
@@ -41,7 +42,7 @@ internal partial class Controller
             return false;
         }
 
-        private bool UpdateFrom(Dictionary<string, string> source, string propName, ref bool? dst)
+        private static bool UpdateFrom(Dictionary<string, string> source, string propName, ref bool? dst)
         {
             if(source.TryGetValue(propName, out var str)) {
                 str = str.ToLower();
