@@ -35,7 +35,7 @@
 	// }
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "sudo apt update && sudo apt install pip python3-full",
+	"postCreateCommand": "sudo apt update && sudo apt install pip python3-full mypy",
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
