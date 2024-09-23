@@ -15,9 +15,10 @@ internal partial class Controller
         {
             _consoleOutput = consoleOutput;
 
-            VendorTuya.Add(_factoryCollection);
-            VendorSunricher.Add(_factoryCollection);
             VendorSignify.Add(_factoryCollection);
+            VendorSunricher.Add(_factoryCollection);
+            VendorTallDane.Add(_factoryCollection);
+            VendorTuya.Add(_factoryCollection);
         }
 
         internal DeviceServiceCollection GetServicesFor(IDevice device)
