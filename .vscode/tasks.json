@@ -47,6 +47,19 @@
             "group": "build"
         },
         {
+            "label": "Run PiPwm",
+            "command": "python3",
+            "type": "shell",
+            "args": [
+                "main.py"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/pipwm",
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
             "label": "publish dotnet linux-arm",
             "command": "dotnet",
             "type": "process",
