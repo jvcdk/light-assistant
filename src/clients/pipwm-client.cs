@@ -6,8 +6,6 @@ namespace LightAssistant.Clients;
 
 internal partial class PiPwmClient : IDeviceBus
 {
-    private const string BASE_TOPIC = "pipwm";
-
     public event Action<IDevice> DeviceDiscovered = delegate { };
     public event Action<IDevice> DeviceUpdated = delegate { };
     public event Action<IDevice, Dictionary<string, string>> DeviceAction = delegate { };
@@ -15,13 +13,15 @@ internal partial class PiPwmClient : IDeviceBus
 
     private readonly IConsoleOutput _consoleOutput;
     private readonly MqttConnection _connection;
+    private readonly string _baseTopic;
     private readonly List<Device> _knownDevices = [];
 
-    internal PiPwmClient(MqttConnection connection, IConsoleOutput consoleOutput)
+    internal PiPwmClient(MqttConnection connection, IConsoleOutput consoleOutput, string baseTopic)
     {
         _consoleOutput = consoleOutput;
         _connection = connection;
-        connection.SubscribeToTopic($"{BASE_TOPIC}", HandleMessage);
+        _baseTopic = baseTopic;
+        connection.SubscribeToTopic($"{_baseTopic}", HandleMessage);
     }
 
     private void HandleMessage(IReadOnlyList<string> topics, string message)
@@ -36,7 +36,7 @@ internal partial class PiPwmClient : IDeviceBus
             return;
         }
 
-        if(topics.Count < 2 || topics[0] != BASE_TOPIC) {
+        if(topics.Count < 2 || topics[0] != _baseTopic) {
             _consoleOutput.ErrorLine($"Error: Unexpected topic {string.Join('/', topics)} in {nameof(PiPwmClient)}.");
             return;
         }
@@ -126,7 +126,7 @@ internal partial class PiPwmClient : IDeviceBus
     private async Task SendDataToDevice(string path, Dictionary<string, string> data)
     {
         var message = JsonConvert.SerializeObject(data);
-        await _connection.Publish($"{BASE_TOPIC}/{path}", message);
+        await _connection.Publish($"{_baseTopic}/{path}", message);
     }
 
     public Task RequestOpenNetwork(int openNetworkTimeSeconds) => Task.CompletedTask; // Do nothing - does not support network open.

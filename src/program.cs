@@ -90,11 +90,11 @@ public static class MainApp {
         config.Type = config.Type.ToLower();
         if(config.Type == Config.ClientType.Zigbee2Mqtt) {
             var connection = GetMqttConnection(config.Host, config.Port, consoleOutput);
-            return new Zigbee2MqttClient(connection, consoleOutput);
+            return new Zigbee2MqttClient(connection, consoleOutput, config.BaseTopic);
         }
         else if(config.Type == Config.ClientType.PiPwm) {
             var connection = GetMqttConnection(config.Host, config.Port, consoleOutput);
-            return new PiPwmClient(connection, consoleOutput);
+            return new PiPwmClient(connection, consoleOutput, config.BaseTopic);
         }
         else
             throw new ArgumentException($"Unknown client type: {config.Type}");

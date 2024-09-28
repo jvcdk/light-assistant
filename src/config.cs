@@ -53,5 +53,6 @@ internal class Config
         public string Type { get; set; } = ClientType.Zigbee2Mqtt;
         public string Host { get; set; } = "localhost";
         public int Port { get; set; } = 1883;
+        public string BaseTopic { get; set; } = "zigbee2mqtt";
     }
 }
