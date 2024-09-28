@@ -5,10 +5,11 @@ from threading import Thread, Lock, Event
 thread_sleep_time = 0.01 # 100Hz
 
 class PwmLight:
-    def __init__(self, pin: int, name: str, driver: PwmDriver):
+    def __init__(self, pin: int, name: str, system_id: str, driver: PwmDriver):
         self._terminate = False
         self._pin = pin
         self._name = name
+        self._system_id = system_id
         self._brightness = 0
         self._target_brightness = 0.0
         self._transition_steps = 0.0
@@ -34,6 +35,9 @@ class PwmLight:
 
     def get_pin(self) -> int:
         return self._pin
+
+    def get_id(self) -> str:
+        return f"{self._system_id}::{self._pin}"
 
     def set_brightness(self, brightness: float, transition: float):
         brightness = self._clamp_brightness(brightness)

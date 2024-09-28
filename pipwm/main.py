@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 from typing import List
 from controller import Controller
 from pwm_light import PwmLight
@@ -72,7 +73,7 @@ def save_updated_config(config_file: str, config: dict, lights: List[PwmLight]):
     with open(config_file, 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
 
-if __name__ == "__main__":
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PWM Controller")
     parser.add_argument("-c", "--config", default="pipwm.yaml",
                         help="Path to the configuration file (default: pipwm.yaml)")
@@ -85,6 +86,25 @@ if __name__ == "__main__":
             yaml.dump(DEFAULT_CONFIG, f, default_flow_style=False)
         print(f"Default configuration written to {args.write_default_config}")
         exit(0)
+    return args
+
+def get_system_id() -> str:
+    system_id_path = "/etc/machine-id"
+    if os.path.exists(system_id_path):
+        with open(system_id_path, 'r') as f:
+            return f.read().strip()
+
+    system_id_path = "/var/lib/dbus/machine-id"
+    if os.path.exists(system_id_path):
+        with open(system_id_path, 'r') as f:
+            return f.read().strip()
+
+    print("System ID not found. Please generate one and store it /etc/machine-id or /var/lib/dbus/machine-id.")
+    sys.exit(1)
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    system_id = get_system_id()
 
     # Set up signal handler for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
@@ -112,7 +132,7 @@ if __name__ == "__main__":
         resolution = 16383
 
     # Create Controller with the drivers
-    controller = Controller(pwm_driver, mqtt_driver, pwm_config.get('pwms', {}), resolution, lambda lights: save_updated_config(args.config, config, lights))
+    controller = Controller(system_id, pwm_driver, mqtt_driver, pwm_config.get('pwms', {}), resolution, lambda lights: save_updated_config(args.config, config, lights))
 
     try:
         controller.start()

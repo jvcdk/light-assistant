@@ -11,12 +11,13 @@ def find_light_by_name(lights: List[PwmLight], name: str) -> PwmLight | None:
     for light in lights:
         if light.get_name() == name:
             return light
-        if str( light.get_pin()) == name:
+        if light.get_id() == name:
             return light
     return None
 
 class Controller:
-    def __init__(self, pwm_driver: PwmDriver, mqtt_driver: MqttDriver, pwms: dict[int, str], resolution: int, device_names_updated_callback: Callable[[List[PwmLight]], None]):
+    def __init__(self, system_id: str, pwm_driver: PwmDriver, mqtt_driver: MqttDriver, pwms: dict[int, str], resolution: int, device_names_updated_callback: Callable[[List[PwmLight]], None]):
+        self._system_id = system_id
         self._device_names_updated_callback = device_names_updated_callback
         self._mqtt_driver = mqtt_driver
         self._mqtt_driver.set_callback(self.handle_message)
@@ -74,7 +75,7 @@ class Controller:
     def _init_lights(self, pwms: dict[int, str], pwm_driver: PwmDriver):
         self._lights: List[PwmLight] = []
         for pin, name in pwms.items():
-            light = PwmLight(pin, name, pwm_driver)
+            light = PwmLight(pin, name, self._system_id, pwm_driver)
             self._lights.append(light)
 
     def _identify_all_lights(self):
@@ -83,7 +84,7 @@ class Controller:
 
     def _identify_light(self, light: PwmLight):
         payload = create_light_identity_payload(light.get_name())
-        self._mqtt_driver.publish(f"{light.get_pin()}/identity", payload)
+        self._mqtt_driver.publish(f"{light.get_id()}/identity", payload)
 
     def _report_all_light_status(self):
         for light in self._lights:
@@ -92,7 +93,7 @@ class Controller:
     def _report_light_status(self, light: PwmLight):
         (brightness, state) = light.get_status()
         payload = create_light_status_payload(int(brightness * self._resolution), state)
-        self._mqtt_driver.publish(f"{light.get_pin()}/status", payload)
+        self._mqtt_driver.publish(f"{light.get_id()}/status", payload)
 
     def _handle_rename_command(self, deviceId: str, topic: List[str], payload: dict):
         if len(topic) != 0:
