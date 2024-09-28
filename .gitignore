@@ -1,5 +1,5 @@
-obj/
-bin/
+obj
+bin
 
 # VS Code plugin crashes!?!?!?
 .mono
@@ -12,4 +12,4 @@ light-assistant-data.json
 build.tar.bz2
 
 # Python env created by VS code
-.venv/
+.venv
