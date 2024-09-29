@@ -176,10 +176,11 @@ export function PopUp_DeviceConfiguration(prop: {devData: DeviceData | null, cb:
   const device = devData.Device;
   return (
     <div className='Popup_DeviceConfiguration'>
-      <div className='Title'>{device.Vendor} / {device.Model} – {device.Description}</div>
-      <div className='SubTitle'>(Address: {device.Address})</div>
+      <div className='Title'>{device.Vendor} – {device.Model}</div>
+      <div className='SubTitle'>{device.Description}</div>
+      <div className='SubTitle'>Address: {device.Address}</div>
       <div className='Content'>
-        <label className='Label'>Friendly Name:</label>
+        <label className='Label'>Friendly name:</label>
         <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
         <div className='Routing'>
           <label className='Label'>Routing:</label>

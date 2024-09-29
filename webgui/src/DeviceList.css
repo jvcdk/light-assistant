@@ -13,3 +13,17 @@
     border: 0.125rem solid var(--light-assistant-primary);
     border-radius: 2.5%;
 }
+
+@media (max-width: 760px) {
+    .DeviceList .VendorModel
+    {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .DeviceList .Description
+    {
+        display: none;
+    }
+}

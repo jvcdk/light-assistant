@@ -8,7 +8,6 @@
 
 .Popup_DeviceConfiguration .SubTitle {
     font-size: 100%;
-    padding-bottom: 0.5em;
     text-align: center;
     width: 20em;
     margin: auto;
@@ -16,11 +15,13 @@
 
 .Popup_DeviceConfiguration .Content {
     padding: 0.5em;
+    padding-top: 1em;
 }
 
 .Popup_DeviceConfiguration .Label {
     margin-right: 0.25em;
 }
+
 
 .Popup_DeviceConfiguration .FriendlyName {
     border: none;
