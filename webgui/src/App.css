@@ -29,3 +29,22 @@ input[type=button]:disabled  {
   background-color: var(--light-assistant-button-disabled-background);
   cursor: auto;
 }
+
+.react-tabs__tab:focus:after {
+  content: unset;
+}
+
+.react-tabs__tab-list {
+  border-bottom: 1px solid var(--light-assistant-border);
+}
+
+
+.react-tabs__tab--selected {
+  background: var(--light-assistant-highlight-1);
+  border-color: var(--light-assistant-border);
+  color: var(--light-assistant-primary);
+}
+
+.react-tabs__tab--disabled {
+  color: var(--light-assistant-button-disabled);
+}
