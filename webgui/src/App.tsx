@@ -3,6 +3,7 @@ import './App.css'
 import { DeviceList } from './DeviceList';
 import { JoinNetworkSection } from './JoinNetworkSection';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import { Schedule } from './Schedule';
 
 function App() {
   return (
@@ -11,9 +12,11 @@ function App() {
       <Tabs forceRenderTabPanel className='MainContent'>
         <TabList>
           <Tab>Devices</Tab>
+          <Tab>Schedule</Tab>
           <Tab>Network</Tab>
         </TabList>
         <TabPanel><DeviceList /></TabPanel>
+        <TabPanel><Schedule /></TabPanel>
         <TabPanel><JoinNetworkSection /></TabPanel>
       </Tabs>
     </div>
