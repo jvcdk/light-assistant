@@ -1,0 +1,13 @@
+span.Time {
+  font-size: 250%;
+}
+span.Time > span {
+  margin: 0.125em;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+}
+
+span.Time span.selected {
+  color: var(--light-assistant-highlight-2);
+}

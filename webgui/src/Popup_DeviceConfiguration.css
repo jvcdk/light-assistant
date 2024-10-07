@@ -63,13 +63,3 @@
     padding-top: 0.5em;
     padding-bottom: 0.25em;
 }
-
-.Popup_DeviceConfiguration .Cancel {
-    background-color: var(--light-assistant-button-cancel);
-    margin-right: 0.5em;
-}
-
-.Popup_DeviceConfiguration .Ok {
-    background-color: var(--light-assistant-button-ok);
-    margin-left: 0.5em;
-}

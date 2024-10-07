@@ -17,6 +17,16 @@ input[type=button] {
   cursor: pointer;
 }
 
+input[type=button].Cancel {
+  background-color: var(--light-assistant-button-cancel);
+  margin-right: 0.5em;
+}
+
+input[type=button].Ok {
+  background-color: var(--light-assistant-button-ok);
+  margin-left: 0.5em;
+}
+
 input[type=button]:active {
   border-radius: 0.4em;
   border-style: dashed;

@@ -1,7 +1,6 @@
 .DaySelector {
   display: block;
-  border: 1px solid var(--light-assistant-border);
-  padding: 0.25em;
+  padding: 0.125em;
 }
 
 .DaySelector .Day {

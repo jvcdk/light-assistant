@@ -1,0 +1,43 @@
+.CircularClock {
+  position: relative;
+  width: 13em;
+  height: 13em;
+  border: 3px solid var(--light-assistant-highlight-2);
+  border-radius: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Hand {
+  position: absolute;
+  height: 3px;
+  background: var(--light-assistant-highlight-2);
+  transform-origin: 100% 50%;
+  transition: transform 0.35s ease;
+}
+
+.Hand.Inner {
+  width: 25%;
+}
+
+.Hand.Outer {
+  width: 36%;
+}
+
+div.ClockDigit {
+  width: 1.5em;
+  height: 1.5em;
+  padding: 0.125em;
+  cursor: pointer;
+}
+
+div.ClockDigit.HoursPm {
+  font-size: 95%;
+}
+
+div.ClockDigit.selected {
+  /*border: 2px solid var(--light-assistant-highlight-2);*/
+  background: var(--light-assistant-highlight-2);
+  border-radius: 50%;
+}
