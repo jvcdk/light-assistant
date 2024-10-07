@@ -16,7 +16,7 @@ export function Schedule() {
     <div className='Schedule' onClick={openPopup}>
       hej
       <Popup open={popupOpen} onClose={closeModal} modal closeOnDocumentClick={false}>
-        <PopUp_ScheduleRuleEdit str={'hello'} /> 
+        <PopUp_ScheduleRuleEdit /> 
       </Popup>
     </div>
   );

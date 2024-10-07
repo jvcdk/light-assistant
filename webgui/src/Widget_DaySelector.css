@@ -1,0 +1,36 @@
+.DaySelector {
+  display: block;
+  border: 1px solid var(--light-assistant-border);
+  padding: 0.25em;
+}
+
+.DaySelector .Day {
+  display: inline-block;
+  padding: 5px;
+  margin: 5px;
+  border: 1px solid var(--light-assistant-border);
+  cursor: pointer;
+  width: 2em;
+  text-align: center;
+  border-radius: 2em;
+  line-height: 2em;
+}
+
+.DaySelector .ToggleAll {
+  padding: 5px;
+  margin: 5px;
+  border: 2px dashed var(--light-assistant-border);
+  cursor: pointer;
+  text-align: center;
+  line-height: 2em;
+  float: right;
+}
+
+.DaySelector div.Day.selected {
+  background: var(--light-assistant-highlight-2);
+}
+
+.DaySelector div.Day:hover,
+.DaySelector div.ToggleAll:hover {
+  background: var(--light-assistant-highlight-1);
+}

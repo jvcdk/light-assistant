@@ -1,11 +1,10 @@
 import './Popup_ScheduleRuleEdit.css'
-import { ScheduleTriggerPicker } from './ScheduleTriggerPicker';
+import { Widget_ScheduleTriggerPicker } from './Widget_ScheduleTriggerPicker';
 
-export function PopUp_ScheduleRuleEdit(prop: {str: string}) {
+export function PopUp_ScheduleRuleEdit() {
   return (
     <div className='Popup_ScheduleRuleEdit'>
-      {prop.str}
-      <ScheduleTriggerPicker />
+      <Widget_ScheduleTriggerPicker />
     </div>
   );
 }
