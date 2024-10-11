@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import './CircularClock.css';
 import { TimeOfDay } from '../Data/ScheduleTrigger';
 import { RenderTimeOfDay } from './RenderTimeOfDay';
+import './CircularClock.css';
 
 export enum ClockMode {
   Hour,
@@ -20,11 +20,12 @@ function ClockDigits(props: { Mode: ClockMode, SelectedDigit: number }) {
     innerBoundary = 12;
   }
 
+  const selfSize = 15; // Units: em. Should match the CSS value in CircularClock.css
   return Array.from({ length: nElements }).map((_, index) => {
     index = index * stepSize;
 
     const isInner = index >= innerBoundary;
-    const radius = isInner ? 4 : 5.5;
+    const radius = isInner ? selfSize*0.3125 : selfSize*0.4125;
     let className;
     if(props.Mode == ClockMode.Hour)
       className = isInner ? 'HoursPm' : 'HoursAm';
@@ -125,10 +126,12 @@ export function CircularClock(props: CircularClockProps) {
 
   return (
     <div>
-      <RenderTimeOfDay selected={mode} Time={selectedTime} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
       <div className="CircularClock" onMouseDown={handleMouseDown}>
         <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${handAngle}deg)` }} />
         <ClockDigits Mode={mode} SelectedDigit={selectedDigit} />
+        <span className='CenterTime'>
+          <RenderTimeOfDay selected={mode} Time={selectedTime} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
+        </span>
       </div>
     </div>
   );

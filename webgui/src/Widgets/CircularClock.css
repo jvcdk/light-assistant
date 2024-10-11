@@ -1,7 +1,7 @@
 .CircularClock {
   position: relative;
-  width: 13em;
-  height: 13em;
+  width: 15em;
+  height: 15em;
   border: 3px solid var(--light-assistant-highlight-2);
   border-radius: 20%;
   display: flex;
@@ -18,11 +18,11 @@
 }
 
 .Hand.Inner {
-  width: 25%;
+  width: 30%;
 }
 
 .Hand.Outer {
-  width: 36%;
+  width: 40%;
 }
 
 div.ClockDigit {
@@ -40,4 +40,17 @@ div.ClockDigit.selected {
   /*border: 2px solid var(--light-assistant-highlight-2);*/
   background: var(--light-assistant-highlight-2);
   border-radius: 50%;
+}
+
+span.CenterTime {
+  font-size: 75%;
+  background-color: var(--light-assistant-background);
+  z-index: 10;
+  display: inline-block;
+  border: 1px dashed var(--light-assistant-highlight-1);
+  border-radius: 50%;
+  vertical-align: middle;
+  height: 8em;
+  width: 8em;
+  line-height: 7.5em;
 }
