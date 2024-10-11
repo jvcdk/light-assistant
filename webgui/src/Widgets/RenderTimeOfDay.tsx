@@ -1,8 +1,8 @@
-import './Widget_RenderTimeOfDay.css';
-import { TimeOfDay } from "./ScheduleTrigger";
+import './RenderTimeOfDay.css';
+import { TimeOfDay } from "../Data/ScheduleTrigger";
 import { ClockMode } from './CircularClock';
 
-export function Widget_RenderTimeOfDay(props: {Time: TimeOfDay, OnHourClick?: () => void, OnMinutesClick?: () => void, selected?: ClockMode}) {
+export function RenderTimeOfDay(props: {Time: TimeOfDay, OnHourClick?: () => void, OnMinutesClick?: () => void, selected?: ClockMode}) {
   const hourStr = props.Time.Hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
   const minuteStr = props.Time.Minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
 

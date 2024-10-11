@@ -1,5 +1,5 @@
-import './Widget_DaySelector.css'
-import { DayName } from "./ScheduleTrigger";
+import './DaySelector.css'
+import { DayName } from "../Data/ScheduleTrigger";
 
 function ToggleDay(days: DayName[], day: DayName) {
     if(days.includes(day))
@@ -18,7 +18,7 @@ function DayElement(prop: {day: DayName, selected: boolean, onClick: () => void}
 }
 
 export type OnChangeType = (days: DayName[]) => void;
-export function Widget_DaySelector(prop: {onChange: OnChangeType, days: DayName[]}) {
+export function DaySelector(prop: {onChange: OnChangeType, days: DayName[]}) {
   return (
     <div className='DaySelector'>
         <div>

@@ -1,12 +1,13 @@
-import './Popup_DeviceConfiguration.css'
-import SvgRouteEntry from './image/route_entry.svg';
-import SvgRouteColon from './image/route_colon.svg';
-import SvgRouteMapsTo from './image/route_maps_to.svg';
+import './DeviceConfiguration.css'
+import SvgRouteEntry from '../image/route_entry.svg';
+import SvgRouteColon from '../image/route_colon.svg';
+import SvgRouteMapsTo from '../image/route_maps_to.svg';
 
-import { IDeviceProvidedEvent, IDeviceRoute } from './JsonTypes';
+import { IDeviceProvidedEvent, IDeviceRoute } from '../Data/JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
-import { DeviceData } from './DeviceData';
+import { DeviceData } from '../Data/DeviceData';
+import Popup from 'reactjs-popup';
 
 interface IDeviceRouteWithKey extends IDeviceRoute {
   key: number;
@@ -155,13 +156,18 @@ function RoutingOptions(prop: {devData: DeviceData, cb: IRoutingOptionsCallbacks
   );
 }
 
-export type CloseDeviceConfigurationType = (devData: DeviceData | null) => void;
-export function PopUp_DeviceConfiguration(prop: {devData: DeviceData | null, cb: IRoutingOptionsCallbacks, cbOnClose: CloseDeviceConfigurationType}) {
+export interface DeviceConfigurationProps {
+  isOpen: boolean;
+  devData: DeviceData | null;
+  routingCallbacks: IRoutingOptionsCallbacks;
+  onClose: (devData: DeviceData | null) => void;
+}
+export function DeviceConfiguration(props: DeviceConfigurationProps) {
   const [devData, setDevData] = useState<DeviceData|null>(null);
 
   useEffect(() => {
-    setDevData(cloneDeep(prop.devData));
-  }, [prop.devData]);
+    setDevData(cloneDeep(props.devData));
+  }, [props.devData]);
 
   function UpdateDeviceRoute(route: IDeviceRoute[]) {
     setDevData({
@@ -175,22 +181,24 @@ export function PopUp_DeviceConfiguration(prop: {devData: DeviceData | null, cb:
 
   const device = devData.Device;
   return (
-    <div className='Popup_DeviceConfiguration'>
-      <div className='Title'>{device.Vendor} – {device.Model}</div>
-      <div className='SubTitle'>{device.Description}</div>
-      <div className='SubTitle'>Address: {device.Address}</div>
-      <div className='Content'>
-        <label className='Label'>Friendly name:</label>
-        <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
-        <div className='Routing'>
-          <label className='Label'>Routing:</label>
-          <RoutingOptions devData={devData} cb={prop.cb} setDeviceRoute={UpdateDeviceRoute} />
+    <Popup open={props.isOpen} onClose={() => props.onClose(null)} modal closeOnDocumentClick={false}>
+      <div className='DeviceConfiguration'>
+        <div className='Title'>{device.Vendor} – {device.Model}</div>
+        <div className='SubTitle'>{device.Description}</div>
+        <div className='SubTitle'>Address: {device.Address}</div>
+        <div className='Content'>
+          <label className='Label'>Friendly name:</label>
+          <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
+          <div className='Routing'>
+            <label className='Label'>Routing:</label>
+            <RoutingOptions devData={devData} cb={props.routingCallbacks} setDeviceRoute={UpdateDeviceRoute} />
+          </div>
+        <div className='Buttons'>
+          <input className='Cancel' type='button' onClick={() => props.onClose(null)} value="Cancel" />
+          <input className='Ok' type='button' onClick={() => props.onClose(devData)} value="Apply" />
         </div>
-      <div className='Buttons'>
-        <input className='Cancel' type='button' onClick={() => prop.cbOnClose(null)} value="Cancel" />
-        <input className='Ok' type='button' onClick={() => prop.cbOnClose(devData)} value="Apply" />
+        </div>
       </div>
-      </div>
-    </div>
+    </Popup>
   );
 }

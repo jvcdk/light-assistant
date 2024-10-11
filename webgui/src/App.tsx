@@ -1,9 +1,9 @@
 import 'react-tabs/style/react-tabs.css';
 import './App.css'
-import { DeviceList } from './DeviceList';
-import { JoinNetworkSection } from './JoinNetworkSection';
+import { DeviceList } from './Pages/DeviceList';
+import { JoinNetworkSection } from './Pages/JoinNetworkSection';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import { Schedule } from './Schedule';
+import { Schedule } from './Pages/Schedule';
 
 function App() {
   return (

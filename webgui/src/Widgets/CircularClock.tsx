@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './CircularClock.css';
-import { TimeOfDay } from './ScheduleTrigger';
-import { Widget_RenderTimeOfDay } from './Widget_RenderTimeOfDay';
+import { TimeOfDay } from '../Data/ScheduleTrigger';
+import { RenderTimeOfDay } from './RenderTimeOfDay';
 
 export enum ClockMode {
   Hour,
@@ -125,7 +125,7 @@ export function CircularClock(props: CircularClockProps) {
 
   return (
     <div>
-      <Widget_RenderTimeOfDay selected={mode} Time={selectedTime} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
+      <RenderTimeOfDay selected={mode} Time={selectedTime} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
       <div className="CircularClock" onMouseDown={handleMouseDown}>
         <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${handAngle}deg)` }} />
         <ClockDigits Mode={mode} SelectedDigit={selectedDigit} />

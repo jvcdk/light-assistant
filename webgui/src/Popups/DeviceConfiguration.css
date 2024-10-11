@@ -1,4 +1,4 @@
-.Popup_DeviceConfiguration .Title {
+.DeviceConfiguration .Title {
     font-size: 120%;
     font-weight: bold;
     text-align: center;
@@ -6,24 +6,24 @@
     margin: auto;
 }
 
-.Popup_DeviceConfiguration .SubTitle {
+.DeviceConfiguration .SubTitle {
     font-size: 100%;
     text-align: center;
     width: 20em;
     margin: auto;
 }
 
-.Popup_DeviceConfiguration .Content {
+.DeviceConfiguration .Content {
     padding: 0.5em;
     padding-top: 1em;
 }
 
-.Popup_DeviceConfiguration .Label {
+.DeviceConfiguration .Label {
     margin-right: 0.25em;
 }
 
 
-.Popup_DeviceConfiguration .FriendlyName {
+.DeviceConfiguration .FriendlyName {
     border: none;
     border-bottom: 1px solid var(--light-assistant-primary);
     outline: none;
@@ -33,21 +33,21 @@
     font-size: 100%;
 }
 
-.Popup_DeviceConfiguration .Routing {
+.DeviceConfiguration .Routing {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
 
-.Popup_DeviceConfiguration .Routing .Route {
+.DeviceConfiguration .Routing .Route {
     margin-bottom: 0.25em;
     margin-left: 0.5em;
 }
 
-.Popup_DeviceConfiguration .Routing .Route svg {
+.DeviceConfiguration .Routing .Route svg {
     vertical-align: middle;
 }
 
-.Popup_DeviceConfiguration .Routing .Route select {
+.DeviceConfiguration .Routing .Route select {
     background-color: var(--light-assistant-highlight-tr2);
     color: var(--light-assistant-primary);
     border: 1px solid var(--light-assistant-primary);
@@ -57,7 +57,7 @@
     width: 8.5em;
 }
 
-.Popup_DeviceConfiguration .Buttons {
+.DeviceConfiguration .Buttons {
     display: flex;
     justify-content: space-between;
     padding-top: 0.5em;

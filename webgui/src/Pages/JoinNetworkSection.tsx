@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './JoinNetworkSection.css'
-import { useWebSocketContext } from './WebSocketContext';
-import { ClientToServerMessage, IOpenNetworkStatus, IServerToClientMessage } from './JsonTypes';
+import { useWebSocketContext } from '../WebSocketContext';
+import { ClientToServerMessage, IOpenNetworkStatus, IServerToClientMessage } from '../Data/JsonTypes';
 
 export function JoinNetworkSection() {
     const { sendJsonMessage, lastJsonMessage } = useWebSocketContext();

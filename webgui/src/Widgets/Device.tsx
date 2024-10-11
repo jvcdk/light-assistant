@@ -1,6 +1,6 @@
 import './Device.css'
-import { DeviceData, FindDeviceDataType } from './DeviceData';
-import { IDeviceRoute } from './JsonTypes';
+import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
+import { IDeviceRoute } from '../Data/JsonTypes';
 
 function DeviceBattery(prop: { battery: number | undefined })
 {

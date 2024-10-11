@@ -1,11 +1,10 @@
 import './DeviceList.css'
-import Popup from 'reactjs-popup';
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useWebSocketContext } from "./WebSocketContext";
-import { Device } from "./Device";
-import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IServerToClientMessage } from './JsonTypes';
-import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, PopUp_DeviceConfiguration, GetTargetFunctionalityOptionsType } from './Popup_DeviceConfiguration';
-import { DeviceData, FindDeviceDataType } from './DeviceData';
+import { useWebSocketContext } from "../WebSocketContext";
+import { Device } from "../Widgets/Device";
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IServerToClientMessage } from '../Data/JsonTypes';
+import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, DeviceConfiguration, GetTargetFunctionalityOptionsType } from '../Popups/DeviceConfiguration';
+import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 
 export function DeviceList() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);
@@ -20,8 +19,6 @@ export function DeviceList() {
     setSelectedDeviceData(device);
     setPopupOpen(true);
   }
-  const closeModal = () => setPopupOpen(false);
-
   const FindDeviceData: FindDeviceDataType = useCallback((address: string, issueWarningNotFound: boolean = true): DeviceData | undefined => {
     const result = deviceData.current.find(entry => entry.Device.Address === address);
     if(result == undefined && issueWarningNotFound)
@@ -117,13 +114,14 @@ export function DeviceList() {
     }
   }, [FindDeviceData, lastJsonMessage]);
 
-  const cb = {
+  const routingCallbacks = {
     GetTargetRoutingOptions: GetRoutingOptions,
     GetTargetFunctionalityOptions: GetTargetFunctionalityOptions,
     TargetAddressToName: TargetAddressToName,
   } as IRoutingOptionsCallbacks;
 
   function OnDeviceConfigurationUpdate(devData: DeviceData | null) {
+    setSelectedDeviceData(null);
     setPopupOpen(false);
     if(devData == null)
       return;
@@ -144,9 +142,7 @@ export function DeviceList() {
         <div className='Routing'>Routing</div>
       </div>
       {deviceData.current.map(device => Device(device, () => openPopup(device), FindDeviceData))}
-      <Popup open={popupOpen} onClose={closeModal} modal closeOnDocumentClick={false}>
-        <PopUp_DeviceConfiguration devData={selectedDeviceData} cb={cb} cbOnClose={OnDeviceConfigurationUpdate} /> 
-      </Popup>
+      <DeviceConfiguration isOpen={popupOpen} devData={selectedDeviceData} routingCallbacks={routingCallbacks} onClose={OnDeviceConfigurationUpdate} /> 
     </div>
   );
 }

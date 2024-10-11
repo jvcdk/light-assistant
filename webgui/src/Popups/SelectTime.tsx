@@ -1,22 +1,22 @@
-import { CircularClock, ClockMode } from './CircularClock';
+import { CircularClock, ClockMode } from '../Widgets/CircularClock';
 import Popup from 'reactjs-popup';
-import './Popup_CircularClock.css'; // Create this CSS file for styling
-import { TimeOfDay } from './ScheduleTrigger';
+import './SelectTime.css';
+import { TimeOfDay } from '../Data/ScheduleTrigger';
 import { useState } from 'react';
 
-interface PopupCircularClockProps {
+interface Popup_SelectTimeProps {
   open: boolean;
   onClose: () => void;
   initialTime: TimeOfDay;
   onTimeChange: (time: TimeOfDay) => void;
 }
 
-function Popup_CircularClock(props: PopupCircularClockProps) {
+function Popup_SelectTime(props: Popup_SelectTimeProps) {
   const [selectedTime, setSelectedTime] = useState(props.initialTime);
 
   return (
     <Popup open={props.open} onClose={() => props.onClose()} closeOnDocumentClick={false} modal>
-      <div className="PopupCircularClock">
+      <div className="SelectTime">
         <CircularClock
           initialTime={props.initialTime}
           onTimeChange={setSelectedTime}
@@ -31,4 +31,4 @@ function Popup_CircularClock(props: PopupCircularClockProps) {
   );
 }
 
-export default Popup_CircularClock;
+export default Popup_SelectTime;

@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { ScheduleTrigger, TimeOfDay } from "./ScheduleTrigger";
-import { Widget_DaySelector } from "./Widget_DaySelector";
-import Popup_CircularClock from './Popup_CircularClock';
-import { Widget_RenderTimeOfDay } from './Widget_RenderTimeOfDay';
+import { ScheduleTrigger, TimeOfDay } from "../Data/ScheduleTrigger";
+import { DaySelector } from "./DaySelector";
+import Popup_SelectTime from '../Popups/SelectTime';
+import { RenderTimeOfDay } from './RenderTimeOfDay';
 
-export function Widget_ScheduleTriggerPicker(props: {OnChildOpenChanged: (isOpen: boolean) => void}) {
+export interface ScheduleTriggerPickerProps {
+  OnChildOpenChanged: (isOpen: boolean) => void;
+}
+export function ScheduleTriggerPicker(props: ScheduleTriggerPickerProps) {
   const [data, setData] = useState(new ScheduleTrigger());
   const [isClockOpen, _setClockOpen] = useState(false);
   function setClockOpen(open: boolean) {
@@ -19,15 +22,15 @@ export function Widget_ScheduleTriggerPicker(props: {OnChildOpenChanged: (isOpen
   return (
     <div className='Schedule'>
       <div className="Time" onClick={() => setClockOpen(true)}>
-        <Widget_RenderTimeOfDay Time={data.Time} />
+        <RenderTimeOfDay Time={data.Time} />
       </div>
-      <Popup_CircularClock
+      <Popup_SelectTime
         open={isClockOpen}
         onClose={() => setClockOpen(false)}
         initialTime={data.Time}
         onTimeChange={handleTimeChange}
       />
-      <Widget_DaySelector onChange={(days) => setData({...data, Days: days})} days={data.Days} />
+      <DaySelector onChange={(days) => setData({...data, Days: days})} days={data.Days} />
     </div>
   );
 }
