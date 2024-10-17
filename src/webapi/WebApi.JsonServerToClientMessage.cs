@@ -33,8 +33,20 @@ internal partial class WebApi
             return this;
         }
 
-        internal JsonServerToClientMessage WithDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumableEvents) {
-            RoutingOptions = new JsonDeviceRoutingOptions(address, providedEvents, consumableEvents);
+        internal JsonServerToClientMessage WithDeviceRoutingOptions(string address, IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumableEvents, IReadOnlyList<IConsumableTrigger> consumableTriggers) {
+            var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.None
+            });
+            var jsonProvidedEvents = providedEvents.Select(ev => new JsonDeviceProvidedEvent(ev.Type, ev.Name)).ToList();
+            var jsonConsumableEvents = consumableEvents.Select(ev => new JsonDeviceConsumableEvent(ev.Type, ev.Functionality)).ToList(); 
+            var jsonConsumableTriggers = consumableTriggers.Select(ev => {
+                using var writer = new StringWriter();
+                serializer.Serialize(writer, ev.Parameters);
+                return new JsonDeviceConsumableTrigger(ev.Type, writer.ToString());
+            }).ToList();
+
+            RoutingOptions = new JsonDeviceRoutingOptions(address, jsonProvidedEvents, jsonConsumableEvents, jsonConsumableTriggers);
             return this;
         }
 
@@ -90,11 +102,12 @@ internal partial class WebApi
         public string TargetFunctionality { get; } = targetFunctionality;
     }
 
-    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents)
+    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents, List<JsonDeviceConsumableTrigger> consumableTriggers)
     {
         public string Address { get; } = address;
         public IReadOnlyList<JsonDeviceProvidedEvent> ProvidedEvents { get; } = providedEvents;
         public IReadOnlyList<JsonDeviceConsumableEvent> ConsumableEvents { get; } = consumedEvents;
+        public IReadOnlyList<JsonDeviceConsumableTrigger> ConsumableTriggers { get; } = consumableTriggers;
     }
 
     internal class JsonDeviceConsumableEvent(string eventType, string targetName)
@@ -109,9 +122,16 @@ internal partial class WebApi
         public string Name { get; } = name;
     }
 
+    internal class JsonDeviceConsumableTrigger(string eventType, string parameters)
+    {
+        public string EventType { get; } = eventType;
+        public string Parameters { get; } = parameters;
+    }
+
     internal class JsonOpenNetworkStatus(bool status, int time)
     {
         public bool Status { get; } = status;
         public int Time { get; } = time;
     }
+
 }

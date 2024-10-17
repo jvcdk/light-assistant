@@ -70,7 +70,7 @@ internal partial class Controller
             }
 
             internal override IEnumerable<InternalEventSink> ConsumedEvents => [
-                new InternalEventSink(typeof(InternalEvent_Push), "ToggleOnOff", HandleToggleOnOff),
+                new InternalEventSink(typeof(InternalEvent_Push), "Toggle on/off", HandleToggleOnOff),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Dim", HandleDim),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Fade", HandleFade)
             ];
@@ -94,11 +94,24 @@ internal partial class Controller
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
 
-                lock(_lock) {
-                    if(_fadeMode != FadeMode.Idle) {
+                HandleTurnOnOff(new TriggerEvent_TurnOnOff(string.Empty, TurnOnOffModes.Toggle) { UserGenerated = true });
+            }
+
+            [TriggerSink("TurnOnOff")]
+            private void HandleTurnOnOff(TriggerEvent_TurnOnOff ev)
+            {
+                lock (_lock) {
+                    if (_fadeMode != FadeMode.Idle) {
                         _fadeMode = FadeMode.Idle;
-                        return;
+                        if(ev.UserGenerated)
+                            return;
                     }
+
+                    if(ev.Mode == TurnOnOffModes.TurnOn && IsOn)
+                        return;
+
+                    if(ev.Mode == TurnOnOffModes.TurnOff && !IsOn)
+                        return;
 
                     var oldBrightness = _brightness;
                     if (IsOn) {

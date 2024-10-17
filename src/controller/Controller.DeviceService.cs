@@ -71,5 +71,8 @@ internal partial class Controller
 
         internal virtual IEnumerable<InternalEventSource> ProvidedEvents =>
             EnumerateServices().SelectMany(service => service.ProvidedEvents);
+
+        internal IEnumerable<TriggerEvent> ConsumedTriggers =>
+            EnumerateServices().SelectMany(service => service.ConsumedTriggers);
     }
 }

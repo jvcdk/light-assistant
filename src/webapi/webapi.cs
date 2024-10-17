@@ -155,12 +155,9 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                 response = response.WithDeviceRouting(device.Address, routes);
 
                 var routingOptions = AppController.GetRoutingOptionsFor(device);
-                if(routingOptions != null) {
-                    var jsonConsumableEvents = routingOptions.ConsumedEvents.Select(ev => new JsonDeviceConsumableEvent(ev.Type, ev.Functionality)).ToList(); 
-                    var jsonProvidedEvents = routingOptions.ProvidedEvents.Select(ev => new JsonDeviceProvidedEvent(ev.Type, ev.Name)).ToList();
-                    response = response.WithDeviceRoutingOptions(device.Address, jsonProvidedEvents, jsonConsumableEvents);
-                }
-
+                if(routingOptions != null)
+                    response = response.WithDeviceRoutingOptions(device.Address, routingOptions.ProvidedEvents, routingOptions.ConsumedEvents, routingOptions.ConsumedTriggers);
+ 
                 foreach(var inner in contexts)
                     await SendMessage(inner, response);
             }

@@ -13,10 +13,11 @@ internal partial class Controller
         public string TargetFunctionality { get; } = targetFunctionality;
     }
 
-    private class RoutingOptions(IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumedEvents) : IRoutingOptions
+    private class RoutingOptions(IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumedEvents, List<ConsumableTrigger> consumedTriggers) : IRoutingOptions
     {
         public IReadOnlyList<IProvidedEvent> ProvidedEvents { get; } = providedEvents;
         public IReadOnlyList<IConsumableEvent> ConsumedEvents { get; } = consumedEvents;
+        public IReadOnlyList<IConsumableTrigger> ConsumedTriggers { get; } = consumedTriggers;
     }
 
     private class ConsumableEvent(string type, string functionality) : IConsumableEvent
@@ -28,6 +29,13 @@ internal partial class Controller
     private class ProvidedEvent(string type, string name) : IProvidedEvent
     {
         public string Type { get; } = type;
+        
         public string Name { get; } = name;
+    }
+
+    private class ConsumableTrigger(string type, IReadOnlyList<ParamInfo> parameters) : IConsumableTrigger
+    {
+        public string Type { get; } = type;
+        public IReadOnlyList<ParamInfo> Parameters { get; } = parameters;
     }
 }

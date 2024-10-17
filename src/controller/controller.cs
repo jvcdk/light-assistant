@@ -125,7 +125,10 @@ internal partial class Controller : IController
         var consumedEvents = deviceInfo.Services.ConsumedEvents
             .Select(ev => new ConsumableEvent(GetInternalEventName(ev.EventType), ev.TargetName))
             .ToList();
-        return new RoutingOptions(providedEvents, consumedEvents);
+        var consumedTriggers = deviceInfo.Services.ConsumedTriggers
+            .Select(ev => new ConsumableTrigger(ev.Name, ev.Params))
+            .ToList();
+        return new RoutingOptions(providedEvents, consumedEvents, consumedTriggers);
     }
 
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
