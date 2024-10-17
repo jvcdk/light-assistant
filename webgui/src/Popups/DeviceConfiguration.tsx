@@ -177,7 +177,7 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
   }
 
   if(devData === null)
-    return (<div>Error: No device selected.</div>);
+    return ("");
 
   const device = devData.Device;
   return (
