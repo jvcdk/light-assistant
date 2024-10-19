@@ -156,7 +156,11 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
 
                 var routingOptions = AppController.GetRoutingOptionsFor(device);
                 if(routingOptions != null)
-                    response = response.WithDeviceRoutingOptions(device.Address, routingOptions.ProvidedEvents, routingOptions.ConsumedEvents, routingOptions.ConsumedTriggers);
+                    response = response.WithDeviceRoutingOptions(device.Address, routingOptions.ProvidedEvents, routingOptions.ConsumedEvents);
+
+                var consumableTriggers = AppController.GetConsumableTriggersFor(device);
+                if(consumableTriggers.Count > 0)
+                    response = response.WithScheduleTriggerOptions(device.Address, consumableTriggers);
  
                 foreach(var inner in contexts)
                     await SendMessage(inner, response);

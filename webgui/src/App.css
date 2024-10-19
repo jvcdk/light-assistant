@@ -10,11 +10,16 @@ h1 {
 
 input[type=button] {
   color: var(--light-assistant-primary);
-  border: 1px solid var(--light-assistant-primary);
+  border: 1px solid var(--light-assistant-border);
+  background-color: var(--light-assistant-background);
   padding: 0.25em 0.75em;
   border-radius: 0.25em;
   font-size: 100%;
   cursor: pointer;
+}
+
+input[type=button]:hover {
+  background-color: var(--light-assistant-background-hover);
 }
 
 input[type=button].Cancel {
@@ -22,13 +27,21 @@ input[type=button].Cancel {
   margin-right: 0.5em;
 }
 
+input[type=button].Cancel:hover {
+  background-color: var(--light-assistant-button-cancel-hover);
+}
+
 input[type=button].Ok {
   background-color: var(--light-assistant-button-ok);
   margin-left: 0.5em;
 }
 
+input[type=button].Ok:hover {
+  background-color: var(--light-assistant-button-ok-hover);
+}
+
 input[type=button]:active {
-  border-radius: 0.4em;
+  border-radius: 0.5em;
   border-style: dashed;
 }
 

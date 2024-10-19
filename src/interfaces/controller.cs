@@ -8,6 +8,7 @@ namespace LightAssistant.Interfaces
         Task SetRoutingFor(IDevice device, IEnumerable<IEventRoute> routes);
         Task SetDeviceName(IDevice device, string name);
         IRoutingOptions? GetRoutingOptionsFor(IDevice device);
+        IReadOnlyList<IConsumableTrigger> GetConsumableTriggersFor(IDevice device);
         bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status);
         Task RequestOpenNetwork();
     }

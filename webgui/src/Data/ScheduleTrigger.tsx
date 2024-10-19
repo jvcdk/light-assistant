@@ -28,7 +28,6 @@ export class TimeOfDay {
 }
 
 export class ScheduleTrigger {
-  Enabled: boolean = false;
   Days: DayName[] = [];
   Time: TimeOfDay = new TimeOfDay(0, 0);
 }

@@ -6,7 +6,7 @@ import SvgRouteMapsTo from '../image/route_maps_to.svg';
 import { IDeviceProvidedEvent, IDeviceRoute } from '../Data/JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
-import { DeviceData } from '../Data/DeviceData';
+import { DeviceData1 } from '../Data/DeviceData';
 import Popup from 'reactjs-popup';
 
 interface IDeviceRouteWithKey extends IDeviceRoute {
@@ -89,7 +89,7 @@ function Route(prop: {route: IDeviceRouteWithKey, idx: number, routingOptions: I
       <select className='RouteSourceEvent' defaultValue={prop.route.SourceEvent} onChange={(e) => { UpdateSourceEvent(e.target.value); }}>
         <option value="">&lt;Please select&gt;</option>
         {prop.routingOptions.map((optionSourceEvent) => <option key={optionSourceEvent.Name} value={optionSourceEvent.Name}>{optionSourceEvent.Name}</option>)}
-      </select>      
+      </select>
 
       {showRouteTargetIcon ? <SvgRouteMapsTo /> : null}
       <TargetRoutingOptions targetAddress={prop.route.TargetAddress} routeTargetOptions={routeTargetOptions} cb={prop.cb} onChange={UpdateTarget} />
@@ -110,7 +110,7 @@ function CreateEmptyRoutingWithKey() : IDeviceRouteWithKey {
   } as IDeviceRouteWithKey;
 }
 
-function RoutingOptions(prop: {devData: DeviceData, cb: IRoutingOptionsCallbacks, setDeviceRoute: (route: IDeviceRoute[]) => void }) {
+function RoutingOptions(prop: {devData: DeviceData1, cb: IRoutingOptionsCallbacks, setDeviceRoute: (route: IDeviceRoute[]) => void }) {
   const devData = prop.devData;
   const routingOptions = devData.RoutingOptions;
 
@@ -158,12 +158,12 @@ function RoutingOptions(prop: {devData: DeviceData, cb: IRoutingOptionsCallbacks
 
 export interface DeviceConfigurationProps {
   isOpen: boolean;
-  devData: DeviceData | null;
+  devData: DeviceData1 | null;
   routingCallbacks: IRoutingOptionsCallbacks;
-  onClose: (devData: DeviceData | null) => void;
+  onClose: (devData: DeviceData1 | null) => void;
 }
 export function DeviceConfiguration(props: DeviceConfigurationProps) {
-  const [devData, setDevData] = useState<DeviceData|null>(null);
+  const [devData, setDevData] = useState<DeviceData1|null>(null);
 
   useEffect(() => {
     setDevData(cloneDeep(props.devData));
@@ -173,7 +173,7 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
     setDevData({
       ...devData,
       Routing: route,
-    } as DeviceData);
+    } as DeviceData1);
   }
 
   if(devData === null)

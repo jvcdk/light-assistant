@@ -12,7 +12,6 @@ namespace LightAssistant.Interfaces
     {
         internal IReadOnlyList<IProvidedEvent> ProvidedEvents { get; }
         internal IReadOnlyList<IConsumableEvent> ConsumedEvents { get; }
-        public IReadOnlyList<IConsumableTrigger> ConsumedTriggers { get; }
     }
 
     internal interface IConsumableEvent

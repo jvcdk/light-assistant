@@ -1,5 +1,5 @@
 import './Device.css'
-import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
+import { DeviceData1, FindDeviceData1Type } from '../Data/DeviceData';
 import { IDeviceRoute } from '../Data/JsonTypes';
 
 function DeviceBattery(prop: { battery: number | undefined })
@@ -42,7 +42,7 @@ function DeviceOnState(prop: { onState: boolean | undefined })
     )
 }
 
-function Route(route: IDeviceRoute, idx: number, findDevice: FindDeviceDataType)
+function Route(route: IDeviceRoute, idx: number, findDevice: FindDeviceData1Type)
 {
   const targetName = findDevice(route.TargetAddress)?.Device.Name || route.TargetAddress;
   return (
@@ -50,7 +50,7 @@ function Route(route: IDeviceRoute, idx: number, findDevice: FindDeviceDataType)
   )
 }
 
-function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceDataType })
+function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceData1Type })
 {
   const routing = prop.routing || [];
     return (
@@ -60,7 +60,7 @@ function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceDa
     )
 }
 
-export function Device(devData: DeviceData, openPopup: () => void, findDevice: FindDeviceDataType) {
+export function Device(devData: DeviceData1, openPopup: () => void, findDevice: FindDeviceData1Type) {
   const device = devData.Device;
   const status = devData.Status;
   const routing = devData.Routing;

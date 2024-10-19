@@ -26,10 +26,10 @@
 }
 
 .DaySelector div.Day.selected {
-  background: var(--light-assistant-highlight-2);
+  background: var(--light-assistant-highlight-1);
 }
 
 .DaySelector div.Day:hover,
 .DaySelector div.ToggleAll:hover {
-  background: var(--light-assistant-highlight-1);
+  background: var(--light-assistant-background-hover);
 }

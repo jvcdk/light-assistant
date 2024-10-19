@@ -14,6 +14,7 @@ internal partial class WebApi
         public JsonDeviceStatus? DeviceStatus { get; private set; }
         public JsonDeviceRouting? Routing { get; private set; }
         public JsonDeviceRoutingOptions? RoutingOptions { get; private set; }
+        public JsonScheduleTriggerOptions? ScheduleTriggerOptions { get; private set; }
         public JsonOpenNetworkStatus? OpenNetworkStatus { get; private set; }
 
         internal static JsonServerToClientMessage Empty() => new();
@@ -33,20 +34,21 @@ internal partial class WebApi
             return this;
         }
 
-        internal JsonServerToClientMessage WithDeviceRoutingOptions(string address, IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumableEvents, IReadOnlyList<IConsumableTrigger> consumableTriggers) {
-            var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.None
-            });
+        internal JsonServerToClientMessage WithDeviceRoutingOptions(string address, IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumableEvents) {
             var jsonProvidedEvents = providedEvents.Select(ev => new JsonDeviceProvidedEvent(ev.Type, ev.Name)).ToList();
             var jsonConsumableEvents = consumableEvents.Select(ev => new JsonDeviceConsumableEvent(ev.Type, ev.Functionality)).ToList(); 
-            var jsonConsumableTriggers = consumableTriggers.Select(ev => {
-                using var writer = new StringWriter();
-                serializer.Serialize(writer, ev.Parameters);
-                return new JsonDeviceConsumableTrigger(ev.Type, writer.ToString());
-            }).ToList();
 
-            RoutingOptions = new JsonDeviceRoutingOptions(address, jsonProvidedEvents, jsonConsumableEvents, jsonConsumableTriggers);
+            RoutingOptions = new JsonDeviceRoutingOptions(address, jsonProvidedEvents, jsonConsumableEvents);
+            return this;
+        }
+
+        internal JsonServerToClientMessage WithScheduleTriggerOptions(string address, IReadOnlyList<IConsumableTrigger> consumableTriggers)
+        {
+            var jsonConsumableTriggers = consumableTriggers.Select(entry => {
+                var @params = entry.Parameters.Select(param => JSonParamInfo.FromParamInfo(param)).ToList();
+                return new JsonDeviceConsumableTrigger(entry.Type, @params);
+            }).ToList();
+            ScheduleTriggerOptions = new JsonScheduleTriggerOptions(address, jsonConsumableTriggers);
             return this;
         }
 
@@ -60,7 +62,7 @@ internal partial class WebApi
     /// Serializing an interface (i.e. IDevice) directly, does not produce json information for the interface,
     /// but for the implementing object. Hence we need to create a specific object for IDevice.
     /// 
-    /// Must match IDevice in Device.tsx
+    /// Must match IDevice in JsonTypes.tsx
     /// </summary>
     public class JsonDevice(IDevice source)
     {
@@ -75,7 +77,7 @@ internal partial class WebApi
     }
 
     /// <summary>
-    /// Must match IDeviceStatus in Device.tsx
+    /// Must match IDeviceStatus in JsonTypes.tsx
     /// </summary>
     public class JsonDeviceStatus(string address, IDeviceStatus source)
     {
@@ -87,7 +89,7 @@ internal partial class WebApi
     }
 
     /// <summary>
-    /// Must match IDeviceRouting in Device.tsx
+    /// Must match IDeviceRouting in JsonTypes.tsx
     /// </summary>
     public class JsonDeviceRouting(string address, IReadOnlyList<JsonDeviceRoute> routing)
     {
@@ -102,11 +104,16 @@ internal partial class WebApi
         public string TargetFunctionality { get; } = targetFunctionality;
     }
 
-    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents, List<JsonDeviceConsumableTrigger> consumableTriggers)
+    public class JsonDeviceRoutingOptions(string address, IReadOnlyList<JsonDeviceProvidedEvent> providedEvents, IReadOnlyList<JsonDeviceConsumableEvent> consumedEvents)
     {
         public string Address { get; } = address;
         public IReadOnlyList<JsonDeviceProvidedEvent> ProvidedEvents { get; } = providedEvents;
         public IReadOnlyList<JsonDeviceConsumableEvent> ConsumableEvents { get; } = consumedEvents;
+    }
+
+    public class JsonScheduleTriggerOptions(string address, IReadOnlyList<JsonDeviceConsumableTrigger> consumableTriggers)
+    {
+        public string Address { get; } = address;
         public IReadOnlyList<JsonDeviceConsumableTrigger> ConsumableTriggers { get; } = consumableTriggers;
     }
 
@@ -122,10 +129,49 @@ internal partial class WebApi
         public string Name { get; } = name;
     }
 
-    internal class JsonDeviceConsumableTrigger(string eventType, string parameters)
+    internal class JsonDeviceConsumableTrigger(string eventType, IReadOnlyList<JSonParamInfo> parameters)
     {
         public string EventType { get; } = eventType;
-        public string Parameters { get; } = parameters;
+        public IReadOnlyList<JSonParamInfo> Parameters { get; } = parameters;
+    }
+
+    /**
+     * JSonParamInfo covers both ParamInfo and ParamDescriptor.
+     * This is a base class; descendants match descendants of ParamDescriptor.
+     */
+    internal abstract class JSonParamInfo(string name)
+    {
+        public abstract string Type { get; }
+        public string Name { get; } = name;
+
+        public static JSonParamInfo FromParamInfo(ParamInfo source) {
+            return source.Param switch {
+                ParamEnum paramEnum => new JSonParamEnum(source.Name, paramEnum.Values, paramEnum.Default),
+                ParamBrightness paramBrightness => new JsonParamBrightness(source.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default),
+                ParamFloat paramFloat => new JSonParamFloat(source.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default),
+                _ => throw new ArgumentException("Unknown ParamDescriptor type"),
+            };
+        }
+    }
+
+    internal class JSonParamEnum(string name, string[] values, string defaultValue) : JSonParamInfo(name)
+    {
+        public override string Type => "enum";
+        public string[] Values { get; } = values;
+        public string Default { get; } = defaultValue;
+    }
+
+    internal class JSonParamFloat(string name, double min, double max, double defaultValue) : JSonParamInfo(name)
+    {
+        public override string Type => "float";
+        public double Min { get; } = min;
+        public double Max { get; } = max;
+        public double Default { get; } = defaultValue;
+    }
+
+    internal class JsonParamBrightness(string name, double min, double max, double defaultValue) : JSonParamFloat(name, min, max, defaultValue)
+    {
+        public override string Type => "brightness";
     }
 
     internal class JsonOpenNetworkStatus(bool status, int time)

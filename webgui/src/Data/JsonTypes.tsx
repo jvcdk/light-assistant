@@ -6,6 +6,7 @@ export interface IServerToClientMessage {
   DeviceStatus: IDeviceStatus | undefined;
   Routing: IDeviceRouting;
   RoutingOptions: IDeviceRoutingOptions | undefined;
+  ScheduleTriggerOptions: IScheduleTriggerOptions | undefined;
   OpenNetworkStatus : IOpenNetworkStatus | undefined;
 }
 
@@ -73,6 +74,53 @@ export interface IDeviceConsumableEvent {
 export interface IDeviceProvidedEvent {
   EventType: string;
   Name: string;
+}
+
+/**
+ * Should match JsonScheduleTriggerOptions
+ */
+export interface IScheduleTriggerOptions {
+  Address: string;
+  ConsumableTriggers: IDeviceConsumableTrigger[];
+}
+
+/**
+ * Should match JsonDeviceConsumableTrigger
+ */
+export interface IDeviceConsumableTrigger {
+  EventType: string;
+  Parameters: IParamInfo[];
+}
+
+/**
+ * Should match JsonParamInfo
+ */
+export interface IParamInfo {
+  Name: string;
+  Type: string;
+}
+
+/**
+ * Should match JsonParamEnum
+ */
+export interface IParamEnum extends IParamInfo {
+  Values: string[];
+  Default: string;
+}
+
+/**
+ * Should match JsonParamFloat
+ */
+export interface IParamFloat extends IParamInfo {
+  Min: number;
+  Max: number;
+  Default: number;
+}
+
+/**
+ * Should match JsonParamBrightness
+ */
+export interface IParamBrightness extends IParamFloat {
 }
 
 /**

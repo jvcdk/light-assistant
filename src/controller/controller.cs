@@ -125,10 +125,20 @@ internal partial class Controller : IController
         var consumedEvents = deviceInfo.Services.ConsumedEvents
             .Select(ev => new ConsumableEvent(GetInternalEventName(ev.EventType), ev.TargetName))
             .ToList();
-        var consumedTriggers = deviceInfo.Services.ConsumedTriggers
+        return new RoutingOptions(providedEvents, consumedEvents);
+    }
+
+    public IReadOnlyList<IConsumableTrigger> GetConsumableTriggersFor(IDevice device)
+    {
+        using var _ = _devicesLock.ObtainReadLock();
+
+        if(!_devices.TryGetValue(device, out var deviceInfo)) {
+            _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
+            return [];
+        }
+        return deviceInfo.Services.ConsumedTriggers
             .Select(ev => new ConsumableTrigger(ev.Name, ev.Params))
             .ToList();
-        return new RoutingOptions(providedEvents, consumedEvents, consumedTriggers);
     }
 
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
