@@ -1,11 +1,12 @@
 import './DeviceConfiguration.css'
 
-import { IDeviceRoute } from '../Data/JsonTypes';
+import { IDeviceRoute, IDeviceScheduleEntry } from '../Data/JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
 import { DeviceData1 } from '../Data/DeviceData';
 import Popup from 'reactjs-popup';
 import { IRoutingOptionsCallbacks, DeviceRoutingOptions } from '../Widgets/DeviceRoutingOptions';
+import { DeviceScheduleOptions } from '../Widgets/DeviceScheduleOptions';
 
 export interface DeviceConfigurationProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export interface DeviceConfigurationProps {
 }
 export function DeviceConfiguration(props: DeviceConfigurationProps) {
   const [devData, setDevData] = useState<DeviceData1|null>(null);
+  const [closeOnEscape, setCloseOnEscape] = useState(true);
 
   useEffect(() => {
     setDevData(cloneDeep(props.devData));
@@ -27,12 +29,19 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
     } as DeviceData1);
   }
 
+  function UpdateDeviceSchedule(schedule: IDeviceScheduleEntry[]) {
+    setDevData({
+      ...devData,
+      Schedule: schedule,
+    } as DeviceData1);
+  }
+
   if(devData === null)
     return ("");
 
   const device = devData.Device;
   return (
-    <Popup open={props.isOpen} onClose={() => props.onClose(null)} modal closeOnDocumentClick={false}>
+    <Popup closeOnEscape={closeOnEscape} open={props.isOpen} onClose={() => props.onClose(null)} modal closeOnDocumentClick={false}>
       <div className='DeviceConfiguration'>
         <div className='Title'>{device.Vendor} – {device.Model}</div>
         <div className='SubTitle'>{device.Description}</div>
@@ -46,7 +55,7 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
           </div>
           <div className='Schedule'>
             <label className='Label'>Schedule:</label>
-            <div>No schedule rules defined.</div>
+            <DeviceScheduleOptions devData={devData} setSchedule={UpdateDeviceSchedule} onChildOpenChanged={(val) => setCloseOnEscape(!val)} />
           </div>
         <div className='Buttons'>
           <input className='Cancel' type='button' onClick={() => props.onClose(null)} value="Cancel" />

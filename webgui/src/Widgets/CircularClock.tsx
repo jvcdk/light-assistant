@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { TimeOfDay } from '../Data/ScheduleTrigger';
 import { RenderTimeOfDay } from './RenderTimeOfDay';
 import './CircularClock.css';
+import { State } from '../Utils/State';
 
 export enum ClockMode {
   Hour,
@@ -51,24 +52,15 @@ export interface CircularClockProps {
 }
 
 export function CircularClock(props: CircularClockProps) {
-  const [selectedTime, setSelectedTime] = useState(props.initialTime);
+  const selectedTime = new State(useState(props.initialTime));
+  selectedTime.addListener("CircularClock", props.onTimeChange);
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState(props.mode);
 
-  const setSelectedHour = useCallback((hour: number) => {
-    const newTime = { ...selectedTime, Hour: hour };
-    setSelectedTime(newTime);
-    props.onTimeChange(newTime);
-  }, [props, selectedTime]);
-
-  const setSelectedMinute = useCallback((minute: number) => {
-    const newTime = { ...selectedTime, Minute: minute };
-    setSelectedTime(newTime);
-    props.onTimeChange(newTime);
-  }, [props, selectedTime]);
-
   const updateTime = useCallback((e: MouseEvent) => {
     const circularClock = (e.target as HTMLElement).closest('.CircularClock') as HTMLElement;
+    if(!circularClock)
+      return;
     const rect = circularClock.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -85,12 +77,12 @@ export function CircularClock(props: CircularClockProps) {
       let hour = Math.round((normalizedDegrees / 30) % 12);
       if(radius < centerX * 0.75)
         hour += 12;
-      setSelectedHour(hour);
+      selectedTime.val.hour = hour;
     } else {
       const minute = Math.round((normalizedDegrees / 6) % 60);
-      setSelectedMinute(minute);
+      selectedTime.val.minute = minute;
     }
-  }, [mode, setSelectedHour, setSelectedMinute]);
+  }, [mode, selectedTime.val]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default text selection
@@ -120,9 +112,9 @@ export function CircularClock(props: CircularClockProps) {
   }, [handleMouseMove, handleMouseUp, isDragging]);
 
   const isModeHour = mode == ClockMode.Hour;
-  const handClass = (isModeHour && selectedTime.Hour >= 12) ? 'Hand Inner' : 'Hand Outer';
-  const handAngle = (isModeHour ? selectedTime.Hour * 30 : selectedTime.Minute * 6) + 90;
-  const selectedDigit = isModeHour ? selectedTime.Hour : selectedTime.Minute;
+  const handClass = (isModeHour && selectedTime.val.hour >= 12) ? 'Hand Inner' : 'Hand Outer';
+  const handAngle = (isModeHour ? selectedTime.val.hour * 30 : selectedTime.val.minute * 6) + 90;
+  const selectedDigit = isModeHour ? selectedTime.val.hour : selectedTime.val.minute;
 
   return (
     <div>
@@ -130,7 +122,7 @@ export function CircularClock(props: CircularClockProps) {
         <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${handAngle}deg)` }} />
         <ClockDigits Mode={mode} SelectedDigit={selectedDigit} />
         <span className='CenterTime'>
-          <RenderTimeOfDay selected={mode} Time={selectedTime} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
+          <RenderTimeOfDay selected={mode} Time={selectedTime.val} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
         </span>
       </div>
     </div>

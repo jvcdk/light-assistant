@@ -5,24 +5,26 @@
 
 .DaySelector .Day {
   display: inline-block;
-  padding: 5px;
-  margin: 5px;
+  margin: 2px;
+  padding: 6px 5px 5px 6px;
   border: 1px solid var(--light-assistant-border);
   cursor: pointer;
-  width: 2em;
+  width: 1em;
   text-align: center;
-  border-radius: 2em;
-  line-height: 2em;
+  border-radius: 1em;
+  line-height: 1em;
+  user-select: none;
 }
 
 .DaySelector .ToggleAll {
-  padding: 5px;
-  margin: 5px;
-  border: 2px dashed var(--light-assistant-border);
+  display: inline-block;
+  padding: 2px 20px 2px 20px;
+  margin: 2px;
+  border: 1px solid var(--light-assistant-border);
   cursor: pointer;
   text-align: center;
-  line-height: 2em;
-  float: right;
+  border-radius: 0.5em;
+  user-select: none;
 }
 
 .DaySelector div.Day.selected {

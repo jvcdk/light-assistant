@@ -1,0 +1,41 @@
+.ScheduleOptions {
+    max-height: 50vh;
+    overflow-y: scroll;
+    
+}
+div.ScheduleEntry {
+    padding: 0.5em;
+    background-color: var(--light-assistant-highlight-tr1);
+}
+
+div.ScheduleEntry:nth-child(2n) {
+    background-color: var(--light-assistant-highlight-tr2);
+}
+
+div.ScheduleEntry > div,
+div.ScheduleEntry > span {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 1rem;
+}
+
+div.ScheduleEntry > span:last-child {
+    margin-right: 0;
+}
+
+div.ScheduleEntry span.Time {
+    font-size: 150%;
+}
+
+div.ScheduleEntry .Param {
+    padding-left: 1rem;
+}
+
+div.ScheduleEntry .Param::before {
+    content: '•';
+    margin-right: 0.25rem;
+}
+
+div.ScheduleEntry .Param select {
+    width: auto;
+}

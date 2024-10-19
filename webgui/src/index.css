@@ -36,3 +36,12 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+.FlexHori {
+  display: flex;
+  flex-direction: row;
+}
+
+.Spacer {
+  flex-grow: 1;
+}

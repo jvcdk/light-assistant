@@ -6,8 +6,14 @@ span.Time > span {
   display: inline-block;
   text-align: center;
   cursor: pointer;
+  user-select: none;
 }
 
 span.Time span.selected {
   color: var(--light-assistant-highlight-2);
+}
+
+span.Time.clickable {
+  cursor: pointer;
+  user-select: none;
 }
