@@ -33,30 +33,6 @@
     font-size: 100%;
 }
 
-.DeviceConfiguration .Routing {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-}
-
-.DeviceConfiguration .Routing .Route {
-    margin-bottom: 0.25em;
-    margin-left: 0.5em;
-}
-
-.DeviceConfiguration .Routing .Route svg {
-    vertical-align: middle;
-}
-
-.DeviceConfiguration .Routing .Route select {
-    background-color: var(--light-assistant-highlight-tr2);
-    color: var(--light-assistant-primary);
-    border: 1px solid var(--light-assistant-primary);
-    padding: 0.25em 0.75em;
-    border-radius: 0.25em;
-    font-size: 100%;
-    width: 8.5em;
-}
-
 .DeviceConfiguration .Buttons {
     display: flex;
     justify-content: space-between;
