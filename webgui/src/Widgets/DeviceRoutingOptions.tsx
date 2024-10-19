@@ -97,7 +97,7 @@ export function Route(prop: {route: IDeviceRouteWithKey, idx: number, routingOpt
   )
 }
 
-export let routingKey: number = 1;
+let routingKey: number = 1;
 export function CreateEmptyRoutingWithKey() : IDeviceRouteWithKey {
   return {
     SourceEvent: "",

@@ -2,8 +2,8 @@
   position: relative;
   width: 15em;
   height: 15em;
-  border: 3px solid var(--light-assistant-highlight-2);
-  border-radius: 20%;
+  border: 1px dashed var(--light-assistant-highlight-2);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,7 +37,6 @@ div.ClockDigit.HoursPm {
 }
 
 div.ClockDigit.selected {
-  /*border: 2px solid var(--light-assistant-highlight-2);*/
   background: var(--light-assistant-highlight-2);
   border-radius: 50%;
 }

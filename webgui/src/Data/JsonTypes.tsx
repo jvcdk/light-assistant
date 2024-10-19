@@ -77,6 +77,39 @@ export interface IDeviceProvidedEvent {
 }
 
 /**
+ * Should match JsonDeviceSchedule
+ */
+export interface IDeviceSchedule {
+  Address: string;
+  Schedule: IDeviceScheduleEntry[];
+}
+
+/**
+ * Should match JsonDeviceScheduleEntry
+ */
+export interface IDeviceScheduleEntry {
+  EventType: string | undefined; // EventType is the action to be taken
+  Parameters: Map<string, string>;
+  Trigger: IScheduleTrigger;
+}
+
+/**
+ * Should match JsonScheduleTrigger
+ */
+export interface ITimeOfDay {
+  hour: number;
+  minute: number;
+}
+
+/**
+ * Should match JsonScheduleTrigger
+ */
+export interface IScheduleTrigger {
+  Days: number[];
+  Time: ITimeOfDay;
+}
+
+/**
  * Should match JsonScheduleTriggerOptions
  */
 export interface IScheduleTriggerOptions {

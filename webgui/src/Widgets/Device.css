@@ -9,7 +9,7 @@
 }
 
 .Device:hover {
-    background-color: var(--light-assistant-highlight-2);
+    background-color: var(--light-assistant-background-hover);
 }
 
 .Heading > div,

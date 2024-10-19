@@ -2,16 +2,26 @@ import './RenderTimeOfDay.css';
 import { TimeOfDay } from "../Data/ScheduleTrigger";
 import { ClockMode } from './CircularClock';
 
-export function RenderTimeOfDay(props: {Time: TimeOfDay, OnHourClick?: () => void, OnMinutesClick?: () => void, selected?: ClockMode}) {
-  const hourStr = props.Time.Hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
-  const minuteStr = props.Time.Minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
+interface RenderTimeOfDayProps {
+  Time: TimeOfDay;
+  OnTimeClick?: () => void;
+  OnHourClick?: () => void;
+  OnMinutesClick?: () => void;
+  selected?: ClockMode;
+}
 
-  const hourSelected = props.selected == ClockMode.Hour ? ' selected' : '';
-  const minuteSelected = props.selected == ClockMode.Minute ? ' selected' : '';
+export function RenderTimeOfDay(props: RenderTimeOfDayProps) {
+  const { Time, OnTimeClick, OnHourClick, OnMinutesClick, selected } = props;
+  const hourStr = Time.hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
+  const minuteStr = Time.minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
+
+  const hourSelected = selected == ClockMode.Hour ? ' selected' : '';
+  const minuteSelected = selected == ClockMode.Minute ? ' selected' : '';
+  const timeClass = OnTimeClick ? ' clickable' : '';
 
   return (
-    <span className='Time'>
-      <span className={`Hour${hourSelected}`} onClick={props.OnHourClick}>{hourStr}</span>:<span className={`Minute${minuteSelected}`} onClick={props.OnMinutesClick}>{minuteStr}</span>
+    <span className={'Time' + timeClass} onClick={OnTimeClick}>
+      <span className={`Hour${hourSelected}`} onClick={OnHourClick}>{hourStr}</span>:<span className={`Minute${minuteSelected}`} onClick={OnMinutesClick}>{minuteStr}</span>
     </span>
   );
 }
