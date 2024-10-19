@@ -3,8 +3,9 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "../WebSocketContext";
 import { Device } from "../Widgets/Device";
 import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IServerToClientMessage } from '../Data/JsonTypes';
-import { GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType, DeviceConfiguration, GetTargetFunctionalityOptionsType } from '../Popups/DeviceConfiguration';
 import { DeviceData1, FindDeviceData1Type } from '../Data/DeviceData';
+import { GetTargetFunctionalityOptionsType, GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType } from '../Widgets/DeviceRoutingOptions';
+import { DeviceConfiguration } from '../Popups/DeviceConfiguration';
 
 export function DeviceList() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);
