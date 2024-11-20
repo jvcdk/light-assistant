@@ -1,7 +1,7 @@
 import './DeviceScheduleOptions.css'
 import { useEffect, useReducer, useState } from "react";
 import { DeviceData } from "../Data/DeviceData";
-import { IDeviceConsumableTrigger, IDeviceScheduleEntry } from "../Data/JsonTypes";
+import { IDeviceConsumableAction, IDeviceScheduleEntry } from "../Data/JsonTypes";
 import { ParamOption } from './ParameterOption';
 import { ScheduleTrigger } from '../Data/ScheduleTrigger';
 import { DaySelector } from './DaySelector';
@@ -62,7 +62,7 @@ class DeviceScheduleEntryWithKey extends Listener<IDeviceScheduleEntry, DeviceSc
 }
 
 interface ActionOptionsProps {
-  info: IDeviceConsumableTrigger;
+  info: IDeviceConsumableAction;
   values: Map<string, string>;
   onChange: (value: Map<string, string>) => void;
 }
@@ -93,7 +93,7 @@ function ActionOptions(props: ActionOptionsProps) {
 
 interface IScheduleEntryProps {
   entry: DeviceScheduleEntryWithKey;
-  consumableTriggers: IDeviceConsumableTrigger[];
+  consumableTriggers: IDeviceConsumableAction[];
   onChildOpenChanged: Action<boolean>;
 }
 
@@ -138,7 +138,7 @@ export interface DeviceScheduleOptionsProps {
 export function DeviceScheduleOptions(prop: DeviceScheduleOptionsProps) {
   const { devData, setSchedule, onChildOpenChanged  } = prop;
   const [localSchedule, setLocalSchedule] = useState<DeviceScheduleEntryWithKey[]>([]);
-  const consumableTriggers = devData.ConsumableTriggers;
+  const consumableTriggers = devData.ConsumableActions;
 
   useEffect(() => {
     const scheduleWithKey = devData.Schedule.map(schedule => new DeviceScheduleEntryWithKey(schedule));

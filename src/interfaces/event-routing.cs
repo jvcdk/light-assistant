@@ -26,7 +26,7 @@ namespace LightAssistant.Interfaces
         internal string Name { get; }
     }
 
-    internal interface IConsumableTrigger
+    internal interface IConsumableAction
     {
         internal string Type { get; }
         internal IReadOnlyList<ParamInfo> Parameters { get; }
