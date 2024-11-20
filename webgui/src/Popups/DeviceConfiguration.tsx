@@ -7,6 +7,7 @@ import { DeviceData } from '../Data/DeviceData';
 import Popup from 'reactjs-popup';
 import { IRoutingOptionsCallbacks, DeviceRoutingOptions } from '../Widgets/DeviceRoutingOptions';
 import { DeviceScheduleOptions } from '../Widgets/DeviceScheduleOptions';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 export interface DeviceConfigurationProps {
   isOpen: boolean;
@@ -43,24 +44,33 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
   return (
     <Popup closeOnEscape={closeOnEscape} open={props.isOpen} onClose={() => props.onClose(null)} modal closeOnDocumentClick={false}>
       <div className='DeviceConfiguration'>
-        <div className='Title'>{device.Vendor} – {device.Model}</div>
-        <div className='SubTitle'>{device.Description}</div>
-        <div className='SubTitle'>Address: {device.Address}</div>
-        <div className='Content'>
-          <label className='Label'>Friendly name:</label>
-          <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
-          <div className='Routing'>
-            <label className='Label'>Routing:</label>
+      <div className='Title'>{device.Name}</div>
+        <div className='SubTitle'>{device.Address}</div>
+        <Tabs>
+          <TabList>
+            <Tab>General</Tab>
+            <Tab>Routing</Tab>
+            <Tab>Schedule</Tab>
+          </TabList>
+          <TabPanel>
+            <div className='Grid'>
+              <label>Vendor:</label><span>{device.Vendor}</span>
+              <label>Model:</label><span>{device.Model}</span>
+              <label>Description:</label><span>{device.Description}</span>
+              <label>Friendly name:</label>
+              <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
+            </div>
+          </TabPanel>
+          <TabPanel className='Routing'>
             <DeviceRoutingOptions devData={devData} cb={props.routingCallbacks} setDeviceRoute={UpdateDeviceRoute} />
-          </div>
-          <div className='Schedule'>
-            <label className='Label'>Schedule:</label>
+          </TabPanel>
+          <TabPanel className='Schedule'>
             <DeviceScheduleOptions devData={devData} setSchedule={UpdateDeviceSchedule} onChildOpenChanged={(val) => setCloseOnEscape(!val)} />
-          </div>
+          </TabPanel>
+        </Tabs>
         <div className='Buttons'>
           <input className='Cancel' type='button' onClick={() => props.onClose(null)} value="Cancel" />
           <input className='Ok' type='button' onClick={() => props.onClose(devData)} value="Apply" />
-        </div>
         </div>
       </div>
     </Popup>

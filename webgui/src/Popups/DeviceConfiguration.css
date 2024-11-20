@@ -13,24 +13,8 @@
     margin: auto;
 }
 
-.DeviceConfiguration .Content {
-    padding: 0.5em;
-    padding-top: 1em;
-}
-
-.DeviceConfiguration .Label {
-    margin-right: 0.25em;
-}
-
-
 .DeviceConfiguration .FriendlyName {
-    border: none;
-    border-bottom: 1px solid var(--light-assistant-primary);
-    outline: none;
-    padding: 0.25em;
-    color: var(--light-assistant-primary);
-    background: none;
-    font-size: 100%;
+    max-width: 12rem;
 }
 
 .DeviceConfiguration .Buttons {
@@ -38,4 +22,16 @@
     justify-content: space-between;
     padding-top: 0.5em;
     padding-bottom: 0.25em;
+}
+
+.DeviceConfiguration .react-tabs {
+    margin: 1rem 0;
+}
+
+.DeviceConfiguration .Grid label {
+    grid-column: 1;
+}
+
+.DeviceConfiguration .Grid span {
+    grid-column: 2;
 }
