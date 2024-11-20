@@ -4,7 +4,7 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract class TriggerEvent(string targetDevice)
+    private abstract class ActionEvent(string targetDevice)
     {
         public string TargetDevice { get; } = targetDevice;
 
@@ -13,7 +13,7 @@ internal partial class Controller
         public string Type {
             get {
                 var typeName = GetType().ToString();
-                var fullName = typeof(TriggerEvent).FullName ?? "";
+                var fullName = typeof(ActionEvent).FullName ?? "";
                 fullName += "_";
                 if(typeName.StartsWith(fullName))
                     typeName = typeName[fullName.Length..];
@@ -24,13 +24,13 @@ internal partial class Controller
 
     public enum TurnOnOffModes { Toggle, TurnOn, TurnOff }
 
-    private class TriggerEvent_TurnOnOff(string targetDevice, TurnOnOffModes mode) : TriggerEvent(targetDevice)
+    private class ActionEvent_TurnOnOff(string targetDevice, TurnOnOffModes mode) : ActionEvent(targetDevice)
     {
         [ParamEnum(typeof(TurnOnOffModes))]
         public TurnOnOffModes Mode { get; } = mode;
     }
 
-    private class TriggerEvent_FadeToBrightness(string targetDevice, double brightness, double duration) : TriggerEvent(targetDevice)
+    private class ActionEvent_FadeToBrightness(string targetDevice, double brightness, double duration) : ActionEvent(targetDevice)
     {
         [ParamBrightness()]
         public double Brightness { get; } = brightness;
@@ -40,12 +40,12 @@ internal partial class Controller
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class TriggerSink(string name) : Attribute
+    public class ActionSink(string name) : Attribute
     {
         public string Name { get; } = name;
     }
 
-    private class TriggerInfo(string name, MethodInfo method, IReadOnlyList<ParamInfo> @params)
+    private class ActionInfo(string name, MethodInfo method, IReadOnlyList<ParamInfo> @params)
     {
         public string Name { get; } = name;
         public MethodInfo Method { get; } = method;

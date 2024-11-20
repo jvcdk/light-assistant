@@ -11,6 +11,13 @@ internal partial class Controller
         public string SourceEvent { get; } = sourceEvent;
         public string TargetAddress { get; } = targetAddress;
         public string TargetFunctionality { get; } = targetFunctionality;
+
+        internal bool Validate()
+        {
+            return !string.IsNullOrWhiteSpace(SourceEvent) && 
+                !string.IsNullOrWhiteSpace(TargetAddress) &&
+                !string.IsNullOrWhiteSpace(TargetFunctionality);
+        }
     }
 
     private class RoutingOptions(IReadOnlyList<IProvidedEvent> providedEvents, IReadOnlyList<IConsumableEvent> consumedEvents) : IRoutingOptions
@@ -32,7 +39,7 @@ internal partial class Controller
         public string Name { get; } = name;
     }
 
-    private class ConsumableTrigger(string type, IReadOnlyList<ParamInfo> parameters) : IConsumableTrigger
+    private class ConsumableAction(string type, IReadOnlyList<ParamInfo> parameters) : IConsumableAction
     {
         public string Type { get; } = type;
         public IReadOnlyList<ParamInfo> Parameters { get; } = parameters;

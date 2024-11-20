@@ -1,4 +1,4 @@
-import { IDevice, IDeviceConsumableTrigger, IDeviceRoute, IDeviceRoutingOptions, IDeviceStatus, IDeviceScheduleEntry } from './JsonTypes';
+import { IDevice, IDeviceConsumableAction, IDeviceRoute, IDeviceRoutingOptions, IDeviceStatus, IDeviceScheduleEntry } from './JsonTypes';
 
 export type FindDeviceDataType = (address: string, issueWarningNotFound?: boolean) => DeviceData | undefined;
 export class DeviceData {
@@ -7,7 +7,7 @@ export class DeviceData {
   Routing: IDeviceRoute[] = [];
   RoutingOptions: IDeviceRoutingOptions | undefined;
   Schedule: IDeviceScheduleEntry[] = [];
-  ConsumableTriggers: IDeviceConsumableTrigger[] = [];
+  ConsumableActions: IDeviceConsumableAction[] = [];
 
   constructor(device: IDevice) {
     this.Device = device;

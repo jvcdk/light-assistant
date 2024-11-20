@@ -129,7 +129,7 @@ internal partial class Controller : IController
         return new RoutingOptions(providedEvents, consumedEvents);
     }
 
-    public IReadOnlyList<IConsumableTrigger> GetConsumableTriggersFor(IDevice device)
+    public IReadOnlyList<IConsumableAction> GetConsumableActionsFor(IDevice device)
     {
         using var _ = _devicesLock.ObtainReadLock();
 
@@ -137,8 +137,8 @@ internal partial class Controller : IController
             _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
             return [];
         }
-        return deviceInfo.Services.ConsumedTriggers
-            .Select(ev => new ConsumableTrigger(ev.Name, ev.Params))
+        return deviceInfo.Services.ConsumedActions
+            .Select(ev => new ConsumableAction(ev.Name, ev.Params))
             .ToList();
     }
 
@@ -309,10 +309,9 @@ internal partial class Controller : IController
     private List<EventRoute> ProcessDeviceRoutes(IDevice device, IEnumerable<IEventRoute> routes)
     {
         var newRoutes = routes
-            .Where(entry => !string.IsNullOrWhiteSpace(entry.SourceEvent)) // Silently ignore any invalid configurations
-            .Where(entry => !string.IsNullOrWhiteSpace(entry.TargetAddress)) // Silently ignore any invalid configurations
-            .Where(entry => !string.IsNullOrWhiteSpace(entry.TargetFunctionality)) // Silently ignore any invalid configurations
-            .Select(entry => new EventRoute(entry)).ToList();
+            .Select(entry => new EventRoute(entry))
+            .Where(entry => entry.Validate()) // Silently ignore any invalid configurations
+            .ToList();
 
         if(newRoutes.Count == 0)
             _consoleOutput.InfoLine($"Clearing all routes for device {device.Address}.");
@@ -328,9 +327,10 @@ internal partial class Controller : IController
 
     private List<DeviceScheduleEntry> ProcessDeviceSchedule(IDevice device, IDeviceScheduleEntry[] schedules)
     {
+        var eligibleActions = GetConsumableActionsFor(device);
         var newSchedules = schedules
-            .Where(entry => !string.IsNullOrWhiteSpace(entry.EventType)) // Silently ignore any invalid configurations
             .Select(entry => new DeviceScheduleEntry(entry))
+            .Where(entry => entry.Validate(eligibleActions)) // Silently ignore any invalid configurations
             .ToList();
 
         if(newSchedules.Count == 0)
@@ -359,17 +359,52 @@ internal partial class Controller : IController
     }
 }
 
-internal class DeviceScheduleEntry
+internal class DeviceScheduleEntry(IDeviceScheduleEntry entry) : IDeviceScheduleEntry
 {
-    public DeviceScheduleEntry(IDeviceScheduleEntry entry)
-    {
-        EventType = entry.EventType;
-        //Parameters = entry.Parameters;
-        //Trigger = entry.Trigger;
+    public string EventType { get; } = entry.EventType;
+    public IReadOnlyDictionary<string, string> Parameters { get; } = entry.Parameters;
+    private readonly ScheduleTrigger _trigger = new(entry.Trigger);
+    public IScheduleTrigger Trigger => _trigger;
+
+    public bool Validate(IReadOnlyList<IConsumableAction> eligibleActions) {
+        return ValidateEventTypes(eligibleActions) &&
+            ValidateParameters(eligibleActions) &&
+            _trigger.Validate();
     }
 
-    public string EventType { get; }
+    private bool ValidateParameters(IReadOnlyList<IConsumableAction> eligibleActions)
+    {
+        return true; // Match against valid parameters
+    }
+
+    private bool ValidateEventTypes(IReadOnlyList<IConsumableAction> eligibleActions) {
+        return !string.IsNullOrWhiteSpace(EventType); // Match against valid event types
+    }
 
     public override string ToString() => $"Schedule: {EventType}";
+}
 
+internal class ScheduleTrigger(IScheduleTrigger trigger) : IScheduleTrigger
+{
+    public IReadOnlySet<int> Days { get; } = trigger.Days;
+    private readonly TimeOfDay _time = new(trigger.Time);
+    public ITimeOfDay Time => _time;
+
+    public bool Validate() {
+        return Days.Count <= 7 && Days.All(day => day >= 0 && day < 7) && _time.Validate();
+    }
+
+    public override string ToString() => $"Trigger: {string.Join(", ", Days)} at {Time}";
+}
+
+internal class TimeOfDay(ITimeOfDay time) : ITimeOfDay
+{
+    public int Hour { get; } = time.Hour;
+    public int Minute { get; } = time.Minute;
+
+    public bool Validate() {
+        return Hour >= 0 && Hour < 24 && Minute >= 0 && Minute < 60;
+    }
+
+    public override string ToString() => $"{Hour:D2}:{Minute:D2}";
 }

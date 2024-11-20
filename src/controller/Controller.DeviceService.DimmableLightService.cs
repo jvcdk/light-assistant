@@ -94,11 +94,11 @@ internal partial class Controller
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
 
-                HandleTurnOnOff(new TriggerEvent_TurnOnOff(string.Empty, TurnOnOffModes.Toggle) { UserGenerated = true });
+                HandleTurnOnOff(new ActionEvent_TurnOnOff(string.Empty, TurnOnOffModes.Toggle) { UserGenerated = true });
             }
 
-            [TriggerSink("TurnOnOff")]
-            private void HandleTurnOnOff(TriggerEvent_TurnOnOff ev)
+            [ActionSink("TurnOnOff")]
+            private void HandleTurnOnOff(ActionEvent_TurnOnOff ev)
             {
                 lock (_lock) {
                     if (_fadeMode != FadeMode.Idle) {

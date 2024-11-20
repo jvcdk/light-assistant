@@ -1,4 +1,3 @@
-using System.Reflection;
 using LightAssistant.Interfaces;
 using LightAssistant.Utils;
 
@@ -30,14 +29,14 @@ internal partial class Controller
         internal IEnumerable<InternalEventSource> ProvidedEvents =>
             EnumerateServices().SelectMany(service => service.ProvidedEvents);
 
-        internal IEnumerable<TriggerInfo> ConsumedTriggers =>
-            EnumerateServices().SelectMany(GetTriggers);
+        internal IEnumerable<ActionInfo> ConsumedActions =>
+            EnumerateServices().SelectMany(GetActions);
 
-        private static IEnumerable<TriggerInfo> GetTriggers(DeviceService service)
+        private static IEnumerable<ActionInfo> GetActions(DeviceService service)
         {
-            return service.EnumerateMethodsWithAttribute<TriggerSink>()
+            return service.EnumerateMethodsWithAttribute<ActionSink>()
                 .Select(tuple => (tuple.method, tuple.attr, param: tuple.method.GetParameters()))
-                .Where(tuple => tuple.param.Length == 1 && tuple.param[0].ParameterType.IsSubclassOf(typeof(TriggerEvent)))
+                .Where(tuple => tuple.param.Length == 1 && tuple.param[0].ParameterType.IsSubclassOf(typeof(ActionEvent)))
                 .Select(tuple => {
                     var paramInfo = tuple.param[0].ParameterType
                         .EnumeratePropertiesWithAttribute<ParamDescriptor>()
@@ -45,7 +44,7 @@ internal partial class Controller
                         .ToList();
                     return (tuple.attr.Name, tuple.method, paramAttr:paramInfo);
                 })
-                .Select(tuple => new TriggerInfo(tuple.Name, tuple.method, tuple.paramAttr));
+                .Select(tuple => new ActionInfo(tuple.Name, tuple.method, tuple.paramAttr));
         }
     }
 
