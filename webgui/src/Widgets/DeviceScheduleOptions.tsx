@@ -1,6 +1,6 @@
 import './DeviceScheduleOptions.css'
 import { useEffect, useReducer, useState } from "react";
-import { DeviceData1 } from "../Data/DeviceData";
+import { DeviceData } from "../Data/DeviceData";
 import { IDeviceConsumableTrigger, IDeviceScheduleEntry } from "../Data/JsonTypes";
 import { ParamOption } from './ParameterOption';
 import { ScheduleTrigger } from '../Data/ScheduleTrigger';
@@ -128,7 +128,7 @@ function ScheduleIsValid(schedule: DeviceScheduleEntryWithKey, eligibleEvTypes: 
 }
 
 export interface DeviceScheduleOptionsProps {
-  devData: DeviceData1;
+  devData: DeviceData;
   setSchedule: (schedule: IDeviceScheduleEntry[]) => void;
   onChildOpenChanged: Action<boolean>;
 }

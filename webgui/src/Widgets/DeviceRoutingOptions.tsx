@@ -3,7 +3,7 @@ import SvgRouteEntry from '../image/route_entry.svg';
 import SvgRouteColon from '../image/route_colon.svg';
 import SvgRouteMapsTo from '../image/route_maps_to.svg';
 import { useState } from "react";
-import { DeviceData1 } from "../Data/DeviceData";
+import { DeviceData } from "../Data/DeviceData";
 import { IDeviceProvidedEvent, IDeviceRoute } from "../Data/JsonTypes";
 
 export interface IDeviceRouteWithKey extends IDeviceRoute {
@@ -107,7 +107,7 @@ export function CreateEmptyRoutingWithKey() : IDeviceRouteWithKey {
   } as IDeviceRouteWithKey;
 }
 
-export function DeviceRoutingOptions(prop: { devData: DeviceData1; cb: IRoutingOptionsCallbacks; setDeviceRoute: (route: IDeviceRoute[]) => void; }) {
+export function DeviceRoutingOptions(prop: { devData: DeviceData; cb: IRoutingOptionsCallbacks; setDeviceRoute: (route: IDeviceRoute[]) => void; }) {
   const devData = prop.devData;
   const routingOptions = devData.RoutingOptions;
 

@@ -3,24 +3,24 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "../WebSocketContext";
 import { Device } from "../Widgets/Device";
 import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IScheduleTriggerOptions, IServerToClientMessage } from '../Data/JsonTypes';
-import { DeviceData1, FindDeviceData1Type } from '../Data/DeviceData';
+import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 import { GetTargetFunctionalityOptionsType, GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType } from '../Widgets/DeviceRoutingOptions';
 import { DeviceConfiguration } from '../Popups/DeviceConfiguration';
 
 export function DeviceList() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);
   const { sendJsonMessage, lastJsonMessage } = useWebSocketContext();
-  const [_deviceData, setDeviceData] = useState<DeviceData1[]>([]);
+  const [_deviceData, setDeviceData] = useState<DeviceData[]>([]);
   const deviceData = useRef(_deviceData);
 
-  const [selectedDeviceData, setSelectedDeviceData] = useState<DeviceData1 | null>(null);
+  const [selectedDeviceData, setSelectedDeviceData] = useState<DeviceData | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
 
-  const openPopup = (device: DeviceData1) => {
+  const openPopup = (device: DeviceData) => {
     setSelectedDeviceData(device);
     setPopupOpen(true);
   }
-  const FindDeviceData: FindDeviceData1Type = useCallback((address: string, issueWarningNotFound: boolean = true): DeviceData1 | undefined => {
+  const FindDeviceData: FindDeviceDataType = useCallback((address: string, issueWarningNotFound: boolean = true): DeviceData | undefined => {
     const result = deviceData.current.find(entry => entry.Device.Address === address);
     if(result == undefined && issueWarningNotFound)
       console.log(`Warning: Searched for device ${address} but did not find it.`)
@@ -83,7 +83,7 @@ export function DeviceList() {
         if(result)
           result.Device = entry;
         else
-          result = new DeviceData1(entry);
+          result = new DeviceData(entry);
 
         return result;
       });
@@ -130,7 +130,7 @@ export function DeviceList() {
     TargetAddressToName: TargetAddressToName,
   } as IRoutingOptionsCallbacks;
 
-  function OnDeviceConfigurationUpdate(devData: DeviceData1 | null) {
+  function OnDeviceConfigurationUpdate(devData: DeviceData | null) {
     setSelectedDeviceData(null);
     setPopupOpen(false);
     if(devData == null)
