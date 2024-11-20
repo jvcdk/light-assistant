@@ -77,28 +77,12 @@ export interface IDeviceProvidedEvent {
 }
 
 /**
- * Should match JsonDeviceSchedule
- */
-export interface IDeviceSchedule {
-  Address: string;
-  Schedule: IDeviceScheduleEntry[];
-}
-
-/**
  * Should match JsonDeviceScheduleEntry
  */
 export interface IDeviceScheduleEntry {
   EventType: string | undefined; // EventType is the action to be taken
-  Parameters: Map<string, string>;
+  Parameters: object;
   Trigger: IScheduleTrigger;
-}
-
-/**
- * Should match JsonScheduleTrigger
- */
-export interface ITimeOfDay {
-  hour: number;
-  minute: number;
 }
 
 /**
@@ -107,6 +91,14 @@ export interface ITimeOfDay {
 export interface IScheduleTrigger {
   Days: number[];
   Time: ITimeOfDay;
+}
+
+/**
+ * Should match JsonTimeOfDay
+ */
+export interface ITimeOfDay {
+  hour: number;
+  minute: number;
 }
 
 /**
@@ -171,11 +163,13 @@ export class DeviceConfigurationChange {
   Address: string;
   Name: string;
   Route: IDeviceRoute[];
+  Schedule: IDeviceScheduleEntry[];
 
-  constructor(address: string, name: string, route: IDeviceRoute[]) {
+  constructor(address: string, name: string, route: IDeviceRoute[], schedule: IDeviceScheduleEntry[]) {
     this.Address = address;
     this.Name = name;
     this.Route = route;
+    this.Schedule = schedule;
   }
 }
 

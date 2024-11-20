@@ -61,13 +61,24 @@ function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceDa
     )
 }
 
+function RenderParameters(props: {params: object}) {
+  const params = props.params;
+  const entries = Object.entries(params);
+  if(entries.length == 0)
+    return null;
+
+  return (
+    <div>{entries.map(([key, value]) => <div key={key}>{key}: {value}</div>)}</div>
+  )
+}
+
 function DeviceScheduleEntry(prop: { entry: IDeviceScheduleEntry }) {
   const entry = prop.entry;
   const trigger = new ScheduleTrigger(entry.Trigger);
   return (
     <div className='ScheduleEntry'>
       <div className='EventType'>{entry.EventType}</div>
-      <div className='Parameters'>{entry.Parameters}</div>
+      <div className='Parameters'><RenderParameters params={entry.Parameters} /></div>
       <div className='Days'>{trigger.DayNames}</div>
       <div className='Time'>{trigger.Time.asString}</div>
     </div>
