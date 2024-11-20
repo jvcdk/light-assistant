@@ -146,10 +146,9 @@ export function DeviceList() {
     <div className='DeviceList'>
       <div className='Heading'>
         <div className='NameAddress'>Name / Address</div>
-        <div className='VendorModel'>Vendor / Model</div>
-        <div className='Description'>Description</div>
         <div className='Status'>Status</div>
         <div className='Routing'>Routing</div>
+        <div className='Schedule'>Schedule</div>
       </div>
       {deviceData.current.map(device => Device(device, () => openPopup(device), FindDeviceData))}
       <DeviceConfiguration isOpen={popupOpen} devData={selectedDeviceData} routingCallbacks={routingCallbacks} onClose={OnDeviceConfigurationUpdate} /> 
