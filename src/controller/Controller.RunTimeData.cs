@@ -12,7 +12,7 @@ internal partial class Controller
         // Deafult constructor; used for de-serialization.
         public RunTimeData() { }
 
-        internal RunTimeData(Dictionary<string, List<EventRoute>> routes)
+        internal RunTimeData(Dictionary<string, List<EventRoute>> routes, Dictionary<string, List<DeviceScheduleEntry>> _schedules)
         {
             Routes = routes.ToDictionary(
                 entry => entry.Key,
@@ -26,10 +26,10 @@ internal partial class Controller
             return JsonConvert.DeserializeObject<RunTimeData>(data);
         }
 
-        internal void SaveToFile(string filePath)
+        internal async Task SaveToFile(string filePath)
         {
             var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-            File.WriteAllText(filePath, json);
+            await File.WriteAllTextAsync(filePath, json);
         }
 
         public class Route(string sourceEvent, string targetAddress, string targetFunctionality) : IEventRoute
