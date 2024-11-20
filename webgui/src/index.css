@@ -45,3 +45,7 @@ body {
 .Spacer {
   flex-grow: 1;
 }
+
+.Grid {
+  display: grid;
+}

@@ -8,6 +8,16 @@ h1 {
   text-align: center;
 }
 
+input[type=text] {
+  border: none;
+  border-bottom: 1px solid var(--light-assistant-primary);
+  outline: none;
+  padding: 0.25em 0;
+  color: var(--light-assistant-primary);
+  background: none;
+  font-size: 100%;
+}
+
 input[type=button] {
   color: var(--light-assistant-primary);
   border: 1px solid var(--light-assistant-border);
