@@ -138,7 +138,7 @@ export function DeviceList() {
 
     const device = devData.Device;
     const msg = new ClientToServerMessage();
-    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, devData.Routing);
+    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, devData.Routing, devData.Schedule);
     sendJsonMessage(msg);
   }
 

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { IParamEnum, IParamFloat, IParamInfo } from "../Data/JsonTypes";
 import { tryParseFloat } from "../Utils/FloatUtils";
 import './ParameterOption.css';
@@ -10,11 +11,16 @@ export interface ParamOptionProps {
 
 function ParamOptionEnum(props: ParamOptionProps) {
   const param = props.param as IParamEnum;
-  const value = props.value || param.Default;
+
+  useEffect(() => {
+    if(props.value === undefined)
+      props.onChange(param.Default);
+  }, [props, param.Default]);
+
   return (
     <span className="Param Enum">
       <label>{param.Name}</label>
-      <select onChange={e => props.onChange(e?.target.value)} value={value}>
+      <select onChange={e => props.onChange(e?.target.value)} value={props.value}>
         {param.Values.map(value => <option key={value} value={value}>{value}</option>)}
       </select>
     </span>
@@ -23,11 +29,23 @@ function ParamOptionEnum(props: ParamOptionProps) {
 
 function ParamOptionFloat(props: ParamOptionProps) {
   const param = props.param as IParamFloat;
+
+  useEffect(() => {
+    if(props.value === undefined)
+      props.onChange(param.Default.toString());
+  }, [props, param.Default]);
+
+  function update(value: string) {
+    const newVal = parseFloat(value);
+    if(!isNaN(newVal))
+      props.onChange(value);
+  }
+
   const value = tryParseFloat(props.value, param.Default);
   return (
     <span className="Param Float">
       <label>{param.Name}</label>
-      <input type="number" min={param.Min} max={param.Max} value={value} onChange={e => props.onChange(e.target.value)} />
+      <input type="number" min={param.Min} max={param.Max} value={value} onChange={e => update(e.target.value)} />
     </span>
   );
 }

@@ -11,7 +11,7 @@ import Popup_SelectTime from '../Popups/SelectTime';
 import { Action } from '../Utils/Action';
 import { Listener, ListenerData } from '../Utils/ListenerPattern';
 
-class DeviceScheduleEntryWithKeyData extends ListenerData<IDeviceScheduleEntry> {
+class DeviceScheduleEntryWithKeyData extends ListenerData<IDeviceScheduleEntry> implements IDeviceScheduleEntry {
   private static _key: number = 1;
   key: number = DeviceScheduleEntryWithKeyData._key++;
 
@@ -26,7 +26,7 @@ class DeviceScheduleEntryWithKey extends Listener<IDeviceScheduleEntry, DeviceSc
     super(data);
     if(source !== undefined) {
       this.EventType = source.EventType;
-      this.Parameters = source.Parameters;
+      this.Parameters = new Map(Object.entries(source.Parameters));
       this.Trigger = new ScheduleTrigger(source.Trigger);
 
       if(source instanceof DeviceScheduleEntryWithKey)
@@ -53,6 +53,12 @@ class DeviceScheduleEntryWithKey extends Listener<IDeviceScheduleEntry, DeviceSc
   }
 
   get key () { return this._data.key; }
+  
+  get asRaw () { return {
+    EventType: this.EventType,
+    Parameters: Object.fromEntries(this.Parameters),
+    Trigger: this.Trigger.asRaw,
+  } as IDeviceScheduleEntry; }
 }
 
 interface ActionOptionsProps {
@@ -151,7 +157,7 @@ export function DeviceScheduleOptions(prop: DeviceScheduleOptionsProps) {
         return;
 
       localSchedule[idx] = entry;
-      const result = localSchedule.filter(scheduleIsActive);
+      const result = localSchedule.filter(scheduleIsActive).map(schedule => schedule.asRaw);
       setSchedule(result);
     }
 
