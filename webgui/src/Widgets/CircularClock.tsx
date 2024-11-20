@@ -77,10 +77,10 @@ export function CircularClock(props: CircularClockProps) {
       let hour = Math.round((normalizedDegrees / 30) % 12);
       if(radius < centerX * 0.75)
         hour += 12;
-      selectedTime.val.hour = hour;
+      selectedTime.val.Hour = hour;
     } else {
       const minute = Math.round((normalizedDegrees / 6) % 60);
-      selectedTime.val.minute = minute;
+      selectedTime.val.Minute = minute;
     }
   }, [mode, selectedTime.val]);
 
@@ -112,9 +112,9 @@ export function CircularClock(props: CircularClockProps) {
   }, [handleMouseMove, handleMouseUp, isDragging]);
 
   const isModeHour = mode == ClockMode.Hour;
-  const handClass = (isModeHour && selectedTime.val.hour >= 12) ? 'Hand Inner' : 'Hand Outer';
-  const handAngle = (isModeHour ? selectedTime.val.hour * 30 : selectedTime.val.minute * 6) + 90;
-  const selectedDigit = isModeHour ? selectedTime.val.hour : selectedTime.val.minute;
+  const handClass = (isModeHour && selectedTime.val.Hour >= 12) ? 'Hand Inner' : 'Hand Outer';
+  const handAngle = (isModeHour ? selectedTime.val.Hour * 30 : selectedTime.val.Minute * 6) + 90;
+  const selectedDigit = isModeHour ? selectedTime.val.Hour : selectedTime.val.Minute;
 
   return (
     <div>

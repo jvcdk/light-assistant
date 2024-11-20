@@ -109,7 +109,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         await AppController.SetDeviceOptions(ev.Address, ev.Name, ev.Route, ev.Schedule);
     }
 
-    public async Task RoutingDataUpdated(IDevice device)
+    public async Task DeviceDataUpdated(IDevice device)
     {
         if(AppController == null)
             return;
@@ -119,6 +119,11 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
             new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
         ).ToList();
         response.WithDeviceRouting(device.Address, routes);
+
+        var schedule = AppController.GetScheduleFor(device).Select(entry =>
+            new JsonDeviceScheduleEntry(entry.EventType, entry.Parameters, entry.Trigger)
+        ).ToList();
+        response.WithDeviceSchedule(device.Address, schedule);
 
         await SendMessageToAllClients(response);
     }
@@ -138,13 +143,18 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         foreach(var device in devices) {
             if(AppController.TryGetDeviceStatus(device, out var status)) {
                 Debug.Assert(status != null);
-                response = JsonServerToClientMessage.Empty()
-                    .WithDeviceStatus(device.Address, status);
 
                 var routes = AppController.GetRoutingFor(device).Select(route =>
                     new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
                 ).ToList();
-                response = response.WithDeviceRouting(device.Address, routes);
+                var schedule = AppController.GetScheduleFor(device).Select(entry =>
+                    new JsonDeviceScheduleEntry(entry.EventType, entry.Parameters, entry.Trigger)
+                ).ToList();
+
+                response = JsonServerToClientMessage.Empty()
+                    .WithDeviceStatus(device.Address, status)
+                    .WithDeviceRouting(device.Address, routes)
+                    .WithDeviceSchedule(device.Address, schedule);
 
                 var routingOptions = AppController.GetRoutingOptionsFor(device);
                 if(routingOptions != null)

@@ -6,6 +6,7 @@ export interface IServerToClientMessage {
   DeviceStatus: IDeviceStatus | undefined;
   Routing: IDeviceRouting;
   RoutingOptions: IDeviceRoutingOptions | undefined;
+  Schedule: IDeviceSchedule | undefined;
   ScheduleActionOptions: IScheduleActionOptions | undefined;
   OpenNetworkStatus : IOpenNetworkStatus | undefined;
 }
@@ -86,6 +87,14 @@ export interface IDeviceScheduleEntry {
 }
 
 /**
+ * Should match JsonDeviceSchedule
+ */
+export interface IDeviceSchedule {
+  Address: string;
+  Schedule: IDeviceScheduleEntry[];
+}
+
+/**
  * Should match JsonScheduleAction
  */
 export interface IScheduleTrigger {
@@ -97,8 +106,8 @@ export interface IScheduleTrigger {
  * Should match JsonTimeOfDay
  */
 export interface ITimeOfDay {
-  hour: number;
-  minute: number;
+  Hour: number;
+  Minute: number;
 }
 
 /**

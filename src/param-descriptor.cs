@@ -12,6 +12,7 @@ internal class ParamInfo(string name, ParamDescriptor param)
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 internal abstract class ParamDescriptor : Attribute
 {
+    internal abstract bool Validate(string value);
 }
 
 internal class ParamEnum : ParamDescriptor
@@ -27,6 +28,8 @@ internal class ParamEnum : ParamDescriptor
 
         Values = Enum.GetNames(sourceEnum).Select(entry => entry.CamelCaseToSentence()).ToArray();
     }
+
+    internal override bool Validate(string value) => Values.Contains(value);
 }
 
 internal class ParamFloat(double min, double max) : ParamDescriptor
@@ -36,6 +39,14 @@ internal class ParamFloat(double min, double max) : ParamDescriptor
     public double Max { get; } = max;
 
     public double Default => (Min + Max) / 2.0;
+
+    internal override bool Validate(string value)
+    {
+        if (!double.TryParse(value, out var floatValue))
+            return false;
+
+        return floatValue >= Min && floatValue <= Max;
+    }
 }
 
 internal class ParamBrightness() : ParamFloat(0.0, 1.0)

@@ -6,6 +6,7 @@ namespace LightAssistant.Interfaces
         IReadOnlyList<IDevice> GetDeviceList();
         IDevice? TryGetDevice(string address);
         IEnumerable<IEventRoute> GetRoutingFor(IDevice device);
+        IEnumerable<IDeviceScheduleEntry> GetScheduleFor(IDevice device);
         Task SetDeviceOptions(string address, string name, IEnumerable<IEventRoute> routes, IDeviceScheduleEntry[] schedule);
         IRoutingOptions? GetRoutingOptionsFor(IDevice device);
         IReadOnlyList<IConsumableAction> GetConsumableActionsFor(IDevice device);

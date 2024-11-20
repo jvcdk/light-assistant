@@ -2,7 +2,7 @@ import './DeviceList.css'
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "../WebSocketContext";
 import { Device } from "../Widgets/Device";
-import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage } from '../Data/JsonTypes';
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceScheduleEntry, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage } from '../Data/JsonTypes';
 import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 import { GetTargetFunctionalityOptionsType, GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType } from '../Widgets/DeviceRoutingOptions';
 import { DeviceConfiguration } from '../Popups/DeviceConfiguration';
@@ -96,6 +96,14 @@ export function DeviceList() {
         devData.RoutingOptions = deviceRoutingOptions;
     }
 
+    function handleDeviceSchedule(schedule: IDeviceSchedule) {
+      const devData = FindDeviceData(schedule.Address);
+      if (devData) {
+        devData.Schedule = schedule.Schedule || [];
+        forceUpdate();
+      }
+    }
+
     function handleScheduleActionOptions(scheduleActionOptions: IScheduleActionOptions) {
       const devData = FindDeviceData(scheduleActionOptions.Address);
       if (devData) {
@@ -117,6 +125,8 @@ export function DeviceList() {
         handleDeviceRouting(message.Routing);
       if(message.RoutingOptions)
         handleDeviceRoutingOptions(message.RoutingOptions);
+      if(message.Schedule)
+        handleDeviceSchedule(message.Schedule);
       if (message.ScheduleActionOptions)
         handleScheduleActionOptions(message.ScheduleActionOptions);
     } catch (error) {
