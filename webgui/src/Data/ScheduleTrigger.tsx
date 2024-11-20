@@ -43,9 +43,13 @@ export class TimeOfDay extends Listener<ITimeOfDay, TimeOfDayData> implements IT
 
   get hour() { return this._data.hour; }
   set hour(value: number) { this._data.hour = value; this.notifyListeners(); }
+  get hourStr() { return this.hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false }); }
 
   get minute() { return this._data.minute; }
   set minute(value: number) { this._data.minute = value; this.notifyListeners(); }
+  get minuteStr() { return this.minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false }); }
+
+  get asString() { return `${this.hourStr}:${this.minuteStr}`; }
 }
 
 class ScheduleTriggerData extends ListenerData<IScheduleTrigger> {

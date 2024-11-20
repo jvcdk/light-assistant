@@ -1,6 +1,7 @@
 import './Device.css'
 import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
-import { IDeviceRoute } from '../Data/JsonTypes';
+import { IDeviceRoute, IDeviceScheduleEntry } from '../Data/JsonTypes';
+import { ScheduleTrigger } from '../Data/ScheduleTrigger';
 
 function DeviceBattery(prop: { battery: number | undefined })
 {
@@ -60,6 +61,29 @@ function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceDa
     )
 }
 
+function DeviceScheduleEntry(prop: { entry: IDeviceScheduleEntry }) {
+  const entry = prop.entry;
+  const trigger = new ScheduleTrigger(entry.Trigger);
+  return (
+    <div className='ScheduleEntry'>
+      <div className='EventType'>{entry.EventType}</div>
+      <div className='Parameters'>{entry.Parameters}</div>
+      <div className='Days'>{trigger.DayNames}</div>
+      <div className='Time'>{trigger.Time.asString}</div>
+    </div>
+  )
+}
+
+function DeviceSchedule(prop: { schedule: IDeviceScheduleEntry[] })
+{
+  const schedule = prop.schedule || [];
+  return (
+    <div className='Schedule'>
+      {schedule.map((entry, idx) => <DeviceScheduleEntry key={idx} entry={entry} />)}
+    </div>
+  )
+}
+
 export function Device(devData: DeviceData, openPopup: () => void, findDevice: FindDeviceDataType) {
   const device = devData.Device;
   const status = devData.Status;
@@ -70,18 +94,14 @@ export function Device(devData: DeviceData, openPopup: () => void, findDevice: F
         <div className='Name'>{device.Name}</div>
         <div className='Address'>{device.Address}</div>
       </div>
-      <div className='VendorModel'>
-        <div className='Vendor'>{device.Vendor}</div>
-        <div className='Model'>{device.Model}</div>
-      </div>
-      <div className='Description'>{device.Description}</div>
       <div className='Status'>
         <DeviceBattery battery={status?.Battery} />
         <DeviceLinkQuality lq={status?.LinkQuality} />
         <DeviceBrightness brightness={status?.Brightness} />
         <DeviceOnState onState={status?.State} />
       </div>
-      <DeviceRouting routing={routing} findDevice={findDevice}></DeviceRouting>
+      <DeviceRouting routing={routing} findDevice={findDevice} />
+      <DeviceSchedule schedule={devData.Schedule} />
     </div>
   );
 }

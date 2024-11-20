@@ -14,15 +14,15 @@
     border-radius: 2.5%;
 }
 
-@media (max-width: 760px) {
-    .DeviceList .VendorModel
+@media (max-width: 750px) {
+    .DeviceList .Schedule
     {
         display: none;
     }
 }
 
-@media (max-width: 900px) {
-    .DeviceList .Description
+@media (max-width: 1000px) {
+    .DeviceList .Routing
     {
         display: none;
     }

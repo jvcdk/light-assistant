@@ -28,7 +28,7 @@
 }
 
 .Device .Status {
-    width: 8em;
+    width: 9em;
 }
 
 .Device .Battery::before {

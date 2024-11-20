@@ -12,8 +12,6 @@ interface RenderTimeOfDayProps {
 
 export function RenderTimeOfDay(props: RenderTimeOfDayProps) {
   const { Time, OnTimeClick, OnHourClick, OnMinutesClick, selected } = props;
-  const hourStr = Time.hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
-  const minuteStr = Time.minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false });
 
   const hourSelected = selected == ClockMode.Hour ? ' selected' : '';
   const minuteSelected = selected == ClockMode.Minute ? ' selected' : '';
@@ -21,7 +19,7 @@ export function RenderTimeOfDay(props: RenderTimeOfDayProps) {
 
   return (
     <span className={'Time' + timeClass} onClick={OnTimeClick}>
-      <span className={`Hour${hourSelected}`} onClick={OnHourClick}>{hourStr}</span>:<span className={`Minute${minuteSelected}`} onClick={OnMinutesClick}>{minuteStr}</span>
+      <span className={`Hour${hourSelected}`} onClick={OnHourClick}>{Time.hourStr}</span>:<span className={`Minute${minuteSelected}`} onClick={OnMinutesClick}>{Time.minuteStr}</span>
     </span>
   );
 }
