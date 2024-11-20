@@ -123,10 +123,6 @@ function ScheduleEntry(props: IScheduleEntryProps) {
   )
 }
 
-function ScheduleIsValid(schedule: DeviceScheduleEntryWithKey, eligibleEvTypes: string[]) {
-  return eligibleEvTypes.find(evType => evType == schedule.EventType) !== undefined;
-}
-
 export interface DeviceScheduleOptionsProps {
   devData: DeviceData;
   setSchedule: (schedule: IDeviceScheduleEntry[]) => void;
@@ -135,39 +131,32 @@ export interface DeviceScheduleOptionsProps {
 
 export function DeviceScheduleOptions(prop: DeviceScheduleOptionsProps) {
   const { devData, setSchedule, onChildOpenChanged  } = prop;
+  const [localSchedule, setLocalSchedule] = useState<DeviceScheduleEntryWithKey[]>([]);
   const consumableTriggers = devData.ConsumableTriggers;
-  const eligibleEvTypes = consumableTriggers.map(el => el.EventType);
 
-  const scheduleWithKey = devData.Schedule.map(schedule => new DeviceScheduleEntryWithKey(schedule));
-  scheduleWithKey.push(new DeviceScheduleEntryWithKey());
-  const [localSchedule, _setLocalSchedule] = useState<DeviceScheduleEntryWithKey[]>(scheduleWithKey);
+  useEffect(() => {
+    const scheduleWithKey = devData.Schedule.map(schedule => new DeviceScheduleEntryWithKey(schedule));
+    scheduleWithKey.push(new DeviceScheduleEntryWithKey());
+    setLocalSchedule(scheduleWithKey);
+  }, [devData.Schedule, consumableTriggers]);
 
-  const setLocalSchedule = (entry: DeviceScheduleEntryWithKey) => {
-    const entryIsValid = ScheduleIsValid(entry, eligibleEvTypes);
+  useEffect(() => {
+    function scheduleIsActive(schedule: DeviceScheduleEntryWithKey) {
+      return consumableTriggers.find(trigger => trigger.EventType == schedule.EventType) !== undefined;
+    }
 
-    let result: DeviceScheduleEntryWithKey[] = [];
-    _setLocalSchedule(prev => {
-      result = prev.slice();
-      const idx = result.findIndex(el => el.key == entry.key);
-      if(idx >= 0) {
-        if(entryIsValid)
-          result[idx] = entry;
-        else
-          result.splice(idx, 1);
-      }
-      const lastElementIsValid = result.length > 0 && ScheduleIsValid(result[result.length - 1], eligibleEvTypes);
-      if(lastElementIsValid) {
-        const emptyEntry = new DeviceScheduleEntryWithKey();
-        emptyEntry.addListener("DeviceScheduleOptions", (val) => setLocalSchedule(val as DeviceScheduleEntryWithKey));
-        result.push(emptyEntry);
-      }
-      return result;
-    });
-    // Remove last element (should not go up to parent scope)
-    result = result.slice(0, result.length - 1);
-    setSchedule(result);
-  }
-  scheduleWithKey.forEach((el) => el.addListener("DeviceScheduleOptions", (val) => setLocalSchedule(val as DeviceScheduleEntryWithKey)));
+    function updateSchedule(entry: DeviceScheduleEntryWithKey) {
+      const idx = localSchedule.findIndex(el => el.key == entry.key);
+      if(idx < 0)
+        return;
+
+      localSchedule[idx] = entry;
+      const result = localSchedule.filter(scheduleIsActive);
+      setSchedule(result);
+    }
+
+    localSchedule.forEach((el) => el.addListener("DeviceScheduleOptions", (val) => updateSchedule(val as DeviceScheduleEntryWithKey)));
+  }, [localSchedule, consumableTriggers, setSchedule]);
 
   if (consumableTriggers.length == 0)
     return (<div>Device does not provide schedulable functions.</div>);
