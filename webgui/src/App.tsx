@@ -2,20 +2,13 @@ import 'react-tabs/style/react-tabs.css';
 import './App.css'
 import { DeviceList } from './Pages/DeviceList';
 import { JoinNetworkSection } from './Pages/JoinNetworkSection';
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 function App() {
   return (
     <div>
       <h1>Light Assistant</h1>
-      <Tabs forceRenderTabPanel className='MainContent'>
-        <TabList>
-          <Tab>Devices</Tab>
-          <Tab>Network</Tab>
-        </TabList>
-        <TabPanel><DeviceList /></TabPanel>
-        <TabPanel><JoinNetworkSection /></TabPanel>
-      </Tabs>
+      <DeviceList />
+      <JoinNetworkSection />
     </div>
   )
 }
