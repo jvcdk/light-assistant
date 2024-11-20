@@ -2,7 +2,7 @@ import './DeviceRoutingOptions.css'
 import SvgRouteEntry from '../image/route_entry.svg';
 import SvgRouteColon from '../image/route_colon.svg';
 import SvgRouteMapsTo from '../image/route_maps_to.svg';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DeviceData } from "../Data/DeviceData";
 import { IDeviceProvidedEvent, IDeviceRoute } from "../Data/JsonTypes";
 
@@ -107,49 +107,48 @@ export function CreateEmptyRoutingWithKey() : IDeviceRouteWithKey {
   } as IDeviceRouteWithKey;
 }
 
-export function DeviceRoutingOptions(prop: { devData: DeviceData; cb: IRoutingOptionsCallbacks; setDeviceRoute: (route: IDeviceRoute[]) => void; }) {
-  const devData = prop.devData;
-  const routingOptions = devData.RoutingOptions;
+interface DeviceRoutingOptionsProps {
+  devData: DeviceData;
+  setDeviceRoute: (route: IDeviceRoute[]) => void;
+  cb: IRoutingOptionsCallbacks;
+}
 
-  const routingWithKey = devData.Routing.map(route => {
-    return {
-      ...route,
-      key: routingKey++,
-    } as IDeviceRouteWithKey;
-  });
-  routingWithKey.push(CreateEmptyRoutingWithKey());
+export function DeviceRoutingOptions(prop: DeviceRoutingOptionsProps) {
+  const { devData, setDeviceRoute } = prop;
+  const [localDeviceRoute, setLocalDeviceRoute] = useState<IDeviceRouteWithKey[]>([]);
 
-  const [deviceRoute, setDeviceRoute] = useState<IDeviceRouteWithKey[]>(routingWithKey);
+  useEffect(() => {
+    const routingWithKey = devData.Routing.map(route => {
+      return {
+        ...route,
+        key: routingKey++,
+      } as IDeviceRouteWithKey;
+    });
+    routingWithKey.push(CreateEmptyRoutingWithKey());
+    setLocalDeviceRoute(routingWithKey);
+  }, [devData.Routing]);
 
-  if (routingOptions == undefined)
-    return (<div>Error: No routing options available.</div>);
-
-  const providedEvents = routingOptions?.ProvidedEvents;
+  const providedEvents = devData.RoutingOptions?.ProvidedEvents || [];
   if (providedEvents.length == 0)
     return (<div>Device does not provide any events.</div>);
 
+  function routeIsEnabled(route: IDeviceRoute) {
+    return providedEvents.find(el => el.Name == route.SourceEvent) != undefined;
+  }
+
   function updateDeviceRoute(newRoute: IDeviceRouteWithKey) {
-    let result = deviceRoute.slice();
-    const entry = result.find(el => el.key == newRoute.key);
-    if (entry == undefined) {
-      console.log("Error: Did not find routing entry.");
+    const idx = localDeviceRoute.findIndex(el => el.key == newRoute.key);
+    if(idx < 0)
       return;
-    }
 
-    Object.assign(entry, newRoute);
-    result = result.filter(route => providedEvents.find(el => el.Name == route.SourceEvent) != undefined);
-    result.push(CreateEmptyRoutingWithKey());
-
-    // We need to both update a local state and a parent (prop.) state.
-    // The local state ensures that the drop-down boxes do not close as new (status) data arrives (from the server) about the device.
-    // The parent state ensures that, well, the parent is up-to-date and can be sent to server when user presses Apply.
+    localDeviceRoute[idx] = newRoute;
+    const result = localDeviceRoute.filter(routeIsEnabled);
     setDeviceRoute(result);
-    prop.setDeviceRoute(result);
   }
 
   return (
     <div className='RoutingOptions'>
-      {deviceRoute.map((route, idx) => <Route key={route.key} route={route} idx={idx} routingOptions={providedEvents} cb={prop.cb} onChange={newRoute => updateDeviceRoute(newRoute)} />)}
+      {localDeviceRoute.map((route, idx) => <Route key={route.key} route={route} idx={idx} routingOptions={providedEvents} cb={prop.cb} onChange={newRoute => updateDeviceRoute(newRoute)} />)}
     </div>
   );
 }
