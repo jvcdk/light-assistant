@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using LightAssistant.Interfaces;
 using Newtonsoft.Json;
 using static System.Text.Encoding;
@@ -180,4 +181,28 @@ internal partial class WebApi
         public int Time { get; } = time;
     }
 
+    internal class JsonDeviceScheduleEntry(string eventType, IReadOnlyDictionary<string, string> parameters, IScheduleTrigger trigger) : IDeviceScheduleEntry
+    {
+        public JsonDeviceScheduleEntry() : this("", new Dictionary<string, string>(), new JsonScheduleTrigger()) { }
+
+        public string EventType { get; set; } = eventType;
+        public IReadOnlyDictionary<string, string> Parameters { get; set; } = parameters;
+        public IScheduleTrigger Trigger { get; set; } = trigger;
+    }
+
+    internal class JsonScheduleTrigger(IReadOnlySet<int> days, ITimeOfDay time) : IScheduleTrigger
+    {
+        public JsonScheduleTrigger() : this(new HashSet<int>(), new JsonTimeOfDay()) { }
+
+        public IReadOnlySet<int> Days { get; set; } = days;
+        public ITimeOfDay Time { get; set; } = time;
+    }
+
+    internal class JsonTimeOfDay(int hour, int minute) : ITimeOfDay
+    {
+        public JsonTimeOfDay() : this(0, 0) { }
+
+        public int Hour { get; set; } = hour;
+        public int Minute { get; set; } = minute;
+    }
 }

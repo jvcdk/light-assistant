@@ -17,6 +17,7 @@ internal partial class Controller : IController
     private readonly Dictionary<IDevice, DeviceInfo> _devices = [];
     private readonly SlimReadWriteLock _devicesLock = new();
     private readonly Dictionary<string, List<EventRoute>> _routes = [];
+    private readonly Dictionary<string, List<DeviceScheduleEntry>> _schedules = [];
     private readonly SlimReadWriteLock _routesLock = new();
 
     public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
@@ -39,7 +40,7 @@ internal partial class Controller : IController
         LoadData();
     }
 
-    private void SaveData()
+    private async Task SaveData()
     {
         if(string.IsNullOrWhiteSpace(_dataPath))
             return; // Error written in LoadData
@@ -47,9 +48,9 @@ internal partial class Controller : IController
         try {
             RunTimeData data;
             using(var _ = _routesLock.ObtainReadLock()) {
-                data = new RunTimeData(_routes);
+                data = new RunTimeData(_routes, _schedules);
             }
-            data.SaveToFile(_dataPath);
+            await data.SaveToFile(_dataPath);
         }
         catch(Exception ex) {
             _consoleOutput.ErrorLine("Could not save runtime data. Message: " + ex.Message);
@@ -283,7 +284,29 @@ internal partial class Controller : IController
         return [];
     }
 
-    public async Task SetRoutingFor(IDevice device, IEnumerable<IEventRoute> routes)
+    public async Task SetDeviceOptions(string address, string name, IEnumerable<IEventRoute> routes, IDeviceScheduleEntry[] schedule)
+    {
+        var device = TryGetDevice(address);
+        if(device == null) {
+            _consoleOutput.ErrorLine($"Address '{address}' given by client does not match a device.");
+            return;
+        }
+
+        await SetDeviceName(device, name);
+
+        var newRoutes = ProcessDeviceRoutes(device, routes);
+        var newSchedule = ProcessDeviceSchedule(device, schedule);
+        using(_ = _routesLock.ObtainWriteLock()) {
+            _routes[device.Address] = newRoutes;
+            _schedules[device.Address] = newSchedule;
+        }
+
+        await SaveData();
+        await _guiApp.RoutingDataUpdated(device);
+    }
+
+
+    private List<EventRoute> ProcessDeviceRoutes(IDevice device, IEnumerable<IEventRoute> routes)
     {
         var newRoutes = routes
             .Where(entry => !string.IsNullOrWhiteSpace(entry.SourceEvent)) // Silently ignore any invalid configurations
@@ -299,15 +322,34 @@ internal partial class Controller : IController
                 _consoleOutput.InfoLine($" - {route.SourceEvent} -> {route.TargetAddress}::{route.TargetFunctionality}");
         }
 
-        using(_ = _routesLock.ObtainWriteLock())
-            _routes[device.Address] = newRoutes;
-
-        SaveData();
-
-        await _guiApp.RoutingDataUpdated(device);
+        return newRoutes;
     }
 
-    public async Task SetDeviceName(IDevice device, string name) => await device.SetName(name);
+
+    private List<DeviceScheduleEntry> ProcessDeviceSchedule(IDevice device, IDeviceScheduleEntry[] schedules)
+    {
+        var newSchedules = schedules
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.EventType)) // Silently ignore any invalid configurations
+            .Select(entry => new DeviceScheduleEntry(entry))
+            .ToList();
+
+        if(newSchedules.Count == 0)
+            _consoleOutput.InfoLine($"Clearing all schedules for device {device.Address}.");
+        else {
+            _consoleOutput.InfoLine($"Setting schedules for device {device.Address}:");
+            foreach(var schedule in newSchedules)
+                _consoleOutput.InfoLine($" - {schedule}");
+        }
+
+        return newSchedules;
+    }
+
+    private async Task SetDeviceName(IDevice device, string name)
+    {
+        if(device.Name == name)
+            return;
+        await device.SetName(name);
+    }
 
     public async Task RequestOpenNetwork()
     {
@@ -315,4 +357,19 @@ internal partial class Controller : IController
         var tasks = _deviceBuses.Select(bus => bus.RequestOpenNetwork(_openNetworkTimeSeconds)).ToArray();
         await Task.WhenAll(tasks);
     }
+}
+
+internal class DeviceScheduleEntry
+{
+    public DeviceScheduleEntry(IDeviceScheduleEntry entry)
+    {
+        EventType = entry.EventType;
+        //Parameters = entry.Parameters;
+        //Trigger = entry.Trigger;
+    }
+
+    public string EventType { get; }
+
+    public override string ToString() => $"Schedule: {EventType}";
+
 }

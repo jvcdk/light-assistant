@@ -106,15 +106,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
     private async Task HandleDeviceConfigurationChange(JsonDeviceConfigurationChange ev)
     {
         Debug.Assert(AppController != null);
-
-        var device = AppController.TryGetDevice(ev.Address);
-        if(device == null) {
-            _consoleOutput.ErrorLine($"Address '{ev.Address}' given by client does not match a device.");
-            return;
-        }
-
-        await AppController.SetRoutingFor(device, ev.Route);
-        await AppController.SetDeviceName(device, ev.Name);
+        await AppController.SetDeviceOptions(ev.Address, ev.Name, ev.Route, ev.Schedule);
     }
 
     public async Task RoutingDataUpdated(IDevice device)
