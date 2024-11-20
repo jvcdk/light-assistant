@@ -3,19 +3,19 @@ import './DeviceConfiguration.css'
 import { IDeviceRoute, IDeviceScheduleEntry } from '../Data/JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
-import { DeviceData1 } from '../Data/DeviceData';
+import { DeviceData } from '../Data/DeviceData';
 import Popup from 'reactjs-popup';
 import { IRoutingOptionsCallbacks, DeviceRoutingOptions } from '../Widgets/DeviceRoutingOptions';
 import { DeviceScheduleOptions } from '../Widgets/DeviceScheduleOptions';
 
 export interface DeviceConfigurationProps {
   isOpen: boolean;
-  devData: DeviceData1 | null;
+  devData: DeviceData | null;
   routingCallbacks: IRoutingOptionsCallbacks;
-  onClose: (devData: DeviceData1 | null) => void;
+  onClose: (devData: DeviceData | null) => void;
 }
 export function DeviceConfiguration(props: DeviceConfigurationProps) {
-  const [devData, setDevData] = useState<DeviceData1|null>(null);
+  const [devData, setDevData] = useState<DeviceData|null>(null);
   const [closeOnEscape, setCloseOnEscape] = useState(true);
 
   useEffect(() => {
@@ -26,14 +26,14 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
     setDevData({
       ...devData,
       Routing: route,
-    } as DeviceData1);
+    } as DeviceData);
   }
 
   function UpdateDeviceSchedule(schedule: IDeviceScheduleEntry[]) {
     setDevData({
       ...devData,
       Schedule: schedule,
-    } as DeviceData1);
+    } as DeviceData);
   }
 
   if(devData === null)
