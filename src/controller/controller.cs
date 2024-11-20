@@ -284,6 +284,16 @@ internal partial class Controller : IController
         return [];
     }
 
+    public IEnumerable<IDeviceScheduleEntry> GetScheduleFor(IDevice device)
+    {
+        using var _ = _routesLock.ObtainReadLock();
+
+        if(_schedules.TryGetValue(device.Address, out var result))
+            return result;
+        
+        return [];
+    }
+
     public async Task SetDeviceOptions(string address, string name, IEnumerable<IEventRoute> routes, IDeviceScheduleEntry[] schedule)
     {
         var device = TryGetDevice(address);
@@ -302,7 +312,7 @@ internal partial class Controller : IController
         }
 
         await SaveData();
-        await _guiApp.RoutingDataUpdated(device);
+        await _guiApp.DeviceDataUpdated(device);
     }
 
 
@@ -357,54 +367,4 @@ internal partial class Controller : IController
         var tasks = _deviceBuses.Select(bus => bus.RequestOpenNetwork(_openNetworkTimeSeconds)).ToArray();
         await Task.WhenAll(tasks);
     }
-}
-
-internal class DeviceScheduleEntry(IDeviceScheduleEntry entry) : IDeviceScheduleEntry
-{
-    public string EventType { get; } = entry.EventType;
-    public IReadOnlyDictionary<string, string> Parameters { get; } = entry.Parameters;
-    private readonly ScheduleTrigger _trigger = new(entry.Trigger);
-    public IScheduleTrigger Trigger => _trigger;
-
-    public bool Validate(IReadOnlyList<IConsumableAction> eligibleActions) {
-        return ValidateEventTypes(eligibleActions) &&
-            ValidateParameters(eligibleActions) &&
-            _trigger.Validate();
-    }
-
-    private bool ValidateParameters(IReadOnlyList<IConsumableAction> eligibleActions)
-    {
-        return true; // Match against valid parameters
-    }
-
-    private bool ValidateEventTypes(IReadOnlyList<IConsumableAction> eligibleActions) {
-        return !string.IsNullOrWhiteSpace(EventType); // Match against valid event types
-    }
-
-    public override string ToString() => $"Schedule: {EventType}";
-}
-
-internal class ScheduleTrigger(IScheduleTrigger trigger) : IScheduleTrigger
-{
-    public IReadOnlySet<int> Days { get; } = trigger.Days;
-    private readonly TimeOfDay _time = new(trigger.Time);
-    public ITimeOfDay Time => _time;
-
-    public bool Validate() {
-        return Days.Count <= 7 && Days.All(day => day >= 0 && day < 7) && _time.Validate();
-    }
-
-    public override string ToString() => $"Trigger: {string.Join(", ", Days)} at {Time}";
-}
-
-internal class TimeOfDay(ITimeOfDay time) : ITimeOfDay
-{
-    public int Hour { get; } = time.Hour;
-    public int Minute { get; } = time.Minute;
-
-    public bool Validate() {
-        return Hour >= 0 && Hour < 24 && Minute >= 0 && Minute < 60;
-    }
-
-    public override string ToString() => $"{Hour:D2}:{Minute:D2}";
 }

@@ -41,16 +41,16 @@ export class TimeOfDay extends Listener<ITimeOfDay, TimeOfDayData> implements IT
     return new TimeOfDay(hour, minute);
   }
 
-  get hour() { return this._data.hour; }
-  set hour(value: number) { this._data.hour = value; this.notifyListeners(); }
-  get hourStr() { return this.hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false }); }
+  get Hour() { return this._data.hour; }
+  set Hour(value: number) { this._data.hour = value; this.notifyListeners(); }
+  get hourStr() { return this.Hour.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false }); }
 
-  get minute() { return this._data.minute; }
-  set minute(value: number) { this._data.minute = value; this.notifyListeners(); }
-  get minuteStr() { return this.minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false }); }
+  get Minute() { return this._data.minute; }
+  set Minute(value: number) { this._data.minute = value; this.notifyListeners(); }
+  get minuteStr() { return this.Minute.toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping: false }); }
 
   get asString() { return `${this.hourStr}:${this.minuteStr}`; }
-  get asRaw() { return { hour: this.hour, minute: this.minute } as ITimeOfDay; }
+  get asRaw() { return { Hour: this.Hour, Minute: this.Minute } as ITimeOfDay; }
 }
 
 class ScheduleTriggerData extends ListenerData<IScheduleTrigger> {
@@ -63,7 +63,7 @@ export class ScheduleTrigger extends Listener<IScheduleTrigger, ScheduleTriggerD
     super(new ScheduleTriggerData());
     if(source !== undefined) {
       this.Days = source.Days;
-      this.Time = new TimeOfDay(source.Time.hour, source.Time.minute);
+      this.Time = new TimeOfDay(source.Time.Hour, source.Time.Minute);
     }
   }
 

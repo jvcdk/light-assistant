@@ -15,6 +15,7 @@ internal partial class WebApi
         public JsonDeviceStatus? DeviceStatus { get; private set; }
         public JsonDeviceRouting? Routing { get; private set; }
         public JsonDeviceRoutingOptions? RoutingOptions { get; private set; }
+        public JsonDeviceSchedule? Schedule { get; private set; }
         public JsonScheduleActionOptions? ScheduleActionOptions { get; private set; }
         public JsonOpenNetworkStatus? OpenNetworkStatus { get; private set; }
 
@@ -50,6 +51,12 @@ internal partial class WebApi
                 return new JsonDeviceConsumableAction(entry.Type, @params);
             }).ToList();
             ScheduleActionOptions = new JsonScheduleActionOptions(address, jsonConsumableActions);
+            return this;
+        }
+
+        internal JsonServerToClientMessage WithDeviceSchedule(string address, IReadOnlyList<JsonDeviceScheduleEntry> schedule)
+        {
+            Schedule = new JsonDeviceSchedule(address, schedule);
             return this;
         }
 
@@ -179,6 +186,12 @@ internal partial class WebApi
     {
         public bool Status { get; } = status;
         public int Time { get; } = time;
+    }
+
+    internal class JsonDeviceSchedule(string address, IReadOnlyList<JsonDeviceScheduleEntry> schedule)
+    {
+        public string Address { get; } = address;
+        public IReadOnlyList<JsonDeviceScheduleEntry> Schedule = schedule;
     }
 
     internal class JsonDeviceScheduleEntry(string eventType, IReadOnlyDictionary<string, string> parameters, IScheduleTrigger trigger) : IDeviceScheduleEntry
