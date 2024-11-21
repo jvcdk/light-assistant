@@ -14,7 +14,9 @@
   --light-assistant-button-disabled: rgba(255, 255, 255, 0.47);
   --light-assistant-button-disabled-border: #767676;
   --light-assistant-button-disabled-background: var(--light-assistant-background);
-  
+  --light-assistant-weekdays-color: #5f7ba0;
+  --light-assistant-weekend-color: #c9a576;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;

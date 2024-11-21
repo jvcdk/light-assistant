@@ -2,17 +2,18 @@ import { Listener, ListenerData } from "../Utils/ListenerPattern";
 import { IScheduleTrigger, ITimeOfDay } from "./JsonTypes";
 
 export enum DayName {
-  Monday = "Mo",
-  Tuesday = "Tu",
-  Wednesday = "We",
-  Thursday = "Th",
-  Friday = "Fr",
-  Saturday = "Sa",
-  Sunday = "Su",
+  Monday = "Mon",
+  Tuesday = "Tue",
+  Wednesday = "Wed",
+  Thursday = "Thu",
+  Friday = "Fri",
+  Saturday = "Sat",
+  Sunday = "Sun",
 }
 
+const DayNames = Object.values(DayName);
 const dayNameIndices: Map<DayName, number> = new Map();
-Object.values(DayName).forEach((day, index) => dayNameIndices.set(day, index));
+DayNames.forEach((day, index) => dayNameIndices.set(day, index));
 
 function getDayIdx(key: DayName | string) {
   const result = dayNameIndices.get(key as DayName);
@@ -70,7 +71,7 @@ export class ScheduleTrigger extends Listener<IScheduleTrigger, ScheduleTriggerD
   get Days() { return this._data.days; }
   set Days(value: number[]) { this._data.days = value; this.notifyListeners(); }
 
-  get DayNames() : DayName[] { return this.Days.map(day => Object.values(DayName)[day] || "<unknown>"); }
+  get DayNames() : DayName[] { return this.Days.map(day => DayNames[day] || "<unknown>"); }
   set DayNames(value: string[] | DayName[]) {
     this.Days = value.map(day => { return getDayIdx(day); });
   }
