@@ -55,3 +55,43 @@
 .Device .Route::before {
     content: "\2022 \00A0";
 }
+
+div.sSchedule div.ScheduleEntry::before {
+    content: '•';
+    margin-right: 0.25rem;
+}
+
+div.Schedule div.ScheduleEntry > div {
+    margin-right: 0.5rem;
+}
+
+div.Schedule div.ScheduleEntry .Days .DayEntry {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    margin-right: 4px;
+    border-radius: 1em;
+}
+
+div.Schedule div.ScheduleEntry .Days .DayEntry.Weekday {
+    border: 1px solid var(--light-assistant-weekdays-color);
+}
+
+div.Schedule div.ScheduleEntry .Days .DayEntry.DaySet.Weekday {
+    background: var(--light-assistant-weekdays-color);
+    border: 1px solid var(--light-assistant-weekdays-color);
+}
+
+div.Schedule div.ScheduleEntry .Days .DayEntry.Weekend {
+    border: 1px solid var(--light-assistant-weekend-color);
+}
+
+div.Schedule div.ScheduleEntry .Days .DayEntry.DaySet.Weekend {
+    background: var(--light-assistant-weekend-color);
+    border: 1px solid var(--light-assistant-weekend-color);
+}
+
+div.Schedule div.ScheduleEntry .EventType::before {
+    content: '->';
+    margin-right: 0.25rem;
+}

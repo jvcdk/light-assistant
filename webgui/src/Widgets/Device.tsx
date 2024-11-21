@@ -61,14 +61,15 @@ function DeviceRouting(prop: { routing: IDeviceRoute[], findDevice: FindDeviceDa
     )
 }
 
-function RenderParameters(props: {params: object}) {
-  const params = props.params;
-  const entries = Object.entries(params);
-  if(entries.length == 0)
-    return null;
-
+function RenderDays(props: {days: number[]}) {
+  const days = props.days;
+  const daysIndices = [0, 1, 2, 3, 4, 5, 6];
   return (
-    <div>{entries.map(([key, value]) => <div key={key}>{key}: {value}</div>)}</div>
+    <div className='Days'>{daysIndices.map(idx => {
+      const dayType = idx <= 4 ? 'Weekday' : 'Weekend';
+      const isSet = days.includes(idx) ? 'DaySet' : '';
+      return <div key={idx} className={`DayEntry ${dayType} ${isSet}`}></div>
+    })}</div>
   )
 }
 
@@ -76,11 +77,10 @@ function DeviceScheduleEntry(prop: { entry: IDeviceScheduleEntry }) {
   const entry = prop.entry;
   const trigger = new ScheduleTrigger(entry.Trigger);
   return (
-    <div className='ScheduleEntry'>
-      <div className='EventType'>{entry.EventType}</div>
-      <div className='Parameters'><RenderParameters params={entry.Parameters} /></div>
-      <div className='Days'>{trigger.DayNames}</div>
+    <div className='ScheduleEntry FlexHori'>
+      <RenderDays days={trigger.Days} />
       <div className='Time'>{trigger.Time.asString}</div>
+      <div className='EventType'>{entry.EventType}</div>
     </div>
   )
 }

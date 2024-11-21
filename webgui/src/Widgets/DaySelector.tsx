@@ -14,23 +14,24 @@ function ToggleAll(days: DayName[]) {
     return Object.values(DayName);
 }
 
-function DayElement(prop: {day: DayName, selected: boolean, onClick: () => void}) {
-    return <div className={prop.selected ? 'Day selected' : 'Day'} onClick={prop.onClick}>{prop.day.charAt(0)}</div>;
+function DayElement(prop: {day: DayName, isWeekDay: boolean; selected: boolean, onClick: () => void}) {
+    const className = prop.isWeekDay ? 'Weekday' : 'Weekend';
+    return <div className={`Day ${className} ` + (prop.selected && 'selected')} onClick={prop.onClick}>{prop.day.charAt(0)}</div>;
 }
 
 export function DaySelector(prop: {onChange: Action<DayName[]>, days: DayName[]}) {
   return (
     <div className='DaySelector'>
         <div className='FlexHori'>
-            <DayElement day={DayName.Monday} selected={prop.days.includes(DayName.Monday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Monday))} />
-            <DayElement day={DayName.Tuesday} selected={prop.days.includes(DayName.Tuesday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Tuesday))} />
-            <DayElement day={DayName.Wednesday} selected={prop.days.includes(DayName.Wednesday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Wednesday))} />
-            <DayElement day={DayName.Thursday} selected={prop.days.includes(DayName.Thursday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Thursday))} />
-            <DayElement day={DayName.Friday} selected={prop.days.includes(DayName.Friday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Friday))} />
+            <DayElement isWeekDay={true} day={DayName.Monday} selected={prop.days.includes(DayName.Monday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Monday))} />
+            <DayElement isWeekDay={true} day={DayName.Tuesday} selected={prop.days.includes(DayName.Tuesday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Tuesday))} />
+            <DayElement isWeekDay={true} day={DayName.Wednesday} selected={prop.days.includes(DayName.Wednesday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Wednesday))} />
+            <DayElement isWeekDay={true} day={DayName.Thursday} selected={prop.days.includes(DayName.Thursday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Thursday))} />
+            <DayElement isWeekDay={true} day={DayName.Friday} selected={prop.days.includes(DayName.Friday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Friday))} />
         </div>
         <div className='FlexHori'>
-            <DayElement day={DayName.Saturday} selected={prop.days.includes(DayName.Saturday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Saturday))} />
-            <DayElement day={DayName.Sunday} selected={prop.days.includes(DayName.Sunday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Sunday))} />
+            <DayElement isWeekDay={false} day={DayName.Saturday} selected={prop.days.includes(DayName.Saturday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Saturday))} />
+            <DayElement isWeekDay={false} day={DayName.Sunday} selected={prop.days.includes(DayName.Sunday)} onClick={() => prop.onChange(ToggleDay(prop.days, DayName.Sunday))} />
             <div className='Spacer'></div>
             <div className='ToggleAll' onClick={() => prop.onChange(ToggleAll(prop.days))}>All</div>
         </div>

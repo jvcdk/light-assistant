@@ -7,7 +7,6 @@
   display: inline-block;
   margin: 2px;
   padding: 6px 5px 5px 6px;
-  border: 1px solid var(--light-assistant-border);
   cursor: pointer;
   width: 1em;
   text-align: center;
@@ -27,8 +26,20 @@
   user-select: none;
 }
 
-.DaySelector div.Day.selected {
-  background: var(--light-assistant-highlight-1);
+.DaySelector div.Day.Weekday {
+  border: 1px solid var(--light-assistant-weekdays-color);
+}
+
+.DaySelector div.Day.Weekday.selected {
+  background: var(--light-assistant-weekdays-color);
+}
+
+.DaySelector div.Day.Weekend {
+  border: 1px solid var(--light-assistant-weekend-color);
+}
+
+.DaySelector div.Day.Weekend.selected {
+  background: var(--light-assistant-weekend-color);
 }
 
 .DaySelector div.Day:hover,
