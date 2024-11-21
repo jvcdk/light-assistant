@@ -82,6 +82,7 @@ internal partial class Controller : IController
 
         using var _ = _routesLock.ObtainWriteLock();
         data.PopulateRoutes(_routes);
+        data.PopulateSchedule(_schedules);
     }
 
     public IReadOnlyList<IDevice> GetDeviceList()
