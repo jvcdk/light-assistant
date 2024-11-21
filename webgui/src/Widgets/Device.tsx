@@ -47,7 +47,7 @@ function Route(route: IDeviceRoute, idx: number, findDevice: FindDeviceDataType)
 {
   const targetName = findDevice(route.TargetAddress)?.Device.Name || route.TargetAddress;
   return (
-    <div key={idx} className='Route'>{route.SourceEvent} -&gt; {targetName}:{route.TargetFunctionality}</div>
+    <div key={idx} className='Route'>{route.SourceEvent} -&gt; {targetName}</div>
   )
 }
 
