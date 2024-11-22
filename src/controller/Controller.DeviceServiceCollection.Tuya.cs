@@ -19,7 +19,7 @@ internal partial class Controller
 
         private class TuyaSmartKnob : DeviceServiceCollection
         {
-            public TuyaSmartKnob(IDevice device)
+            public TuyaSmartKnob(IDevice device, IConsoleOutput consoleOutput) : base(consoleOutput)
             {
                 AutoModeChange = new(device) {
                     ModeField = "operation_mode",
@@ -35,7 +35,7 @@ internal partial class Controller
                     unitStepSize: 12);
             }
 
-            internal static DeviceServiceCollection Create(IDevice device) => new TuyaSmartKnob(device);
+            internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new TuyaSmartKnob(device, consoleOutput);
 
             internal DeviceService.AutoModeChangeService AutoModeChange { get; }
 

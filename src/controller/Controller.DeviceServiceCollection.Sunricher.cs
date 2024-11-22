@@ -17,9 +17,9 @@ internal partial class Controller
             }
         }
 
-        private class SunricherCctLed(IDevice device) : DeviceServiceCollection
+        private class SunricherCctLed(IDevice device, IConsoleOutput consoleOutput) : DeviceServiceCollection(consoleOutput)
         {
-            internal static DeviceServiceCollection Create(IDevice device) => new SunricherCctLed(device);
+            internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new SunricherCctLed(device, consoleOutput);
 
             internal DeviceService.DimmableLightService Default { get; init; } = new(device, maxBrightness: 254);
         }

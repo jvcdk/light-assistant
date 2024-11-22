@@ -4,10 +4,8 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract class ActionEvent(string targetDevice)
+    private abstract class ActionEvent()
     {
-        public string TargetDevice { get; } = targetDevice;
-
         public bool UserGenerated { get; init; } = false;
 
         public string Type {
@@ -24,13 +22,13 @@ internal partial class Controller
 
     public enum TurnOnOffModes { Toggle, TurnOn, TurnOff }
 
-    private class ActionEvent_TurnOnOff(string targetDevice, TurnOnOffModes mode) : ActionEvent(targetDevice)
+    private class ActionEvent_TurnOnOff() : ActionEvent
     {
         [ParamEnum(typeof(TurnOnOffModes))]
-        public TurnOnOffModes Mode { get; } = mode;
+        public TurnOnOffModes Mode { get; init; } = TurnOnOffModes.Toggle;
     }
 
-    private class ActionEvent_FadeToBrightness(string targetDevice, double brightness, double duration) : ActionEvent(targetDevice)
+    private class ActionEvent_FadeToBrightness(double brightness, double duration) : ActionEvent
     {
         [ParamBrightness()]
         public double Brightness { get; } = brightness;
@@ -45,10 +43,12 @@ internal partial class Controller
         public string Name { get; } = name;
     }
 
-    private class ActionInfo(string name, MethodInfo method, IReadOnlyList<ParamInfo> @params)
+    private class ActionInfo(string name, DeviceService service, MethodInfo method, Type actionType, IReadOnlyList<ParamInfo> @params)
     {
         public string Name { get; } = name;
+        public DeviceService ServiceInstance { get; } = service;
         public MethodInfo Method { get; } = method;
         public IReadOnlyList<ParamInfo> Params { get; } = @params;
+        public Type ActionType { get; } = actionType;
     }
 }

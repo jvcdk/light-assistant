@@ -6,7 +6,7 @@ internal partial class Controller
 {
     private partial class DeviceServiceMapping
     {
-        private class ModelFactoryCollection : Dictionary<string, Func<IDevice, DeviceServiceCollection>> { }
+        private class ModelFactoryCollection : Dictionary<string, Func<IDevice, IConsoleOutput, DeviceServiceCollection>> { }
 
         private readonly IConsoleOutput _consoleOutput;
         private readonly Dictionary<string, ModelFactoryCollection> _factoryCollection = [];
@@ -25,7 +25,7 @@ internal partial class Controller
         {
             if(_factoryCollection.TryGetValue(device.Vendor, out var modelFactoryCollection)) {
                 if(modelFactoryCollection.TryGetValue(device.Model, out var factory))
-                    return factory.Invoke(device);
+                    return factory.Invoke(device, _consoleOutput);
             }
 
             _consoleOutput.ErrorLine($"No services found for device '{device.Name}' (Vendor: {device.Vendor}, Model: {device.Model}).");

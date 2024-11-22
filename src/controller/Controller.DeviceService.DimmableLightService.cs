@@ -94,7 +94,10 @@ internal partial class Controller
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
 
-                HandleTurnOnOff(new ActionEvent_TurnOnOff(string.Empty, TurnOnOffModes.Toggle) { UserGenerated = true });
+                HandleTurnOnOff(new ActionEvent_TurnOnOff {
+                    UserGenerated = true,
+                    Mode = TurnOnOffModes.Toggle
+                });
             }
 
             [ActionSink("TurnOnOff")]
