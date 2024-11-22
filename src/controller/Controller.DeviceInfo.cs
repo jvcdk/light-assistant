@@ -1,3 +1,5 @@
+using LightAssistant.Interfaces;
+
 namespace LightAssistant.Controller;
 
 internal partial class Controller
@@ -7,4 +9,9 @@ internal partial class Controller
         public DeviceStatus Status = new();
         public DeviceServiceCollection Services = new EmptyDeviceServiceCollection();
     }
+
+    private class DeviceInfoCollection : Dictionary<IDevice, DeviceInfo>
+    {
+    }
+
 }

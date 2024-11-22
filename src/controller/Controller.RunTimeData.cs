@@ -10,18 +10,22 @@ internal partial class Controller
         public Dictionary<string, List<Route>> Routes { get; set; } = [];
         public Dictionary<string, List<SerializableDeviceScheduleEntry>> Schedules { get; set; } = [];
 
-        // Deafult constructor; used for de-serialization.
+        // Default constructor; used for de-serialization.
         public RunTimeData() { }
 
-        internal RunTimeData(Dictionary<string, List<EventRoute>> routes, Dictionary<string, List<DeviceScheduleEntry>> schedules)
+        internal void SetSchedules(Dictionary<string, List<DeviceScheduleEntry>> schedules)
+        {
+            Schedules = schedules.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value.Select(entry => new SerializableDeviceScheduleEntry(entry)).ToList()
+            );
+        }
+
+        internal void SetRoutes(Dictionary<string, List<EventRoute>> routes)
         {
             Routes = routes.ToDictionary(
                 entry => entry.Key,
                 entry => entry.Value.Select(route => new Route(route)).ToList()
-            );
-            Schedules = schedules.ToDictionary(
-                entry => entry.Key,
-                entry => entry.Value.Select(entry => new SerializableDeviceScheduleEntry(entry)).ToList()
             );
         }
 
@@ -44,7 +48,7 @@ internal partial class Controller
                 routes[key] = value.Select(route => new EventRoute(route)).ToList();
         }
 
-        internal void PopulateSchedule(Dictionary<string, List<DeviceScheduleEntry>> schedules)
+        internal void PopulateSchedules(Dictionary<string, List<DeviceScheduleEntry>> schedules)
         {
             schedules.Clear();
             foreach(var (key, value) in Schedules)

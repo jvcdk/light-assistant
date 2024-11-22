@@ -35,7 +35,6 @@ internal partial class Controller
     private class ProvidedEvent(string type, string name) : IProvidedEvent
     {
         public string Type { get; } = type;
-        
         public string Name { get; } = name;
     }
 
@@ -43,5 +42,9 @@ internal partial class Controller
     {
         public string Type { get; } = type;
         public IReadOnlyList<ParamInfo> Parameters { get; } = parameters;
+    }
+
+    private class DeviceRoutes : Dictionary<string, List<EventRoute>>
+    {
     }
 }

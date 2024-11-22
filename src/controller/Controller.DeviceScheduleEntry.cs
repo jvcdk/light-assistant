@@ -39,7 +39,7 @@ internal partial class Controller
         public override string ToString() => $"Schedule: {EventType} with {string.Join(", ", Parameters.Select(kv => $"{kv.Key}={kv.Value}"))}, {_trigger}";
     }
 
-    internal class ScheduleTrigger(IScheduleTrigger trigger) : IScheduleTrigger
+    private class ScheduleTrigger(IScheduleTrigger trigger) : IScheduleTrigger
     {
         public IReadOnlySet<int> Days { get; } = trigger.Days;
         private readonly TimeOfDay _time = new(trigger.Time);
@@ -52,7 +52,7 @@ internal partial class Controller
         public override string ToString() => $"Trigger: {string.Join(", ", Days)} at {Time}";
     }
 
-    internal class TimeOfDay(ITimeOfDay time) : ITimeOfDay
+    private class TimeOfDay(ITimeOfDay time) : ITimeOfDay
     {
         public int Hour { get; } = time.Hour;
         public int Minute { get; } = time.Minute;
@@ -62,5 +62,9 @@ internal partial class Controller
         }
 
         public override string ToString() => $"{Hour:D2}:{Minute:D2}";
+    }
+
+    private class DeviceSchedule : Dictionary<string, List<DeviceScheduleEntry>>
+    {
     }
 }
