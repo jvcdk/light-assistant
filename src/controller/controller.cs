@@ -14,11 +14,9 @@ internal partial class Controller : IController
     private readonly int _openNetworkTimeSeconds;
 
     // Protected data
-    private readonly Dictionary<IDevice, DeviceInfo> _devices = [];
-    private readonly SlimReadWriteLock _devicesLock = new();
-    private readonly Dictionary<string, List<EventRoute>> _routes = [];
-    private readonly Dictionary<string, List<DeviceScheduleEntry>> _schedules = [];
-    private readonly SlimReadWriteLock _routesLock = new();
+    private readonly SlimReadWriteDataGuard<DeviceInfoCollection> _devices = new(new DeviceInfoCollection());
+    private readonly SlimReadWriteDataGuard<DeviceSchedule> _schedules = new(new DeviceSchedule());
+    private readonly SlimReadWriteDataGuard<DeviceRoutes> _routes = new(new DeviceRoutes());
 
     public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
     {
@@ -46,10 +44,13 @@ internal partial class Controller : IController
             return; // Error written in LoadData
 
         try {
-            RunTimeData data;
-            using(var _ = _routesLock.ObtainReadLock()) {
-                data = new RunTimeData(_routes, _schedules);
-            }
+            var data = new RunTimeData();
+
+            using(_ = _routes.ObtainReadLock(out var routes))
+                data.SetRoutes(routes);
+            using(_ = _schedules.ObtainReadLock(out var schedules))
+                data.SetSchedules(schedules);
+
             await data.SaveToFile(_dataPath);
         }
         catch(Exception ex) {
@@ -80,28 +81,30 @@ internal partial class Controller : IController
             return;
         }
 
-        using var _ = _routesLock.ObtainWriteLock();
-        data.PopulateRoutes(_routes);
-        data.PopulateSchedule(_schedules);
+        using(_ = _routes.ObtainWriteLock(out var routes))
+            data.PopulateRoutes(routes);
+
+        using(_ = _schedules.ObtainWriteLock(out var schedules))
+            data.PopulateSchedules(schedules);
     }
 
     public IReadOnlyList<IDevice> GetDeviceList()
     {
-        using var _ = _devicesLock.ObtainReadLock();
-        return new List<IDevice>(_devices.Keys);
+        using var _ = _devices.ObtainReadLock(out var devices);
+        return new List<IDevice>(devices.Keys);
     }
 
     public IDevice? TryGetDevice(string address)
     {
-        using var _ = _devicesLock.ObtainReadLock();
-        return _devices.Keys.FirstOrDefault(entry => entry.Address == address);
+        using var _ = _devices.ObtainReadLock(out var devices);
+        return devices.Keys.FirstOrDefault(entry => entry.Address == address);
     }
 
     public bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status)
     {
-        using var _ = _devicesLock.ObtainReadLock();
+        using var _ = _devices.ObtainReadLock(out var devices);
 
-        if(_devices.TryGetValue(device, out var entry)) {
+        if(devices.TryGetValue(device, out var entry)) {
             status = entry.Status;
             return true;
         }
@@ -112,9 +115,9 @@ internal partial class Controller : IController
 
     public IRoutingOptions? GetRoutingOptionsFor(IDevice device)
     {
-        using var _ = _devicesLock.ObtainReadLock();
+        using var _ = _devices.ObtainReadLock(out var devices);
 
-        if(!_devices.TryGetValue(device, out var deviceInfo)) {
+        if(!devices.TryGetValue(device, out var deviceInfo)) {
             _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
             return null;
         }
@@ -132,9 +135,9 @@ internal partial class Controller : IController
 
     public IReadOnlyList<IConsumableAction> GetConsumableActionsFor(IDevice device)
     {
-        using var _ = _devicesLock.ObtainReadLock();
+        using var _ = _devices.ObtainReadLock(out var devices);
 
-        if(!_devices.TryGetValue(device, out var deviceInfo)) {
+        if(!devices.TryGetValue(device, out var deviceInfo)) {
             _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
             return [];
         }
@@ -148,8 +151,8 @@ internal partial class Controller : IController
         bool didUpdate;
         DeviceStatus newStatus;
         DeviceServiceCollection services;
-        using(var _ = _devicesLock.ObtainWriteLock()) {
-            if(!_devices.TryGetValue(device, out var deviceInfo)) {
+        using(_ = _devices.ObtainWriteLock(out var devices)) {
+            if(!devices.TryGetValue(device, out var deviceInfo)) {
                 _consoleOutput.ErrorLine($"Got Device Action from unknown device '{device.Name}'.");
                 return;            
             }
@@ -200,12 +203,12 @@ internal partial class Controller : IController
 
     private void AugmentRoutesWithDestination(List<RouteInternalEvents_Workspace> routes)
     {
-        using var _ = _devicesLock.ObtainReadLock();
+        using var _ = _devices.ObtainReadLock(out var devices);
 
         foreach (var entry in routes) {
             Debug.Assert(entry.RoutesFromSourceAddress != null);
             foreach (var route in entry.RoutesFromSourceAddress) {
-                foreach (var (targetDevice, targetInfo) in _devices) {
+                foreach (var (targetDevice, targetInfo) in devices) {
                     if (targetDevice.Address != route.TargetAddress)
                         continue;
 
@@ -220,12 +223,12 @@ internal partial class Controller : IController
 
     private List<RouteInternalEvents_Workspace> RouteInternalEvents_GetEligibleRoutes(IEnumerable<InternalEvent> events)
     {
-        using var _ = _routesLock.ObtainReadLock();
+        using var _ = _routes.ObtainReadLock(out var routes);
         return events.Select(ev => {
-            if (!_routes.TryGetValue(ev.SourceAddress, out var routes))
-                routes = null;
+            if (!routes.TryGetValue(ev.SourceAddress, out var deviceRoutes))
+                deviceRoutes = null;
 
-            return new RouteInternalEvents_Workspace(ev, routes?.Where(route => route.SourceEvent == ev.ServiceName).ToList());
+            return new RouteInternalEvents_Workspace(ev, deviceRoutes?.Where(route => route.SourceEvent == ev.ServiceName).ToList());
         })
         .Where(el => el.RoutesFromSourceAddress != null && el.RoutesFromSourceAddress.Count > 0)
         .ToList();
@@ -234,27 +237,27 @@ internal partial class Controller : IController
     private async void HandleDeviceDiscovered(IDevice device)
     {
         _consoleOutput.ErrorLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
-        using(var _ = _devicesLock.ObtainWriteLock()) {
-            if(_devices.ContainsKey(device))
+        using(_ = _devices.ObtainWriteLock(out var devices)) {
+            if(devices.ContainsKey(device))
                 return; // Not new
 
-            _devices.Add(device, CreateDeviceInfo(device));
+            devices.Add(device, CreateDeviceInfo(device));
         }
         await _guiApp.DeviceListUpdated();
     }
 
     private async void HandleDeviceUpdated(IDevice device)
     {
-        using(var _ = _devicesLock.ObtainWriteLock()) {
-            var existing = _devices.Keys.FirstOrDefault(entry => entry.Address == device.Address);
+        using(_ = _devices.ObtainWriteLock(out var devices)) {
+            var existing = devices.Keys.FirstOrDefault(entry => entry.Address == device.Address);
             if (existing == default) {
                 _consoleOutput.ErrorLine($"Error updating device. Device '{device.Address}' did not seem to exist.");
                 return;
             }
 
-            var data = _devices[existing];
-            _devices.Remove(existing);
-            _devices[device] = data;
+            var data = devices[existing];
+            devices.Remove(existing);
+            devices[device] = data;
         }
         await _guiApp.DeviceListUpdated();
     }
@@ -277,21 +280,21 @@ internal partial class Controller : IController
 
     public IEnumerable<IEventRoute> GetRoutingFor(IDevice device)
     {
-        using var _ = _routesLock.ObtainReadLock();
+        using var _ = _routes.ObtainReadLock(out var routes);
 
-        if(_routes.TryGetValue(device.Address, out var result))
+        if(routes.TryGetValue(device.Address, out var result))
             return result;
-        
+
         return [];
     }
 
     public IEnumerable<IDeviceScheduleEntry> GetScheduleFor(IDevice device)
     {
-        using var _ = _routesLock.ObtainReadLock();
+        using var _ = _schedules.ObtainReadLock(out var schedules);
 
-        if(_schedules.TryGetValue(device.Address, out var result))
+        if(schedules.TryGetValue(device.Address, out var result))
             return result;
-        
+
         return [];
     }
 
@@ -307,10 +310,12 @@ internal partial class Controller : IController
 
         var newRoutes = ProcessDeviceRoutes(device, routes);
         var newSchedule = ProcessDeviceSchedule(device, schedule);
-        using(_ = _routesLock.ObtainWriteLock()) {
-            _routes[device.Address] = newRoutes;
-            _schedules[device.Address] = newSchedule;
-        }
+
+        using(_ = _routes.ObtainWriteLock(out var deviceRoutes))
+            deviceRoutes[device.Address] = newRoutes;
+
+        using(_ = _schedules.ObtainWriteLock(out var deviceSchedules))
+            deviceSchedules[device.Address] = newSchedule;
 
         await SaveData();
         await _guiApp.DeviceDataUpdated(device);
