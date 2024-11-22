@@ -1,3 +1,4 @@
+
 namespace LightAssistant.Interfaces
 {
     internal interface IDeviceScheduleEntry

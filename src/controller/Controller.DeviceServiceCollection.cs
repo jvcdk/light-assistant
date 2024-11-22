@@ -7,6 +7,13 @@ internal partial class Controller
 {
     private abstract class DeviceServiceCollection
     {
+        private readonly IConsoleOutput _consoleOutput;
+
+        protected DeviceServiceCollection(IConsoleOutput consoleOutput)
+        {
+            _consoleOutput = consoleOutput;
+        }
+
         internal IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
         {
             foreach(var service in EnumerateServices()) {
@@ -19,6 +26,56 @@ internal partial class Controller
         {
             foreach(var service in EnumerateServices())
                 service.ProcessInternalEvent(ev, targetFunctionality);
+        }
+
+        internal void ProcessScheduleAction(string eventType, IReadOnlyDictionary<string, string> parameters)
+        {
+            foreach(var action in ConsumedActions) {
+                if(action.Name == eventType) {
+                    var param = CreateActionParam(action.ActionType, parameters);
+                    if(param != null)
+                        action.Method.Invoke(action.ServiceInstance, [param]);
+                }
+            }
+        }
+
+        private object? CreateActionParam(Type actionType, IReadOnlyDictionary<string, string> parameters)
+        {
+            try {
+                var result = Activator.CreateInstance(actionType);
+                if(result == null) {
+                    _consoleOutput.ErrorLine($"Failed to create instance action parameter of type {actionType}.");
+                    return null;
+                }
+
+                foreach(var prop in actionType.GetProperties()) {
+                    if(parameters.TryGetValue(prop.Name, out var value)) {
+                        var convertedValue = ChangeType(value, prop.PropertyType, _consoleOutput);
+                        if(convertedValue != null)
+                            prop.SetValue(result, convertedValue);
+                    }
+                }
+
+                return result;
+            }
+            catch(Exception ex) {
+                _consoleOutput.ErrorLine($"Failed to create action parameter of type {actionType}. Msg.: " + ex.Message);
+                return null;
+            }
+        }
+
+        private static object? ChangeType(string value, Type type, IConsoleOutput consoleOutput)
+        {
+            try {
+                if(type.IsEnum)
+                    return Enum.Parse(type, value.SentenceToCamelCase());
+
+                return Convert.ChangeType(value, type);
+            }
+            catch(Exception ex) {
+                consoleOutput.ErrorLine($"Failed to convert value '{value}' to type {type}. Msg.: " + ex.Message);
+                return null;
+            }
         }
 
         private IEnumerable<DeviceService> EnumerateServices() => this.EnumeratePropertiesOfType<DeviceService>();
@@ -38,15 +95,15 @@ internal partial class Controller
                 .Select(tuple => (tuple.method, tuple.attr, param: tuple.method.GetParameters()))
                 .Where(tuple => tuple.param.Length == 1 && tuple.param[0].ParameterType.IsSubclassOf(typeof(ActionEvent)))
                 .Select(tuple => {
-                    var paramInfo = tuple.param[0].ParameterType
+                    var param = tuple.param[0];
+                    var paramInfo = param.ParameterType
                         .EnumeratePropertiesWithAttribute<ParamDescriptor>()
                         .Select(prop => new ParamInfo(prop.prop.Name, prop.attr!))
                         .ToList();
-                    return (tuple.attr.Name, tuple.method, paramAttr:paramInfo);
-                })
-                .Select(tuple => new ActionInfo(tuple.Name, tuple.method, tuple.paramAttr));
+                    return new ActionInfo(tuple.attr.Name, service, tuple.method, param.ParameterType, paramInfo);
+                });
         }
     }
 
-    private class EmptyDeviceServiceCollection : DeviceServiceCollection { }
+    private class EmptyDeviceServiceCollection() : DeviceServiceCollection(new ConsoleOutput()) { }
 }
