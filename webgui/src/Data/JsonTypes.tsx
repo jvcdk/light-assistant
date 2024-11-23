@@ -158,6 +158,15 @@ export interface IParamBrightness extends IParamFloat {
 }
 
 /**
+ * Should match JsonParamInt
+ */
+export interface IParamInt extends IParamInfo {
+  Min: number;
+  Max: number;
+  Default: number;
+}
+
+/**
  * Should match JsonOpenNetworkStatus
  */
 export interface IOpenNetworkStatus {

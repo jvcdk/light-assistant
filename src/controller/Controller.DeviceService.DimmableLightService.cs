@@ -13,8 +13,6 @@ internal partial class Controller
         {
             private readonly object _lock = new();
 
-            private enum FadeMode { Idle, FadeUp, FadeDown};
-
             private const double FastTransitionTime = 0.25; // s
             private const double SlowTransitionTime = 1.25; // s
             private const int LastStepTimeConstantMs = 350;
@@ -25,7 +23,7 @@ internal partial class Controller
 
             private readonly Timer _fadeTriggerTimer = new();
             private readonly Timer _fadeEngineTimer = new();
-            private FadeMode _fadeMode = FadeMode.Idle;
+            private double _fadeBrightnessTarget = 0;
             private double _upcomingFadeTimeValue = 0; // Doesn't really have a unit. It is Button StepSize but is scaled into seconds.
             private double _fadeTime; // Unit: s
             private double _fadeNextBrightness;
@@ -65,7 +63,7 @@ internal partial class Controller
                 _fadeTriggerTimer.AutoReset = false;
                 _fadeTriggerTimer.Interval = FadeInitiateDelayMs;
 
-                _fadeEngineTimer.Elapsed += (sender, args) => RunFade(isInitial: false);
+                _fadeEngineTimer.Elapsed += (sender, args) => RunFade();
                 _fadeEngineTimer.AutoReset = false;
             }
 
@@ -100,12 +98,12 @@ internal partial class Controller
                 });
             }
 
-            [ActionSink("TurnOnOff")]
+            [ActionSink("Turn on/off")]
             private void HandleTurnOnOff(ActionEvent_TurnOnOff ev)
             {
                 lock (_lock) {
-                    if (_fadeMode != FadeMode.Idle) {
-                        _fadeMode = FadeMode.Idle;
+                    if (!IsDoneFading) {
+                        _fadeBrightnessTarget = _brightness;
                         if(ev.UserGenerated)
                             return;
                     }
@@ -140,10 +138,7 @@ internal partial class Controller
                     return;
                 }
 
-
                 lock(_lock) {
-                    _fadeMode = FadeMode.Idle;
-
                     var lastDirectionUp = _brightnessStep > 0;
                     var isSameDirection = evRotate.IsUp == lastDirectionUp;
                     var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -161,6 +156,7 @@ internal partial class Controller
                         _brightnessStep -= evRotate.StepSize;
 
                     SetPrivateBrightness(_brightness + _brightnessStep / StepSizeScaling, evRotate.IsUp);
+                    _fadeBrightnessTarget = _brightness;
                 }
             }
 
@@ -184,47 +180,49 @@ internal partial class Controller
 
             private void TriggerFade(object? sender, ElapsedEventArgs args)
             {
+                ActionEvent_FadeToBrightness ev;
                 lock(_lock) {
-                    var fadeTimeValue = Math.Abs(_upcomingFadeTimeValue);
                     var directionIsUp = _upcomingFadeTimeValue > 0;
+                    ev = new ActionEvent_FadeToBrightness {
+                        Brightness = directionIsUp ? 1.0 : 0.0,
+                        Duration = (int) Math.Round(FadeTimeFactor * Math.Abs(_upcomingFadeTimeValue) / StepSizeScaling), // Unit: s,
+                        UserGenerated = true
+                    };
                     _upcomingFadeTimeValue = 0;
-                    if(fadeTimeValue <= float.Epsilon)
+                }
+                HandleFade(ev);
+            }
+
+            [ActionSink("Fade to brightness")]
+            private void HandleFade(ActionEvent_FadeToBrightness ev)
+            {
+                lock(_lock) {
+                    if(ev.Duration <= 0)
                         return;
 
-                    if(directionIsUp) {
-                        if(IsFullOn)
-                            return;
-
-                        _fadeMode = FadeMode.FadeUp;
-                    }
-                    else {
-                        if(!IsOn)
-                            return;
-
-                        _fadeMode = FadeMode.FadeDown;
-                    }
-
-                    _fadeTime = FadeTimeFactor * fadeTimeValue / StepSizeScaling; // Unit: s
-                    RunFade(isInitial: true);
+                    _fadeBrightnessTarget = ev.Brightness;
+                    var distance = ev.UserGenerated ? 1:
+                        Math.Abs(_brightness - ev.Brightness);
+                    _fadeTime = ev.Duration * distance; // Unit: s
+                    RunFade();
                 }
             }
 
-            private void RunFade(bool isInitial)
+            private bool IsDoneFading => Math.Abs(_fadeBrightnessTarget - _brightness) < float.Epsilon;
+
+            private void RunFade()
             {
                 lock(_lock) {
-                    if (_fadeMode == FadeMode.Idle)
+                    if(IsDoneFading)
                         return;
 
-                    var isUp = _fadeMode == FadeMode.FadeUp;
-                    var (target, direction) = isUp ? (MaxBrightness, 1) : (0, -1);
-                    double intervalMs = CalculateInterval(isUp, target, direction);
+                    var isUp = _fadeBrightnessTarget > _brightness;
+                    var target = (int) Math.Round(MaxBrightness * _fadeBrightnessTarget);
+                    double intervalMs = CalculateInterval(isUp, target);
                     SetPrivateBrightness(_fadeNextBrightness, isUp, intervalMs / 1000);
 
-                    bool isDone = target == Brightness;
-                    if (isDone) {
-                        _fadeMode = FadeMode.Idle;
+                    if (IsDoneFading)
                         return;
-                    }
 
                     _fadeEngineTimer.Interval = intervalMs;
                     _fadeEngineTimer.Start();
@@ -232,9 +230,10 @@ internal partial class Controller
 
                 double CalcNextBrightnessStepValue(int step) => UnApplyGamma((double)(Brightness + step) / MaxBrightness);
 
-                double CalculateInterval(bool isUp, int target, int direction)
+                double CalculateInterval(bool isUp, int target)
                 {
                     double intervalMs = 0;
+                    var direction = isUp ? 1 : -1;
                     var step = direction;
                     do {
                         _fadeNextBrightness = CalcNextBrightnessStepValue(step);

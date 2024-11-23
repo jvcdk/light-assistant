@@ -52,3 +52,20 @@ internal class ParamFloat(double min, double max) : ParamDescriptor
 internal class ParamBrightness() : ParamFloat(0.0, 1.0)
 {
 }
+
+internal class ParamInt(int min, int max) : ParamDescriptor
+{
+    public int Min { get; } = min;
+
+    public int Max { get; } = max;
+
+    public int Default => (int)Math.Round((Min + Max) / 2.0);
+
+    internal override bool Validate(string value)
+    {
+        if (!int.TryParse(value, out var intValue))
+            return false;
+
+        return intValue >= Min && intValue <= Max;
+    }
+}
