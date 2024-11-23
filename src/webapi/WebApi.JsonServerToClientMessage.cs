@@ -157,6 +157,7 @@ internal partial class WebApi
                 ParamEnum paramEnum => new JSonParamEnum(source.Name, paramEnum.Values, paramEnum.Default),
                 ParamBrightness paramBrightness => new JsonParamBrightness(source.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default),
                 ParamFloat paramFloat => new JSonParamFloat(source.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default),
+                ParamInt paramInt => new JSonParamInt(source.Name, paramInt.Min, paramInt.Max, paramInt.Default),
                 _ => throw new ArgumentException("Unknown ParamDescriptor type"),
             };
         }
@@ -180,6 +181,14 @@ internal partial class WebApi
     internal class JsonParamBrightness(string name, double min, double max, double defaultValue) : JSonParamFloat(name, min, max, defaultValue)
     {
         public override string Type => "brightness";
+    }
+
+    internal class JSonParamInt(string name, int min, int max, int defaultValue) : JSonParamInfo(name)
+    {
+        public override string Type => "int";
+        public int Min { get; } = min;
+        public int Max { get; } = max;
+        public int Default { get; } = defaultValue;
     }
 
     internal class JsonOpenNetworkStatus(bool status, int time)

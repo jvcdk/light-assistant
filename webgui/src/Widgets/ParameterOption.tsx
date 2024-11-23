@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { IParamEnum, IParamFloat, IParamInfo } from "../Data/JsonTypes";
+import { IParamEnum, IParamFloat, IParamInfo, IParamInt } from "../Data/JsonTypes";
 import { tryParseFloat } from "../Utils/FloatUtils";
 import './ParameterOption.css';
 
@@ -41,14 +41,37 @@ function ParamOptionFloat(props: ParamOptionProps) {
       props.onChange(value);
   }
 
-  const value = tryParseFloat(props.value, param.Default);
+  const stepSize = (param.Max - param.Min) / 100;
   return (
     <span className="Param Float">
       <label>{param.Name}</label>
-      <input type="number" min={param.Min} max={param.Max} value={value} onChange={e => update(e.target.value)} />
+      <input type="number" min={param.Min} step={stepSize} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
     </span>
   );
 }
+
+function ParamOptionInt(props: ParamOptionProps) {
+  const param = props.param as IParamInt;
+
+  useEffect(() => {
+    if(props.value === undefined)
+      props.onChange(param.Default.toString());
+  }, [props, param.Default]);
+
+  function update(value: string) {
+    const newVal = parseInt(value);
+    if(!isNaN(newVal))
+      props.onChange(value);
+  }
+
+  return (
+    <span className="Param Int">
+      <label>{param.Name}</label>
+      <input type="number" min={param.Min} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
+    </span>
+  );
+}
+
 
 export function ParamOption(props: ParamOptionProps) {
   const param = props.param;
@@ -58,6 +81,8 @@ export function ParamOption(props: ParamOptionProps) {
     case 'float':
     case 'brightness': // For now, just use the float option
       return <ParamOptionFloat {...props} />;
+    case 'int':
+      return <ParamOptionInt {...props} />;
     default:
       return <div>Unknown type: {param.Type}</div>;
   }

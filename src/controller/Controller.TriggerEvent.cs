@@ -28,13 +28,13 @@ internal partial class Controller
         public TurnOnOffModes Mode { get; init; } = TurnOnOffModes.Toggle;
     }
 
-    private class ActionEvent_FadeToBrightness(double brightness, double duration) : ActionEvent
+    private class ActionEvent_FadeToBrightness() : ActionEvent
     {
         [ParamBrightness()]
-        public double Brightness { get; } = brightness;
+        public double Brightness { get; init; }
 
-        [ParamFloat(0, 120)]
-        public double Duration { get; } = duration;
+        [ParamInt(1, 120)]
+        public int Duration { get; init; } = 1;
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
