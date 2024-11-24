@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { IParamEnum, IParamFloat, IParamInfo, IParamInt } from "../Data/JsonTypes";
-import { tryParseFloat } from "../Utils/FloatUtils";
 import './ParameterOption.css';
 
 export interface ParamOptionProps {
@@ -42,9 +41,10 @@ function ParamOptionFloat(props: ParamOptionProps) {
   }
 
   const stepSize = (param.Max - param.Min) / 100;
+  const units = props.param.Units;
   return (
     <span className="Param Float">
-      <label>{param.Name}</label>
+      <label>{param.Name}{units && ` [${units}]`}</label>
       <input type="number" min={param.Min} step={stepSize} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
     </span>
   );
@@ -64,9 +64,10 @@ function ParamOptionInt(props: ParamOptionProps) {
       props.onChange(value);
   }
 
+  const units = props.param.Units;
   return (
     <span className="Param Int">
-      <label>{param.Name}</label>
+      <label>{param.Name}{units && ` [${units}]`}</label>
       <input type="number" min={param.Min} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
     </span>
   );

@@ -33,7 +33,7 @@ internal partial class Controller
         [ParamBrightness()]
         public double Brightness { get; init; }
 
-        [ParamInt(1, 120)]
+        [ParamInt(1, 120, "s")]
         public int Duration { get; init; } = 1;
     }
 

@@ -147,30 +147,32 @@ internal partial class WebApi
      * JSonParamInfo covers both ParamInfo and ParamDescriptor.
      * This is a base class; descendants match descendants of ParamDescriptor.
      */
-    internal abstract class JSonParamInfo(string name)
+    internal abstract class JSonParamInfo(string name, string units)
     {
         public abstract string Type { get; }
         public string Name { get; } = name;
+        public string Units { get; } = units;
 
         public static JSonParamInfo FromParamInfo(ParamInfo source) {
+            var param = source.Param;
             return source.Param switch {
-                ParamEnum paramEnum => new JSonParamEnum(source.Name, paramEnum.Values, paramEnum.Default),
+                ParamEnum paramEnum => new JSonParamEnum(source.Name, paramEnum.Values, paramEnum.Default, param.Units),
                 ParamBrightness paramBrightness => new JsonParamBrightness(source.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default),
-                ParamFloat paramFloat => new JSonParamFloat(source.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default),
-                ParamInt paramInt => new JSonParamInt(source.Name, paramInt.Min, paramInt.Max, paramInt.Default),
+                ParamFloat paramFloat => new JSonParamFloat(source.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default, param.Units),
+                ParamInt paramInt => new JSonParamInt(source.Name, paramInt.Min, paramInt.Max, paramInt.Default, param.Units),
                 _ => throw new ArgumentException("Unknown ParamDescriptor type"),
             };
         }
     }
 
-    internal class JSonParamEnum(string name, string[] values, string defaultValue) : JSonParamInfo(name)
+    internal class JSonParamEnum(string name, string[] values, string defaultValue, string units) : JSonParamInfo(name, units)
     {
         public override string Type => "enum";
         public string[] Values { get; } = values;
         public string Default { get; } = defaultValue;
     }
 
-    internal class JSonParamFloat(string name, double min, double max, double defaultValue) : JSonParamInfo(name)
+    internal class JSonParamFloat(string name, double min, double max, double defaultValue, string units) : JSonParamInfo(name, units)
     {
         public override string Type => "float";
         public double Min { get; } = min;
@@ -178,12 +180,12 @@ internal partial class WebApi
         public double Default { get; } = defaultValue;
     }
 
-    internal class JsonParamBrightness(string name, double min, double max, double defaultValue) : JSonParamFloat(name, min, max, defaultValue)
+    internal class JsonParamBrightness(string name, double min, double max, double defaultValue) : JSonParamFloat(name, min, max, defaultValue, "")
     {
         public override string Type => "brightness";
     }
 
-    internal class JSonParamInt(string name, int min, int max, int defaultValue) : JSonParamInfo(name)
+    internal class JSonParamInt(string name, int min, int max, int defaultValue, string units) : JSonParamInfo(name, units)
     {
         public override string Type => "int";
         public int Min { get; } = min;
