@@ -10,8 +10,9 @@ internal class ParamInfo(string name, ParamDescriptor param)
 
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-internal abstract class ParamDescriptor : Attribute
+internal abstract class ParamDescriptor(string units) : Attribute
 {
+    internal string Units { get; } = units;
     internal abstract bool Validate(string value);
 }
 
@@ -21,7 +22,7 @@ internal class ParamEnum : ParamDescriptor
 
     public string Default => (Values.Length > 0) ? Values[0] : string.Empty;
 
-    internal ParamEnum(Type sourceEnum)
+    internal ParamEnum(Type sourceEnum) : base("")
     {
         if (!sourceEnum.IsEnum)
             throw new ArgumentException("SourceEnum must be an enum type.");
@@ -32,7 +33,7 @@ internal class ParamEnum : ParamDescriptor
     internal override bool Validate(string value) => Values.Contains(value);
 }
 
-internal class ParamFloat(double min, double max) : ParamDescriptor
+internal class ParamFloat(double min, double max, string units) : ParamDescriptor(units)
 {
     public double Min { get; } = min;
 
@@ -49,11 +50,11 @@ internal class ParamFloat(double min, double max) : ParamDescriptor
     }
 }
 
-internal class ParamBrightness() : ParamFloat(0.0, 1.0)
+internal class ParamBrightness() : ParamFloat(0.0, 1.0, "")
 {
 }
 
-internal class ParamInt(int min, int max) : ParamDescriptor
+internal class ParamInt(int min, int max, string units) : ParamDescriptor(units)
 {
     public int Min { get; } = min;
 

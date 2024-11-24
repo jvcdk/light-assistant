@@ -132,6 +132,7 @@ export interface IDeviceConsumableAction {
 export interface IParamInfo {
   Name: string;
   Type: string;
+  Units: string;
 }
 
 /**
