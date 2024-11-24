@@ -17,12 +17,12 @@ function ParamOptionEnum(props: ParamOptionProps) {
   }, [props, param.Default]);
 
   return (
-    <span className="Param Enum">
-      <label>{param.Name}</label>
-      <select onChange={e => props.onChange(e?.target.value)} value={props.value}>
+    <>
+      <label className="Param Enum">{param.Name}:</label>
+      <select className="Param Enum" onChange={e => props.onChange(e?.target.value)} value={props.value}>
         {param.Values.map(value => <option key={value} value={value}>{value}</option>)}
       </select>
-    </span>
+    </>
   );
 }
 
@@ -43,10 +43,10 @@ function ParamOptionFloat(props: ParamOptionProps) {
   const stepSize = (param.Max - param.Min) / 100;
   const units = props.param.Units;
   return (
-    <span className="Param Float">
-      <label>{param.Name}{units && ` [${units}]`}</label>
-      <input type="number" min={param.Min} step={stepSize} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
-    </span>
+    <>
+      <label className="Param Float">{param.Name}{units && ` [${units}]`}:</label>
+      <input className="Param Float" type="text" min={param.Min} step={stepSize} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
+    </>
   );
 }
 
@@ -66,10 +66,10 @@ function ParamOptionInt(props: ParamOptionProps) {
 
   const units = props.param.Units;
   return (
-    <span className="Param Int">
-      <label>{param.Name}{units && ` [${units}]`}</label>
-      <input type="number" min={param.Min} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
-    </span>
+    <>
+      <label className="Param Int">{param.Name}{units && ` [${units}]`}:</label>
+      <input className="Param Int" type="text" min={param.Min} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
+    </>
   );
 }
 

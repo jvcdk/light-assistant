@@ -81,7 +81,7 @@ function ActionOptions(props: ActionOptionsProps) {
   }
 
   return (
-    <div>
+    <div className='ActionOptions'>
       {params.map(param => <ParamOption
           key={param.Name}
           param={param}
@@ -118,6 +118,7 @@ function ScheduleEntry(props: IScheduleEntryProps) {
         </select>
         {triggerInfo && <ActionOptions info={triggerInfo} values={entry.Parameters} onChange={val => entry.Parameters = val} />}
       </div>
+      <div className='Spacer'></div>
       {triggerInfo && <DaySelector onChange={(days) => trigger.DayNames = days} days={trigger.DayNames} />}
       {triggerInfo && <RenderTimeOfDay Time={trigger.Time} OnTimeClick={() => clockOpen.val = true} /> }
       <Popup_SelectTime
