@@ -51,11 +51,10 @@ internal partial class Controller
             }
 
             private bool IsOn => _brightness > float.Epsilon;
-            private bool IsFullOn => (1.0 - _brightness) < float.Epsilon;
             private double UnApplyGamma(double value) => Math.Pow(value, 1.0 / _gamma);
             private double ApplyGamma(double value) => Math.Pow(value, _gamma);
 
-            public DimmableLightService(IDevice device, int maxBrightness) : base("", device)
+            public DimmableLightService(IDevice device, int maxBrightness, IConsoleOutput consoleOutput) : base("", device, consoleOutput)
             {
                 MaxBrightness = maxBrightness;
 
@@ -182,6 +181,7 @@ internal partial class Controller
             {
                 ActionEvent_FadeToBrightness ev;
                 lock(_lock) {
+                    ConsoleOutput.InfoLine($"Trigger fade: {_upcomingFadeTimeValue}");
                     var directionIsUp = _upcomingFadeTimeValue > 0;
                     ev = new ActionEvent_FadeToBrightness {
                         Brightness = directionIsUp ? 1.0 : 0.0,
@@ -196,6 +196,7 @@ internal partial class Controller
             [ActionSink("Fade to brightness")]
             private void HandleFade(ActionEvent_FadeToBrightness ev)
             {
+                ConsoleOutput.InfoLine($"Fade to brightness: {ev.Brightness} in {ev.Duration} s");
                 lock(_lock) {
                     if(ev.Duration <= 0)
                         return;

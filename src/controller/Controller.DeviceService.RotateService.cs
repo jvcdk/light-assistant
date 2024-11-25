@@ -6,7 +6,7 @@ internal partial class Controller
 {
     private abstract partial class DeviceService
     {
-        internal class RotateService(string name, IDevice device) : DeviceService(name, device)
+        internal class RotateService(string name, IDevice device, IConsoleOutput consoleOutput) : DeviceService(name, device, consoleOutput)
         {
             public string RotateRight { get; init; } = string.Empty;
             public string RotateLeft { get; init; } = string.Empty;

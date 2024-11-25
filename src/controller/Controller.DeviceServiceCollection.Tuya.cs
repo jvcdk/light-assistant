@@ -21,7 +21,7 @@ internal partial class Controller
         {
             public TuyaSmartKnob(IDevice device, IConsoleOutput consoleOutput) : base(consoleOutput)
             {
-                AutoModeChange = new(device) {
+                AutoModeChange = new(device, consoleOutput) {
                     ModeField = "operation_mode",
                     FromMode = "event",
                     ModeChangeCommand = "some command"
@@ -32,7 +32,8 @@ internal partial class Controller
                     actionPush: "toggle",
                     actionNormalRotateLeft: "brightness_step_down", actionNormalRotateRight: "brightness_step_up",
                     actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up",
-                    unitStepSize: 12);
+                    unitStepSize: 12,
+                    consoleOutput);
             }
 
             internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new TuyaSmartKnob(device, consoleOutput);

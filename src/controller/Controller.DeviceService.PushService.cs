@@ -6,7 +6,7 @@ internal partial class Controller
 {
     private abstract partial class DeviceService
     {
-        internal class PushService(string path, IDevice device) : DeviceService(path, device)
+        internal class PushService(string path, IDevice device, IConsoleOutput consoleOutput) : DeviceService(path, device, consoleOutput)
         {
             public string Push { get; set; } = string.Empty;
 

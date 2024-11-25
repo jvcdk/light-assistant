@@ -21,7 +21,7 @@ internal partial class Controller
         {
             internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new PiPwm(device, consoleOutput);
 
-            internal DeviceService.DimmableLightService Default { get; init; } = new(device, maxBrightness: (1<<15)-1);
+            internal DeviceService.DimmableLightService Default { get; init; } = new(device, maxBrightness: (1<<15)-1, consoleOutput);
         }
     }
 }
