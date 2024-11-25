@@ -1,7 +1,6 @@
 .ScheduleOptions {
     max-height: 50vh;
     overflow-y: scroll;
-    
 }
 
 div.ScheduleOptions div.ScheduleEntry {
@@ -32,7 +31,7 @@ div.ScheduleOptions div.ScheduleEntry .ActionOptions {
     padding-left: 1rem;
 }
 
-div.ScheduleOptions div.ScheduleEntry .Param::before {
+div.ScheduleOptions div.ScheduleEntry label.Param::before {
     content: '•';
     margin-right: 0.25rem;
 }
@@ -52,12 +51,10 @@ div.ScheduleOptions .ActionOptions label {
     align-items: center;
 }
   
-div.ScheduleOptions .ActionOptions input,
-div.ScheduleOptions .ActionOptions select {
+div.ScheduleOptions span.Param {
     grid-column: 2;
 }
 
 div.ScheduleOptions label.Param {
     margin-right: 0.5em;
-  }
-  
+}
