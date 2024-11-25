@@ -1,6 +1,10 @@
-import { useEffect } from "react";
+import ParamKnob from '../image/param_knob_2.svg';
+import { useEffect, useRef, useState } from "react";
 import { IParamEnum, IParamFloat, IParamInfo, IParamInt } from "../Data/JsonTypes";
 import './ParameterOption.css';
+import { tryParseFloat, tryParseInt } from '../Utils/NumberUtils';
+
+const MouseDialScaling = 5;
 
 export interface ParamOptionProps {
   param: IParamInfo;
@@ -14,7 +18,7 @@ function ParamOptionEnum(props: ParamOptionProps) {
   useEffect(() => {
     if(props.value === undefined)
       props.onChange(param.Default);
-  }, [props, param.Default]);
+  }, [props.value, param.Default]);
 
   return (
     <>
@@ -28,47 +32,121 @@ function ParamOptionEnum(props: ParamOptionProps) {
 
 function ParamOptionFloat(props: ParamOptionProps) {
   const param = props.param as IParamFloat;
-
-  useEffect(() => {
-    if(props.value === undefined)
-      props.onChange(param.Default.toString());
-  }, [props, param.Default]);
-
-  function update(value: string) {
-    const newVal = parseFloat(value);
-    if(!isNaN(newVal))
-      props.onChange(value);
-  }
+  const [value, setValue] = useState(tryParseFloat(props.value, param.Default));
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const stepSize = (param.Max - param.Min) / 100;
   const units = props.param.Units;
+
+  useEffect(() => {
+    setValue(tryParseFloat(props.value, param.Default));
+  }, [props.value, param.Default]);
+
+  function update(newValStr: string) {
+    const newVal = tryParseFloat(newValStr, value);
+    updateValue(newVal);
+    return newVal;
+  }
+
+  function updateValue(value: number) {
+    value = Math.max(param.Min, Math.min(param.Max, value));
+    props.onChange(value.toString());
+  }
+
+  function handleMouseDown(event: React.MouseEvent) {
+    if(inputRef.current === null)
+      return;
+
+    event.preventDefault();
+
+    const startValue = update(inputRef.current.value);
+    const startY = event.clientY;
+
+    function onMouseMove(moveEvent: MouseEvent) {
+      const deltaY = Math.round((startY - moveEvent.clientY) / MouseDialScaling);
+      let newValue = startValue + deltaY * stepSize;
+      newValue = Math.round(newValue / stepSize) * stepSize;
+      updateValue(newValue);
+      if(inputRef.current !== null)
+        inputRef.current.value = newValue.toString();
+      }
+
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
   return (
     <>
       <label className="Param Float">{param.Name}{units && ` [${units}]`}:</label>
-      <input className="Param Float" type="text" min={param.Min} step={stepSize} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
+      <span className="Param Float">
+        <input ref={inputRef} type="text" defaultValue={value} onBlur={e => update(e.target.value)} />
+        <span onMouseDown={handleMouseDown}><ParamKnob /></span>
+      </span>
     </>
   );
 }
 
 function ParamOptionInt(props: ParamOptionProps) {
   const param = props.param as IParamInt;
+  const [value, setValue] = useState(tryParseInt(props.value, param.Default));
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if(props.value === undefined)
-      props.onChange(param.Default.toString());
+    setValue(tryParseInt(props.value, param.Default));
   }, [props, param.Default]);
 
-  function update(value: string) {
-    const newVal = parseInt(value);
-    if(!isNaN(newVal))
-      props.onChange(value);
+  function update(newValStr: string) {
+    const newVal = tryParseInt(newValStr, value);
+    updateValue(newVal);
+    return newVal;
+  }
+
+  function updateValue(value: number) {
+    value = Math.max(param.Min, Math.min(param.Max, value));
+    props.onChange(value.toString());
   }
 
   const units = props.param.Units;
+
+  function handleMouseDown(event: React.MouseEvent) {
+    if(inputRef.current === null)
+      return;
+
+    event.preventDefault();
+
+    const startValue = update(inputRef.current.value);
+    const startY = event.clientY;
+
+    function onMouseMove(moveEvent: MouseEvent) {
+      const deltaY = Math.round((startY - moveEvent.clientY) / MouseDialScaling);
+      let newValue = startValue + deltaY;
+      newValue = Math.round(newValue);
+      updateValue(newValue);
+      if(inputRef.current !== null)
+        inputRef.current.value = newValue.toString();
+    }
+
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
   return (
     <>
       <label className="Param Int">{param.Name}{units && ` [${units}]`}:</label>
-      <input className="Param Int" type="text" min={param.Min} max={param.Max} value={props.value} onChange={e => update(e.target.value)} />
+      <span className="Param Int">
+        <input ref={inputRef} type="text" defaultValue={value} onBlur={e => update(e.target.value)} />
+        <span onMouseDown={handleMouseDown}><ParamKnob /></span>
+      </span>
     </>
   );
 }
