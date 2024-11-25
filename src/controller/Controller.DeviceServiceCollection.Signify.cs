@@ -21,7 +21,7 @@ internal partial class Controller
         {
             internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new SignifyE14Bluetooth(device, consoleOutput);
 
-            internal DeviceService.DimmableLightService Default { get; init; } = new(device, maxBrightness: 254);
+            internal DeviceService.DimmableLightService Default { get; init; } = new(device, maxBrightness: 254, consoleOutput);
         }
     }
 }

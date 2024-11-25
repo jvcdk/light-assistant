@@ -10,6 +10,7 @@ internal partial class Controller
         private const string KeywordAction = "action";
         private const string KeywordActionStepSize = "action_step_size";
 
+        protected IConsoleOutput ConsoleOutput { get; }
         internal string Name { get; private set; }
 
         protected readonly IDevice Device;
@@ -17,10 +18,11 @@ internal partial class Controller
         private volatile bool _terminate = false;
         private readonly Mutex _flag = new();
 
-        protected DeviceService(string name, IDevice device)
+        protected DeviceService(string name, IDevice device, IConsoleOutput consoleOutput)
         {
             Name = name;
             Device = device;
+            ConsoleOutput = consoleOutput;
             if(NeedsTickCall) {
                 _processingThread = new(ProcessingThread);
                 _processingThread.Start();
