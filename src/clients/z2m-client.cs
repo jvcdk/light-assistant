@@ -203,6 +203,9 @@ internal partial class Zigbee2MqttClient : IDeviceBus
 
     private void HandleBridgeIgnoredMessage(string command, string message)
     {
+        if(command == "logging")
+            return; // Ignore without logging
+
         _consoleOutput.InfoLine($"Ignored Bridge message. Command: {command}. Message: {message}");
     }
 
