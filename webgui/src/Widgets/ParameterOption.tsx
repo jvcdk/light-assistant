@@ -18,7 +18,7 @@ function ParamOptionEnum(props: ParamOptionProps) {
   useEffect(() => {
     if(props.value === undefined)
       props.onChange(param.Default);
-  }, [props.value, param.Default]);
+  }, [props, param.Default]);
 
   return (
     <>
@@ -39,8 +39,13 @@ function ParamOptionFloat(props: ParamOptionProps) {
   const units = props.param.Units;
 
   useEffect(() => {
+    if(props.value === undefined) {
+      props.onChange(param.Default.toString());
+      return;
+    }
+
     setValue(tryParseFloat(props.value, param.Default));
-  }, [props.value, param.Default]);
+  }, [props, param.Default]);
 
   function update(newValStr: string) {
     const newVal = tryParseFloat(newValStr, value);
@@ -97,6 +102,11 @@ function ParamOptionInt(props: ParamOptionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if(props.value === undefined) {
+      props.onChange(param.Default.toString());
+      return;
+    }
+
     setValue(tryParseInt(props.value, param.Default));
   }, [props, param.Default]);
 
