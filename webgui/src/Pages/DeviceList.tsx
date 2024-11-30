@@ -2,7 +2,7 @@ import './DeviceList.css'
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "../WebSocketContext";
 import { Device } from "../Widgets/Device";
-import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceScheduleEntry, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage } from '../Data/JsonTypes';
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage } from '../Data/JsonTypes';
 import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 import { GetTargetFunctionalityOptionsType, GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType } from '../Widgets/DeviceRoutingOptions';
 import { DeviceConfiguration } from '../Popups/DeviceConfiguration';
