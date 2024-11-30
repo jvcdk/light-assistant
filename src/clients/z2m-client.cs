@@ -249,6 +249,7 @@ internal partial class Zigbee2MqttClient : IDeviceBus
     private async Task SendDataToDevice(string path, Dictionary<string, string> data)
     {
         var message = JsonConvert.SerializeObject(data);
+        _consoleOutput.InfoLine($"Z2M: Sending message to {path}: {message}");
         await _connection.Publish($"{_baseTopic}/{path}", message);
     }
 
