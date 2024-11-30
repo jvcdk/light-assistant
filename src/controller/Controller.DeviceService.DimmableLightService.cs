@@ -179,32 +179,27 @@ internal partial class Controller
 
             private void TriggerFade(object? sender, ElapsedEventArgs args)
             {
-                ActionEvent_FadeToBrightness ev;
                 lock(_lock) {
                     ConsoleOutput.InfoLine($"Trigger fade: {_upcomingFadeTimeValue}");
                     var directionIsUp = _upcomingFadeTimeValue > 0;
-                    ev = new ActionEvent_FadeToBrightness {
-                        Brightness = directionIsUp ? 1.0 : 0.0,
-                        Duration = (int) Math.Round(FadeTimeFactor * Math.Abs(_upcomingFadeTimeValue) / StepSizeScaling), // Unit: s,
-                        UserGenerated = true
-                    };
+                    _fadeBrightnessTarget = directionIsUp ? 1.0 : 0.0;
+                    _fadeTime = (int) Math.Round(FadeTimeFactor * Math.Abs(_upcomingFadeTimeValue) / StepSizeScaling); // Unit: s
                     _upcomingFadeTimeValue = 0;
+                    RunFade();
                 }
-                HandleFade(ev);
             }
 
             [ActionSink("Fade to brightness")]
             private void HandleFade(ActionEvent_FadeToBrightness ev)
             {
-                ConsoleOutput.InfoLine($"Fade to brightness: {ev.Brightness} in {ev.Duration} s");
+                ConsoleOutput.InfoLine($"HandleFade: {ev.Brightness} in {ev.Duration} min");
                 lock(_lock) {
                     if(ev.Duration <= 0)
                         return;
 
-                    _fadeBrightnessTarget = ev.Brightness;
-                    var distance = ev.UserGenerated ? 1:
-                        Math.Abs(_brightness - ev.Brightness);
-                    _fadeTime = ev.Duration * distance; // Unit: s
+                    _fadeBrightnessTarget = UnApplyGamma(ev.Brightness);
+                    var distance = Math.Abs(_brightness - ev.Brightness);
+                    _fadeTime = ev.Duration * 60 * distance; // Unit: s
                     RunFade();
                 }
             }
@@ -245,6 +240,11 @@ internal partial class Controller
 
                     if (Brightness == 0 && isUp)
                         intervalMs = 1; // Instant on, timer requires at least 1 ms.
+
+                    var willBeDone = (_fadeNextBrightness - _fadeBrightnessTarget) * direction >= 0;
+                    if(willBeDone)
+                        _fadeNextBrightness = _fadeBrightnessTarget;
+
                     return intervalMs;
                 }
             }
