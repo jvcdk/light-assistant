@@ -121,6 +121,7 @@ internal partial class Controller
                     else
                         _brightness = _lastSteadyStateBrightness;
 
+                    _fadeBrightnessTarget = _brightness;
                     Device.SendBrightnessTransition(Brightness, CalcTransitionTime(oldBrightness, SlowTransitionTime));
                 }
             }
