@@ -57,15 +57,12 @@ export function CircularClock(props: CircularClockProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState(props.mode);
 
-  const updateTime = useCallback((e: MouseEvent) => {
-    const circularClock = (e.target as HTMLElement).closest('.CircularClock') as HTMLElement;
-    if(!circularClock)
-      return;
+  const updateTime = useCallback((circularClock: HTMLElement, clientX: number, clientY: number) => {
     const rect = circularClock.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const mouseX = e.clientX - rect.left - centerX;
-    const mouseY = e.clientY - rect.top - centerY;
+    const mouseX = clientX - rect.left - centerX;
+    const mouseY = clientY - rect.top - centerY;
     const radius = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
     if(radius < Math.abs(centerX) * 0.25 || radius > Math.abs(centerX) * 1.1)
       return; // Ignore clicks inside or outside the clock
@@ -84,16 +81,26 @@ export function CircularClock(props: CircularClockProps) {
     }
   }, [mode, selectedTime.val]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseEvent = useCallback((e: MouseEvent) => {
+    const circularClock = (e.target as HTMLElement).closest('.CircularClock') as HTMLElement;
+    if(!circularClock)
+      return;
+
+    updateTime(circularClock, e.clientX, e.clientY);
+  }, [updateTime]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default text selection
     setIsDragging(true);
-    updateTime(e.nativeEvent as MouseEvent);
-  };
+    handleMouseEvent(e.nativeEvent as MouseEvent);
+  }, [handleMouseEvent]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isDragging)
-      updateTime(e);
-  }, [isDragging, updateTime]);
+    if (!isDragging)
+      return;
+
+    handleMouseEvent(e);
+  }, [isDragging, handleMouseEvent]);
 
   const handleMouseUp = useCallback(() => {
     if(isDragging)
