@@ -1,5 +1,6 @@
 span.Time {
   font-size: 250%;
+  white-space: nowrap;
 }
 span.Time > span {
   margin: 0.125em;
