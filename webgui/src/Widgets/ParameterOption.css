@@ -1,3 +1,8 @@
+span.Param,
+label.Param {
+    white-space: nowrap;
+}
+
 span.Param.Int input,
 span.Param.Float input {
     vertical-align: bottom;
