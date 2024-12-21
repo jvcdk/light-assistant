@@ -5,22 +5,18 @@ using static LightAssistant.Clients.Zigbee2MqttClient;
 
 namespace LightAssistantOffline;
 
-internal class MqttEmulatedClient : IDeviceBus, IDisposable
+internal class MqttEmulatedClient(ConsoleOutput consoleOutput) : IDeviceBus, IDisposable
 {
     public event Action<IDevice> DeviceDiscovered = delegate { };
     public event Action<IDevice, Dictionary<string, string>> DeviceAction = delegate { };
     public event Action<IDevice> DeviceUpdated  = delegate { };
     public event Action<bool, int> NetworkOpenStatus = delegate { };
 
-    private readonly ConsoleOutput _consoleOutput;
+    private readonly ConsoleOutput _consoleOutput = consoleOutput;
+    private readonly Random _rnd = new();
 
     private Device? _smartKnob;
     private Device? _ledDriver;
-
-    public MqttEmulatedClient(ConsoleOutput consoleOutput)
-    {
-        _consoleOutput = consoleOutput;
-    }
 
     private void ThreadMain()
     {
@@ -28,52 +24,53 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
         Debug.Assert(_smartKnob != null);
         Debug.Assert(_ledDriver != null);
 
-        var rnd = new Random();
         while (!_disposed) {
-            var sleepTime = rnd.Next(5000) + 1000;
-            Thread.Sleep(sleepTime);
+            SendSmartKnobCommand("toggle");
+            Thread.Sleep(1500);
+            if(_disposed)
+                return;
 
-            var action = rnd.Next(2);
-            switch (action) {
-                case 0: {
-                        var btnAction = rnd.Next(2) == 0 ? "color_temperature_step_" : "brightness_step_";
-                        var direction = rnd.Next(2) == 0 ? "down" : "up";
-                        var nSteps = rnd.Next(3) + 1;
-                        for (var i = 0; i < nSteps; i++) {
-                            var stepSize = ((rnd.Next(2) + 1) * 12).ToString();
-                            var battery = rnd.Next(100).ToString();
-                            var linkquality = rnd.Next(255).ToString();
+            SendSmartKnobCommand("toggle");
+            Thread.Sleep(1500);
+            if(_disposed)
+                return;
 
-                            DeviceAction(_smartKnob,
-                                new Dictionary<string, string>() {
-                                {"action", btnAction + direction},
-                                {"action_step_size", stepSize},
-                                {"action_transition_time", "0.01"},
-                                {"battery", battery},
-                                {"linkquality", linkquality},
-                                {"operation_mode", "command"},
-                                {"voltage", "3000"}
-                                });
-                        }
-                        break;
-                    }
-
-                case 1: {
-                        var battery = rnd.Next(100).ToString();
-                        var linkquality = rnd.Next(255).ToString();
-                        DeviceAction(_smartKnob,
-                            new Dictionary<string, string>() {
-                            {"action", "toggle"},
-                            {"action_transition_time", "0.01"},
-                            {"battery", battery},
-                            {"linkquality", linkquality},
-                            {"operation_mode", "command"},
-                            {"voltage", "3000"}
-                            });
-                        break;
-                    }
+            for (var i = 0; i < 10; i++) {
+                SendSmartKnobCommand("brightness_step_up", "12");
+                Thread.Sleep(250);
+                if(_disposed)
+                    return;
             }
+            Thread.Sleep(1500);
+            if(_disposed)
+                return;
+
+            SendSmartKnobCommand("color_temperature_step_down", "12");
+            Thread.Sleep(10000);
+            if(_disposed)
+                return;
         }
+    }
+
+    private void SendSmartKnobCommand(string action, string? stepSize = null)
+    {
+        Debug.Assert(_smartKnob != null);
+
+        var battery = _rnd.Next(100).ToString();
+        var linkquality = _rnd.Next(255).ToString();
+        var voltage = _rnd.Next(3000).ToString();
+        var @params = new Dictionary<string, string>() {
+            {"action", action},
+            {"action_transition_time", "0.01"},
+            {"battery", battery},
+            {"linkquality", linkquality},
+            {"operation_mode", "command"},
+            {"voltage", voltage}
+        };
+        if(stepSize != null)
+            @params.Add("action_step_size", stepSize);
+        
+        DeviceAction(_smartKnob, @params);
     }
 
     private void InitializeDevices()
@@ -108,12 +105,27 @@ internal class MqttEmulatedClient : IDeviceBus, IDisposable
         };
         _ledDriver.SendToBus += (deviceId, data) => {
             _consoleOutput.MessageLine($"TX to Led Driver sent data: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+            SendLedDriverReply(data);
             return Task.CompletedTask;
         };
         DeviceDiscovered(_ledDriver);
     }
 
-    private bool _disposed;
+    private void SendLedDriverReply(Dictionary<string, string> data)
+    {
+        if(_ledDriver == null)
+            return;
+        if(!data.TryGetValue("brightness", out var brightness))
+            brightness = "0";
+        var @params = new Dictionary<string, string> {
+                {"brightness", brightness},
+                {"linkquality", _rnd.Next(255).ToString()},
+                {"state", data["state"]}
+            };
+        DeviceAction(_ledDriver, @params);
+    }
+
+    private volatile bool _disposed;
 
     public void Dispose()
     {
