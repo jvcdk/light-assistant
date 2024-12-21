@@ -33,6 +33,10 @@ export class TimeOfDay extends Listener<ITimeOfDay, TimeOfDayData> implements IT
     super(new TimeOfDayData(hour, minute));
   }
 
+  Clone() {
+    return new TimeOfDay(this.Hour, this.Minute);
+  }
+
   static fromString(simeStr : string) {
     const parts = simeStr.split(':');
     if(parts.length !== 2)

@@ -52,7 +52,7 @@ export interface CircularClockProps {
 }
 
 export function CircularClock(props: CircularClockProps) {
-  const selectedTime = new State(useState(props.initialTime));
+  const selectedTime = new State(useState(props.initialTime.Clone()));
   selectedTime.addListener("CircularClock", props.onTimeChange);
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState(props.mode);
