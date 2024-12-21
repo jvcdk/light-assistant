@@ -89,6 +89,15 @@ export function CircularClock(props: CircularClockProps) {
     updateTime(circularClock, e.clientX, e.clientY);
   }, [updateTime]);
 
+  const handleTouchEvent = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    const circularClock = (touch.target as HTMLElement).closest('.CircularClock') as HTMLElement;
+    if(!circularClock)
+      return;
+
+    updateTime(circularClock, touch.clientX, touch.clientY);
+  }, [updateTime]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default text selection
     setIsDragging(true);
@@ -108,15 +117,38 @@ export function CircularClock(props: CircularClockProps) {
     setIsDragging(false);
   }, [isDragging]);
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default text selection
+    setIsDragging(true);
+    handleTouchEvent(e.nativeEvent as TouchEvent);
+  }, [handleTouchEvent]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isDragging)
+      return;
+
+    handleTouchEvent(e);
+  }, [isDragging, handleTouchEvent]);
+
+  const handleTouchEnd = useCallback(() => {
+    if(isDragging)
+      setMode(ClockMode.Minute);
+    setIsDragging(false);
+  }, [isDragging]);
+
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleMouseMove, handleMouseUp, isDragging]);
+  }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd, isDragging]);
 
   const isModeHour = mode == ClockMode.Hour;
   const handClass = (isModeHour && selectedTime.val.Hour >= 12) ? 'Hand Inner' : 'Hand Outer';
@@ -125,7 +157,7 @@ export function CircularClock(props: CircularClockProps) {
 
   return (
     <div>
-      <div className="CircularClock" onMouseDown={handleMouseDown}>
+      <div className="CircularClock" onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
         <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${handAngle}deg)` }} />
         <ClockDigits Mode={mode} SelectedDigit={selectedDigit} />
         <span className='CenterTime'>
