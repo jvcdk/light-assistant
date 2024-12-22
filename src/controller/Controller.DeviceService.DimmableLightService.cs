@@ -28,35 +28,17 @@ internal partial class Controller
             private double _fadeTime; // Unit: s
             private double _fadeNextBrightness;
 
-            private readonly int MaxBrightness;
-            private int Brightness => (int)Math.Round(ApplyGamma(_brightness) * MaxBrightness);
+            private readonly BrightnessConverter _brightnessConverter;
+            private int RawBrightness => _brightnessConverter.NormToRaw(_brightness);
 
             private double _brightness = 0.0; // Don't set this directly; use SetPrivateBrightness
             private double _lastSteadyStateBrightness = 1.0;
 
-            private double _gamma = 10; // Range: _gamma > double.Epsilon. TODO: Make a user interface for configuring gamma.
-            internal double Gamma {    // Range: Gamma <= 1.0 || Gamma >= 1.0
-                get {
-                    if(_gamma >= 1.0)
-                        return _gamma;
-                    return -1.0 / _gamma;
-                }
-                set {
-                    var absValue = Math.Max(Math.Abs(value), 1.0);
-                    if(value >= 0)
-                        _gamma = absValue;
-                    else
-                        _gamma = 1.0 / absValue;
-                }
-            }
-
             private bool IsOn => _brightness > float.Epsilon;
-            private double UnApplyGamma(double value) => Math.Pow(value, 1.0 / _gamma);
-            private double ApplyGamma(double value) => Math.Pow(value, _gamma);
 
             public DimmableLightService(IDevice device, int maxBrightness, IConsoleOutput consoleOutput) : base("", device, consoleOutput)
             {
-                MaxBrightness = maxBrightness;
+                _brightnessConverter = new BrightnessConverter(maxBrightness);
 
                 _fadeTriggerTimer.Elapsed += TriggerFade;
                 _fadeTriggerTimer.AutoReset = false;
@@ -76,15 +58,15 @@ internal partial class Controller
             {
                 if(directionIsUp) {
                     _brightness = Math.Min(value, 1.0);
-                    if(Brightness == 0)
-                        _brightness = UnApplyGamma(1.0 / MaxBrightness);
+                    if(RawBrightness == 0)
+                        _brightness = _brightnessConverter.MinVisibleNormBrightness;
                 }
                 else {
                     _brightness = Math.Max(value, 0.0);
-                    if(Brightness == 0)
+                    if(RawBrightness == 0)
                         _brightness = 0;
                 }
-                Device.SendBrightnessTransition(Brightness, transitionTime);
+                Device.SendBrightnessTransition(RawBrightness, transitionTime);
             }
 
             private void HandleToggleOnOff(InternalEvent ev)
@@ -122,7 +104,7 @@ internal partial class Controller
                         _brightness = _lastSteadyStateBrightness;
 
                     _fadeBrightnessTarget = _brightness;
-                    Device.SendBrightnessTransition(Brightness, CalcTransitionTime(oldBrightness, SlowTransitionTime));
+                    Device.SendBrightnessTransition(RawBrightness, CalcTransitionTime(oldBrightness, SlowTransitionTime));
                 }
             }
 
@@ -198,7 +180,7 @@ internal partial class Controller
                     if(ev.Duration <= 0)
                         return;
 
-                    _fadeBrightnessTarget = UnApplyGamma(ev.Brightness);
+                    _fadeBrightnessTarget = _brightnessConverter.UnApplyGamma(ev.Brightness);
                     var distance = Math.Abs(_brightness - ev.Brightness);
                     _fadeTime = ev.Duration * 60 * distance; // Unit: s
                     RunFade();
@@ -214,7 +196,7 @@ internal partial class Controller
                         return;
 
                     var isUp = _fadeBrightnessTarget > _brightness;
-                    var target = (int) Math.Round(MaxBrightness * _fadeBrightnessTarget);
+                    var target = (int) Math.Round(_brightnessConverter.MaxRawBrightness * _fadeBrightnessTarget);
                     double intervalMs = CalculateInterval(isUp, target);
                     SetPrivateBrightness(_fadeNextBrightness, isUp, intervalMs / 1000);
 
@@ -225,7 +207,7 @@ internal partial class Controller
                     _fadeEngineTimer.Start();
                 }
 
-                double CalcNextBrightnessStepValue(int step) => UnApplyGamma((double)(Brightness + step) / MaxBrightness);
+                double CalcNextBrightnessStepValue(int step) => _brightnessConverter.RawToNorm(RawBrightness + step);
 
                 double CalculateInterval(bool isUp, int target)
                 {
@@ -237,9 +219,9 @@ internal partial class Controller
                         var delta = Math.Abs(_fadeNextBrightness - _brightness);
                         intervalMs = delta * _fadeTime * 1000;
                         step += direction;
-                    } while (intervalMs < FadeMinIntervalMs && (Brightness + step) != target);
+                    } while (intervalMs < FadeMinIntervalMs && (RawBrightness + step) != target);
 
-                    if (Brightness == 0 && isUp)
+                    if (RawBrightness == 0 && isUp)
                         intervalMs = 1; // Instant on, timer requires at least 1 ms.
 
                     var willBeDone = (_fadeNextBrightness - _fadeBrightnessTarget) * direction >= 0;
