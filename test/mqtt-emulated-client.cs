@@ -37,7 +37,7 @@ internal class MqttEmulatedClient(ConsoleOutput consoleOutput) : IDeviceBus, IDi
 
             for (var i = 0; i < 10; i++) {
                 SendSmartKnobCommand("brightness_step_up", "12");
-                Thread.Sleep(250);
+                Thread.Sleep(350);
                 if(_disposed)
                     return;
             }

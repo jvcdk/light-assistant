@@ -25,7 +25,7 @@ internal partial class Controller
 
     private class InternalEvent_Rotate(string sourceAddress, string serviceName) : InternalEvent(sourceAddress, serviceName)
     {
-        internal double StepSize { get; init; }
+        internal double Degrees { get; init; }
         internal bool IsUp { get; init; } // Else: Down
     }
 
