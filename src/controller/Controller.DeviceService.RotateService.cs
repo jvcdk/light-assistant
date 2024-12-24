@@ -10,7 +10,7 @@ internal partial class Controller
         {
             public string RotateRight { get; init; } = string.Empty;
             public string RotateLeft { get; init; } = string.Empty;
-            public double UnitStepSize { get; init; }
+            public double StepSizeToDegrees { get; init; }
 
             internal override IEnumerable<InternalEventSource> ProvidedEvents => [
                 new InternalEventSource(typeof(InternalEvent_Rotate), Name)
@@ -24,15 +24,15 @@ internal partial class Controller
                 if(!int.TryParse(stepSizeStr, out var stepSizeInt))
                     yield break;;
 
-                var stepSize = stepSizeInt / UnitStepSize;
+                var degrees = stepSizeInt * StepSizeToDegrees;
                 if(Match(data, RotateRight))
                     yield return new InternalEvent_Rotate(sourceDevice.Address, Name) {
-                        StepSize = stepSize,
+                        Degrees = degrees,
                         IsUp = true,
                     };
                 else if(Match(data, RotateLeft))
                     yield return new InternalEvent_Rotate(sourceDevice.Address, Name) {
-                        StepSize = stepSize,
+                        Degrees = degrees,
                         IsUp = false,
                     };
             }
