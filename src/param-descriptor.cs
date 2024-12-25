@@ -50,8 +50,11 @@ internal class ParamFloat(double min, double max, string units) : ParamDescripto
     }
 }
 
-internal class ParamBrightness() : ParamFloat(0.0, 1.0, "")
+enum PreviewMode { None, Raw, Normalized }
+
+internal class ParamBrightness(PreviewMode previewModes) : ParamFloat(0.0, 1.0, "")
 {
+    public PreviewMode PreviewMode { get; } = previewModes;
 }
 
 internal class ParamInt(int min, int max, string units) : ParamDescriptor(units)

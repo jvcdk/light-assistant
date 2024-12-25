@@ -2,7 +2,7 @@ import './DeviceList.css'
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "../WebSocketContext";
 import { Device } from "../Widgets/Device";
-import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage } from '../Data/JsonTypes';
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage, PreviewMode } from '../Data/JsonTypes';
 import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 import { GetTargetFunctionalityOptionsType, GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType } from '../Widgets/DeviceRoutingOptions';
 import { DeviceConfiguration } from '../Popups/DeviceConfiguration';
@@ -152,6 +152,16 @@ export function DeviceList() {
     sendJsonMessage(msg);
   }
 
+  function OnActionOptionsPreview(devData: DeviceData | null, value: string, previewMode: PreviewMode) {
+    if(devData == null)
+      return;
+
+    const msg = new ClientToServerMessage();
+    msg.DeviceOptionPreview = { Address: devData.Device.Address, Value: value, PreviewMode: previewMode };
+    sendJsonMessage(msg);
+  }
+
+
   return (
     <div className='DeviceList'>
       <div className='Heading'>
@@ -161,7 +171,7 @@ export function DeviceList() {
         <div className='Schedule'>Schedule</div>
       </div>
       {deviceData.current.map(device => Device(device, () => openPopup(device), FindDeviceData))}
-      <DeviceConfiguration isOpen={popupOpen} devData={selectedDeviceData} routingCallbacks={routingCallbacks} onClose={OnDeviceConfigurationUpdate} /> 
+      <DeviceConfiguration onActionOptionsPreview={OnActionOptionsPreview} isOpen={popupOpen} devData={selectedDeviceData} routingCallbacks={routingCallbacks} onClose={OnDeviceConfigurationUpdate} /> 
     </div>
   );
 }

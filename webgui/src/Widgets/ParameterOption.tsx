@@ -1,6 +1,6 @@
 import ParamKnob from '../image/param_knob_2.svg';
 import { useCallback, useEffect, useRef, useState } from "react";
-import { IParamEnum, IParamFloat, IParamInfo, IParamInt } from "../Data/JsonTypes";
+import { IParamEnum, IParamFloat, IParamInfo, IParamInt, PreviewMode } from "../Data/JsonTypes";
 import './ParameterOption.css';
 import { tryParseFloat, tryParseInt } from '../Utils/NumberUtils';
 
@@ -9,7 +9,9 @@ const MouseDialScaling = 5;
 export interface ParamOptionProps {
   param: IParamInfo;
   value: string | undefined;
+  previewMode: PreviewMode;
   onChange: (value: string | undefined) => void;
+  onPreview: (value: string, previewMode: PreviewMode) => void;
 }
 
 function ParamOptionEnum(props: ParamOptionProps) {
@@ -36,6 +38,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
   const [value, setValue] = useState(parseFn(props.value, param.Default));
   const inputRef = useRef<HTMLInputElement>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
+  const sendPreview = props.previewMode != "None";
 
   useEffect(() => {
     if(props.value === undefined) {
@@ -48,8 +51,11 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
 
   const updateValue = useCallback((value: number) => {
     value = Math.max(param.Min, Math.min(param.Max, value));
-    props.onChange(value.toString());
-  }, [param, props]);
+    const valStr = value.toString();value.toString()
+    props.onChange(valStr);
+    if(sendPreview)
+      props.onPreview(valStr, props.previewMode);
+  }, [param, props, sendPreview]);
 
   const update = useCallback((newValStr: string) => {
     const newVal = parseFn(newValStr, value);
@@ -85,6 +91,8 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       function onMouseUp() {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        if(sendPreview)
+          props.onPreview("", "None");
       }
 
       document.addEventListener('mousemove', onMouseMove);
@@ -104,6 +112,8 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       function onTouchEnd() {
         thisSpan.ontouchmove = null;
         thisSpan.ontouchend = null;
+        if(sendPreview)
+          props.onPreview("", "None");
       }
 
       spanRef.current.ontouchmove = (e) => handleMove(startValue, startY, stepSize, e.touches[0].clientY);
@@ -114,7 +124,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       spanRef.current.onmousedown = (e) => handleMouseDown(e);
       spanRef.current.ontouchstart = (e) => handleTouchStart(e);
     }
-  }, [param, value, props, update, updateValue, isFloat, handleMove]);
+  }, [param, value, props, update, updateValue, isFloat, handleMove, sendPreview]);
 
   const units = props.param.Units;
   const classType = isFloat ? 'Float' : 'Int';
@@ -130,11 +140,11 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
 }
 
 function ParamOptionFloat(props: ParamOptionProps) {
-  return ParamOptionNumber(props, true);
+  return ParamOptionNumber(props, /* isFloat */ true);
 }
 
 function ParamOptionInt(props: ParamOptionProps) {
-  return ParamOptionNumber(props, false);
+  return ParamOptionNumber(props, /* isFloat */ false);
 }
 
 export function ParamOption(props: ParamOptionProps) {

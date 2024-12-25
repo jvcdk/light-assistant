@@ -126,6 +126,8 @@ export interface IDeviceConsumableAction {
   Parameters: IParamInfo[];
 }
 
+export type PreviewMode = 'None' | 'Raw' | 'Normalized';
+
 /**
  * Should match JsonParamInfo
  */
@@ -133,6 +135,7 @@ export interface IParamInfo {
   Name: string;
   Type: string;
   Units: string;
+  PreviewMode: PreviewMode;
 }
 
 /**
@@ -193,9 +196,24 @@ export class DeviceConfigurationChange {
 }
 
 /**
+ * Should match JsonDeviceOptionPreview
+ */
+export class DeviceOptionPreview {
+  Address: string;
+  Value: string;
+  PreviewMode: PreviewMode;
+
+  constructor(address: string, value: string, previewMode: PreviewMode) {
+    this.Address = address;
+    this.Value = value;
+    this.PreviewMode = previewMode;
+  }
+}
+/**
  * Should match JsonIngressMessage
  */
 export class ClientToServerMessage {
   DeviceConfigurationChange: DeviceConfigurationChange | undefined;
   RequestOpenNetwork: boolean = false;
+  DeviceOptionPreview: DeviceOptionPreview | undefined;
 }

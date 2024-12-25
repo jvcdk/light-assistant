@@ -1,7 +1,7 @@
 import './DeviceScheduleOptions.css'
 import { useEffect, useReducer, useState } from "react";
 import { DeviceData } from "../Data/DeviceData";
-import { IDeviceConsumableAction, IDeviceScheduleEntry } from "../Data/JsonTypes";
+import { IDeviceConsumableAction, IDeviceScheduleEntry, PreviewMode } from "../Data/JsonTypes";
 import { ParamOption } from './ParameterOption';
 import { ScheduleTrigger } from '../Data/ScheduleTrigger';
 import { DaySelector } from './DaySelector';
@@ -65,6 +65,7 @@ interface ActionOptionsProps {
   info: IDeviceConsumableAction;
   values: Map<string, string>;
   onChange: (value: Map<string, string>) => void;
+  onPreview: (value: string, previewMode: PreviewMode) => void;
 }
 
 function ActionOptions(props: ActionOptionsProps) {
@@ -86,6 +87,8 @@ function ActionOptions(props: ActionOptionsProps) {
           key={param.Name}
           param={param}
           value={values.get(param.Name)}
+          previewMode={param.PreviewMode}
+          onPreview={props.onPreview}
           onChange={val => onChange(param.Name, val)} />)}
     </div>
   );
@@ -95,6 +98,7 @@ interface IScheduleEntryProps {
   entry: DeviceScheduleEntryWithKey;
   consumableTriggers: IDeviceConsumableAction[];
   onChildOpenChanged: Action<boolean>;
+  onActionOptionsPreview: (value: string, previewMode: PreviewMode) => void;
 }
 
 function ScheduleEntry(props: IScheduleEntryProps) {
@@ -116,7 +120,7 @@ function ScheduleEntry(props: IScheduleEntryProps) {
           <option value="">&lt;Please select&gt;</option>
           {consumableTriggers.map((action) => <option key={action.EventType} value={action.EventType}>{action.EventType}</option>)}
         </select>
-        {triggerInfo && <ActionOptions info={triggerInfo} values={entry.Parameters} onChange={val => entry.Parameters = val} />}
+        {triggerInfo && <ActionOptions onPreview={props.onActionOptionsPreview} info={triggerInfo} values={entry.Parameters} onChange={val => entry.Parameters = val} />}
       </div>
       <div className='Spacer'></div>
       {triggerInfo && <DaySelector onChange={(days) => trigger.DayNames = days} days={trigger.DayNames} />}
@@ -134,6 +138,7 @@ export interface DeviceScheduleOptionsProps {
   devData: DeviceData;
   setSchedule: (schedule: IDeviceScheduleEntry[]) => void;
   onChildOpenChanged: Action<boolean>;
+  onActionOptionsPreview: (value: string, previewMode: PreviewMode) => void;
 }
 
 export function DeviceScheduleOptions(prop: DeviceScheduleOptionsProps) {
@@ -170,7 +175,7 @@ export function DeviceScheduleOptions(prop: DeviceScheduleOptionsProps) {
 
   return (
     <div className='ScheduleOptions'>
-      {localSchedule.map((entry) => <ScheduleEntry key={entry.key} entry={entry}
+      {localSchedule.map((entry) => <ScheduleEntry onActionOptionsPreview={prop.onActionOptionsPreview} key={entry.key} entry={entry}
         consumableTriggers={consumableTriggers} onChildOpenChanged={onChildOpenChanged} />)}
     </div>
   );

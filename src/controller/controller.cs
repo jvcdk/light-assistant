@@ -177,6 +177,23 @@ internal partial class Controller : IController
         _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
     }
 
+    public Task PreviewDeviceOption(string address, string value, PreviewMode previewMode)
+    {
+        DeviceServiceCollection services;
+        using (var _ = _devices.ObtainReadLock(out var devices)) {
+            var device = devices.Keys.FirstOrDefault(entry => entry.Address == address);
+            if(device == null) {
+                _consoleOutput.ErrorLine($"Address '{address}' given by client does not match a device.");
+                return Task.CompletedTask;
+            }
+            services = devices[device].Services;
+        }
+
+        services.PreviewDeviceOption(value, previewMode);
+        return Task.CompletedTask;
+    }
+
+
     /// Helper struct for function RouteInternalEvents to avoid locking two locks simultaneously.
     private readonly struct RouteInternalEvents_Workspace(InternalEvent @event, List<EventRoute>? routesFromSourceAddress)
     {

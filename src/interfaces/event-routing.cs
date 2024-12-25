@@ -1,4 +1,3 @@
-
 namespace LightAssistant.Interfaces
 {
     internal interface IEventRoute
