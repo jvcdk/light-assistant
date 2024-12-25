@@ -1,6 +1,6 @@
 import './DeviceConfiguration.css'
 
-import { IDeviceRoute, IDeviceScheduleEntry } from '../Data/JsonTypes';
+import { IDeviceRoute, IDeviceScheduleEntry, PreviewMode } from '../Data/JsonTypes';
 import cloneDeep from 'lodash/cloneDeep';
 import { useEffect, useState } from 'react';
 import { DeviceData } from '../Data/DeviceData';
@@ -14,6 +14,7 @@ export interface DeviceConfigurationProps {
   devData: DeviceData | null;
   routingCallbacks: IRoutingOptionsCallbacks;
   onClose: (devData: DeviceData | null) => void;
+  onActionOptionsPreview: (devData: DeviceData | null, value: string, previewMode: PreviewMode) => void;
 }
 export function DeviceConfiguration(props: DeviceConfigurationProps) {
   const [devData, setDevData] = useState<DeviceData|null>(null);
@@ -35,6 +36,10 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
       ...devData,
       Schedule: schedule,
     } as DeviceData);
+  }
+
+  function OnActionOptionsPreview(value: string, previewMode: PreviewMode) {
+    props.onActionOptionsPreview(devData, value, previewMode);
   }
 
   if(devData === null)
@@ -65,7 +70,7 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
             <DeviceRoutingOptions devData={devData} cb={props.routingCallbacks} setDeviceRoute={UpdateDeviceRoute} />
           </TabPanel>
           <TabPanel className='Schedule'>
-            <DeviceScheduleOptions devData={devData} setSchedule={UpdateDeviceSchedule} onChildOpenChanged={(val) => setCloseOnEscape(!val)} />
+            <DeviceScheduleOptions onActionOptionsPreview={OnActionOptionsPreview} devData={devData} setSchedule={UpdateDeviceSchedule} onChildOpenChanged={(val) => setCloseOnEscape(!val)} />
           </TabPanel>
         </Tabs>
         <div className='Buttons'>

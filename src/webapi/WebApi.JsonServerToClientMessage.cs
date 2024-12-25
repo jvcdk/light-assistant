@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using LightAssistant.Interfaces;
 using Newtonsoft.Json;
 using static System.Text.Encoding;
@@ -147,17 +148,18 @@ internal partial class WebApi
      * JSonParamInfo covers both ParamInfo and ParamDescriptor.
      * This is a base class; descendants match descendants of ParamDescriptor.
      */
-    internal abstract class JSonParamInfo(string name, string units)
+    internal abstract class JSonParamInfo(string name, string units, string? previewMode = null)
     {
         public abstract string Type { get; }
         public string Name { get; } = name;
         public string Units { get; } = units;
+        public string PreviewMode { get; } = previewMode ?? "None";
 
         public static JSonParamInfo FromParamInfo(ParamInfo source) {
             var param = source.Param;
             return source.Param switch {
                 ParamEnum paramEnum => new JSonParamEnum(source.Name, paramEnum.Values, paramEnum.Default, param.Units),
-                ParamBrightness paramBrightness => new JsonParamBrightness(source.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default),
+                ParamBrightness paramBrightness => new JsonParamBrightness(source.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default, paramBrightness.PreviewMode.ToString()),
                 ParamFloat paramFloat => new JSonParamFloat(source.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default, param.Units),
                 ParamInt paramInt => new JSonParamInt(source.Name, paramInt.Min, paramInt.Max, paramInt.Default, param.Units),
                 _ => throw new ArgumentException("Unknown ParamDescriptor type"),
@@ -172,7 +174,7 @@ internal partial class WebApi
         public string Default { get; } = defaultValue;
     }
 
-    internal class JSonParamFloat(string name, double min, double max, double defaultValue, string units) : JSonParamInfo(name, units)
+    internal class JSonParamFloat(string name, double min, double max, double defaultValue, string units, string? previewMode = null) : JSonParamInfo(name, units, previewMode)
     {
         public override string Type => "float";
         public double Min { get; } = min;
@@ -180,7 +182,7 @@ internal partial class WebApi
         public double Default { get; } = defaultValue;
     }
 
-    internal class JsonParamBrightness(string name, double min, double max, double defaultValue) : JSonParamFloat(name, min, max, defaultValue, "")
+    internal class JsonParamBrightness(string name, double min, double max, double defaultValue, string previewMode) : JSonParamFloat(name, min, max, defaultValue, "", previewMode)
     {
         public override string Type => "brightness";
     }

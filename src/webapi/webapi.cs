@@ -83,11 +83,19 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                 await HandleDeviceConfigurationChange(msg.DeviceConfigurationChange);
             if(msg.RequestOpenNetwork)
                 await HandleOpenNetworkRequest();
+            if(msg.DeviceOptionPreview != null)
+                await HandleDeviceOptionPreview(msg.DeviceOptionPreview);
         }
         catch(Exception ex) {
             _consoleOutput.ErrorLine("Could not parse message from client. Error message: " + ex);
             return;
         }
+    }
+
+    private async Task HandleDeviceOptionPreview(JsonDeviceOptionPreview ev)
+    {
+        Debug.Assert(AppController != null);
+        await AppController.PreviewDeviceOption(ev.Address, ev.Value, ev.PreviewMode);
     }
 
     private async Task HandleOpenNetworkRequest()

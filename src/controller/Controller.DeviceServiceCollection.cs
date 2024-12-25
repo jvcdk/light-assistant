@@ -5,14 +5,9 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract class DeviceServiceCollection
+    private abstract class DeviceServiceCollection(IConsoleOutput consoleOutput)
     {
-        private readonly IConsoleOutput _consoleOutput;
-
-        protected DeviceServiceCollection(IConsoleOutput consoleOutput)
-        {
-            _consoleOutput = consoleOutput;
-        }
+        private readonly IConsoleOutput _consoleOutput = consoleOutput;
 
         internal IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
         {
@@ -102,6 +97,12 @@ internal partial class Controller
                         .ToList();
                     return new ActionInfo(tuple.attr.Name, service, tuple.method, param.ParameterType, paramInfo);
                 });
+        }
+
+        internal void PreviewDeviceOption(string value, PreviewMode previewMode)
+        {
+            foreach(var service in EnumerateServices().OfType<IServicePreviewOption>())
+                service.PreviewDeviceOption(value, previewMode);
         }
     }
 

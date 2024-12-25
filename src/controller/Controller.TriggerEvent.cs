@@ -30,7 +30,7 @@ internal partial class Controller
 
     private class ActionEvent_FadeToBrightness() : ActionEvent
     {
-        [ParamBrightness()]
+        [ParamBrightness(PreviewMode.Normalized)]
         public double Brightness { get; init; }
 
         [ParamInt(1, 120, "min")]

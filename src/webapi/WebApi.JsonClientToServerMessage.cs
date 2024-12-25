@@ -9,6 +9,7 @@ internal partial class WebApi
     {
         public JsonDeviceConfigurationChange? DeviceConfigurationChange { get; set; }
         public bool RequestOpenNetwork { get; set; }
+        public JsonDeviceOptionPreview? DeviceOptionPreview { get; set; }
     }
 
     public class JsonDeviceConfigurationChange
@@ -17,6 +18,13 @@ internal partial class WebApi
         public string Name { get; init; } = "";
         public JsonDeviceRoute[] Route { get; init; } = [];
         public JsonDeviceScheduleEntry[] Schedule { get; init; } = [];
+    }
+
+    public class JsonDeviceOptionPreview
+    {
+        public string Address { get; init; } = "";
+        public string Value { get; init; } = "";
+        public PreviewMode PreviewMode { get; init; } = PreviewMode.None;
     }
 
     public static class JsonIngressMessageParser
@@ -35,7 +43,7 @@ internal partial class WebApi
                 {
                     new CustomConverter<IDeviceScheduleEntry, JsonDeviceScheduleEntry>(),
                     new CustomConverter<IScheduleTrigger, JsonScheduleTrigger>(),
-                    new CustomConverter<ITimeOfDay, JsonTimeOfDay>()
+                    new CustomConverter<ITimeOfDay, JsonTimeOfDay>(),
                 }
             };
         }

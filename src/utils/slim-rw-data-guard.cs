@@ -1,14 +1,9 @@
 namespace LightAssistant.Utils;
 
-public sealed class SlimReadWriteDataGuard<T> : IDisposable
+public sealed class SlimReadWriteDataGuard<T>(T data) : IDisposable
 {
-    private T _data;
+    private readonly T _data = data;
     private readonly ReaderWriterLockSlim _lock = new();
-
-    public SlimReadWriteDataGuard(T data)
-    {
-        _data = data;
-    }
 
     public void Dispose() => _lock.Dispose();
 
