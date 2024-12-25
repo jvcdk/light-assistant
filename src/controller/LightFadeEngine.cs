@@ -140,10 +140,6 @@ internal class LightFadeEngine
 
     private (double intervalMs, double nextBrightness) CalculateIntervalAndNextBrightness(bool isUp)
     {
-        if (isUp && !IsOn) {
-            return (intervalMs: 1, nextBrightness: _brightnessConverter.MinVisibleNormBrightness);
-        }
-
         double intervalMs;
         var nextBrightness = _brightness;
         var direction = isUp ? 1 : -1;
