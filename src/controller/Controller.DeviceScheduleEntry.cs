@@ -6,6 +6,7 @@ internal partial class Controller
 {
     internal class DeviceScheduleEntry(IDeviceScheduleEntry entry) : IDeviceScheduleEntry
     {
+        public int Key { get; } = entry.Key;
         public string EventType { get; } = entry.EventType;
         public IReadOnlyDictionary<string, string> Parameters { get; } = entry.Parameters;
         private readonly ScheduleTrigger _trigger = new(entry.Trigger);

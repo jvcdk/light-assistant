@@ -19,6 +19,7 @@ internal partial class WebApi
         public JsonDeviceSchedule? Schedule { get; private set; }
         public JsonScheduleActionOptions? ScheduleActionOptions { get; private set; }
         public JsonOpenNetworkStatus? OpenNetworkStatus { get; private set; }
+        public JsonServiceOptions? ServiceOptions { get; private set; }
 
         internal static JsonServerToClientMessage Empty() => new();
 
@@ -48,10 +49,18 @@ internal partial class WebApi
         internal JsonServerToClientMessage WithScheduleActionOptions(string address, IReadOnlyList<IConsumableAction> consumableActions)
         {
             var jsonConsumableActions = consumableActions.Select(entry => {
-                var @params = entry.Parameters.Select(param => JSonParamInfo.FromParamInfo(param)).ToList();
+                var @params = entry.Parameters.Select(param => JsonParamInfo.FromParamInfo(param)).ToList();
                 return new JsonDeviceConsumableAction(entry.Type, @params);
             }).ToList();
             ScheduleActionOptions = new JsonScheduleActionOptions(address, jsonConsumableActions);
+            return this;
+        }
+
+        internal JsonServerToClientMessage WithServiceOptions(string address, IReadOnlyList<IServiceOption> serviceOptions)
+        {
+            var options = serviceOptions.Select(JsonParamInfo.FromIServiceOption).ToList();
+            var values = serviceOptions.Select(option => option.Value.ToString() ?? "").ToList();
+            ServiceOptions = new JsonServiceOptions(address, options, values);
             return this;
         }
 
@@ -138,43 +147,63 @@ internal partial class WebApi
         public string Name { get; } = name;
     }
 
-    internal class JsonDeviceConsumableAction(string eventType, IReadOnlyList<JSonParamInfo> parameters)
+    internal class JsonDeviceConsumableAction(string eventType, IReadOnlyList<JsonParamInfo> parameters)
     {
         public string EventType { get; } = eventType;
-        public IReadOnlyList<JSonParamInfo> Parameters { get; } = parameters;
+        public IReadOnlyList<JsonParamInfo> Parameters { get; } = parameters;
+    }
+
+    internal class JsonServiceOptions(string address, List<JsonParamInfo> @params, List<string> values)
+    {
+        public string Address { get; } = address;
+        public IReadOnlyList<JsonParamInfo> Params { get; } = @params;
+        public IReadOnlyList<string> Values { get; } = values;
     }
 
     /**
      * JSonParamInfo covers both ParamInfo and ParamDescriptor.
      * This is a base class; descendants match descendants of ParamDescriptor.
      */
-    internal abstract class JSonParamInfo(string name, string units, string? previewMode = null)
+    internal abstract class JsonParamInfo(string name, string units, string? previewMode = null)
     {
         public abstract string Type { get; }
         public string Name { get; } = name;
         public string Units { get; } = units;
         public string PreviewMode { get; } = previewMode ?? "None";
 
-        public static JSonParamInfo FromParamInfo(ParamInfo source) {
+        public static JsonParamInfo FromParamInfo(ParamInfo source) {
             var param = source.Param;
             return source.Param switch {
                 ParamEnum paramEnum => new JSonParamEnum(source.Name, paramEnum.Values, paramEnum.Default, param.Units),
                 ParamBrightness paramBrightness => new JsonParamBrightness(source.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default, paramBrightness.PreviewMode.ToString()),
                 ParamFloat paramFloat => new JSonParamFloat(source.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default, param.Units),
                 ParamInt paramInt => new JSonParamInt(source.Name, paramInt.Min, paramInt.Max, paramInt.Default, param.Units),
-                _ => throw new ArgumentException("Unknown ParamDescriptor type"),
+                _ => throw new ArgumentException("Unknown ParamDescriptor type (in FromParamInfo)"),
+            };
+        }
+
+        public static JsonParamInfo FromIServiceOption(IServiceOption source) {
+            var param1 = source.Param;
+            var param2 = param1.Param;
+            return param2 switch {
+                ParamEnum paramEnum => new JSonParamEnum(param1.Name, paramEnum.Values, paramEnum.Default, param2.Units),
+                ParamBrightness paramBrightness => new JsonParamBrightness(param1.Name, paramBrightness.Min, paramBrightness.Max, paramBrightness.Default, paramBrightness.PreviewMode.ToString()),
+                ParamFloat paramFloat => new JSonParamFloat(param1.Name, paramFloat.Min, paramFloat.Max, paramFloat.Default, param2.Units),
+                ParamInt paramInt => new JSonParamInt(param1.Name, paramInt.Min, paramInt.Max, paramInt.Default, param2.Units),
+                
+                _ => throw new ArgumentException("Unknown ParamDescriptor type (in FromIServiceOption)"),
             };
         }
     }
 
-    internal class JSonParamEnum(string name, string[] values, string defaultValue, string units) : JSonParamInfo(name, units)
+    internal class JSonParamEnum(string name, string[] values, string defaultValue, string units) : JsonParamInfo(name, units)
     {
         public override string Type => "enum";
         public string[] Values { get; } = values;
         public string Default { get; } = defaultValue;
     }
 
-    internal class JSonParamFloat(string name, double min, double max, double defaultValue, string units, string? previewMode = null) : JSonParamInfo(name, units, previewMode)
+    internal class JSonParamFloat(string name, double min, double max, double defaultValue, string units, string? previewMode = null) : JsonParamInfo(name, units, previewMode)
     {
         public override string Type => "float";
         public double Min { get; } = min;
@@ -187,7 +216,7 @@ internal partial class WebApi
         public override string Type => "brightness";
     }
 
-    internal class JSonParamInt(string name, int min, int max, int defaultValue, string units) : JSonParamInfo(name, units)
+    internal class JSonParamInt(string name, int min, int max, int defaultValue, string units) : JsonParamInfo(name, units)
     {
         public override string Type => "int";
         public int Min { get; } = min;
@@ -207,10 +236,11 @@ internal partial class WebApi
         public IReadOnlyList<JsonDeviceScheduleEntry> Schedule = schedule;
     }
 
-    internal class JsonDeviceScheduleEntry(string eventType, IReadOnlyDictionary<string, string> parameters, IScheduleTrigger trigger) : IDeviceScheduleEntry
+    internal class JsonDeviceScheduleEntry(int key, string eventType, IReadOnlyDictionary<string, string> parameters, IScheduleTrigger trigger) : IDeviceScheduleEntry
     {
-        public JsonDeviceScheduleEntry() : this("", new Dictionary<string, string>(), new JsonScheduleTrigger()) { }
+        public JsonDeviceScheduleEntry() : this(0, "", new Dictionary<string, string>(), new JsonScheduleTrigger()) { }
 
+        public int Key { get; set; } = key;
         public string EventType { get; set; } = eventType;
         public IReadOnlyDictionary<string, string> Parameters { get; set; } = parameters;
         public IScheduleTrigger Trigger { get; set; } = trigger;

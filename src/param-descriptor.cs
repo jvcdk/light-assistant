@@ -35,9 +35,9 @@ internal class ParamEnum : ParamDescriptor
 
 internal class ParamFloat(double min, double max, string units) : ParamDescriptor(units)
 {
-    public double Min { get; } = min;
+    public double Min { get; init; } = min;
 
-    public double Max { get; } = max;
+    public double Max { get; init; } = max;
 
     public double Default => (Min + Max) / 2.0;
 
@@ -55,6 +55,12 @@ enum PreviewMode { None, Raw, Normalized }
 internal class ParamBrightness(PreviewMode previewModes) : ParamFloat(0.0, 1.0, "")
 {
     public PreviewMode PreviewMode { get; } = previewModes;
+
+    public ParamBrightness(PreviewMode previewModes, double min, double max) : this(previewModes)
+    {
+        Min = min;
+        Max = max;
+    }
 }
 
 internal class ParamInt(int min, int max, string units) : ParamDescriptor(units)

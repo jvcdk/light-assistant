@@ -15,9 +15,10 @@ internal partial class Controller : IController
     private readonly Thread _scheduleThread;
 
     // Protected data
-    private readonly SlimReadWriteDataGuard<DeviceInfoCollection> _devices = new(new DeviceInfoCollection());
-    private readonly SlimReadWriteDataGuard<DeviceSchedule> _schedules = new(new DeviceSchedule());
-    private readonly SlimReadWriteDataGuard<DeviceRoutes> _routes = new(new DeviceRoutes());
+    private readonly SlimReadWriteDataGuard<DeviceInfoCollection> _devices = new([]);
+    private readonly SlimReadWriteDataGuard<DeviceSchedule> _schedules = new([]);
+    private readonly SlimReadWriteDataGuard<DeviceRoutes> _routes = new([]);
+    private readonly SlimReadWriteDataGuard<ServiceOptionValues> _serviceOptionValues = new([]);
 
     public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
     {
@@ -49,6 +50,8 @@ internal partial class Controller : IController
         try {
             var data = new RunTimeData();
 
+            using(_ = _serviceOptionValues.ObtainWriteLock(out var serviceOptionValues))
+                data.SetServiceOptionValues(serviceOptionValues);
             using(_ = _routes.ObtainReadLock(out var routes))
                 data.SetRoutes(routes);
             using(_ = _schedules.ObtainReadLock(out var schedules))
@@ -89,6 +92,9 @@ internal partial class Controller : IController
 
         using(_ = _schedules.ObtainWriteLock(out var schedules))
             data.PopulateSchedules(schedules);
+
+        using(_ = _serviceOptionValues.ObtainWriteLock(out var serviceOptionValues))
+            data.PopulateServiceOptionValues(serviceOptionValues);
     }
 
     public IReadOnlyList<IDevice> GetDeviceList()
@@ -147,6 +153,17 @@ internal partial class Controller : IController
         return deviceInfo.Services.ConsumedActions
             .Select(ev => new ConsumableAction(ev.Name, ev.Params))
             .ToList();
+    }
+
+    public IReadOnlyList<IServiceOption> GetServiceOptionsFor(IDevice device)
+    {
+        using var _ = _devices.ObtainReadLock(out var devices);
+
+        if(!devices.TryGetValue(device, out var deviceInfo)) {
+            _consoleOutput.ErrorLine($"Device not found. Name: {device.Name}");
+            return [];
+        }
+        return deviceInfo.Services.ServiceOptions.ToList();
     }
 
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
@@ -257,11 +274,15 @@ internal partial class Controller : IController
     private async void HandleDeviceDiscovered(IDevice device)
     {
         _consoleOutput.ErrorLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
+
         using(_ = _devices.ObtainWriteLock(out var devices)) {
             if(devices.ContainsKey(device))
                 return; // Not new
 
-            devices.Add(device, CreateDeviceInfo(device));
+            using var _ = _serviceOptionValues.ObtainReadLock(out var deviceServiceOptionValues);
+            deviceServiceOptionValues.TryGetValue(device.Address, out var serviceOptionValues);
+
+            devices.Add(device, CreateDeviceInfo(device, serviceOptionValues));
         }
         await _guiApp.DeviceListUpdated();
     }
@@ -282,10 +303,10 @@ internal partial class Controller : IController
         await _guiApp.DeviceListUpdated();
     }
 
-    private DeviceInfo CreateDeviceInfo(IDevice device)
+    private DeviceInfo CreateDeviceInfo(IDevice device, IReadOnlyList<ServiceOptionValue>? serviceOptionValues)
     {
         return new DeviceInfo {
-            Services = _deviceServiceMapping.GetServicesFor(device)
+            Services = _deviceServiceMapping.GetServicesFor(device, serviceOptionValues)
         };
     }
 
@@ -319,18 +340,29 @@ internal partial class Controller : IController
         return [];
     }
 
-    public async Task SetDeviceOptions(string address, string name, IEnumerable<IEventRoute> routes, IDeviceScheduleEntry[] schedule)
+    public async Task SetDeviceOptions(string address, string name, IEnumerable<IEventRoute> routes, IDeviceScheduleEntry[] schedule, IServiceOptionValue[] serviceOptionValues)
     {
-        var device = TryGetDevice(address);
-        if(device == null) {
-            _consoleOutput.ErrorLine($"Address '{address}' given by client does not match a device.");
-            return;
+        IDevice device;
+        List<ServiceOptionValue> savedServiceOptionValues;
+        using(_devices.ObtainReadLock(out var devices)) {
+            var kv = devices.FirstOrDefault(entry => entry.Key.Address == address);
+            device = kv.Key;
+            if(device == null) {
+                _consoleOutput.ErrorLine($"Address '{address}' given by client does not match a device.");
+                return;
+            }
+
+            var services = kv.Value.Services;
+            savedServiceOptionValues = services.SetServiceOptionValues(serviceOptionValues);
         }
 
         await SetDeviceName(device, name);
 
         var newRoutes = ProcessDeviceRoutes(device, routes);
         var newSchedule = ProcessDeviceSchedule(device, schedule);
+
+        using(_ = _serviceOptionValues.ObtainWriteLock(out var deviceServiceOptionValues))
+            deviceServiceOptionValues[device.Address] = savedServiceOptionValues;
 
         using(_ = _routes.ObtainWriteLock(out var deviceRoutes))
             deviceRoutes[device.Address] = newRoutes;
@@ -381,7 +413,7 @@ internal partial class Controller : IController
         return newSchedules;
     }
 
-    private async Task SetDeviceName(IDevice device, string name)
+    private static async Task SetDeviceName(IDevice device, string name)
     {
         if(device.Name == name)
             return;
@@ -446,7 +478,7 @@ internal partial class Controller : IController
         return result;
     }
 
-    private bool ShouldTrigger(IScheduleTrigger trigger, DateTime now)
+    private static bool ShouldTrigger(IScheduleTrigger trigger, DateTime now)
     {
         int dayOfWeek = ((int)now.DayOfWeek + 6) % 7; // Shift to match the IScheduleTrigger days
         if(!trigger.Days.Contains(dayOfWeek))

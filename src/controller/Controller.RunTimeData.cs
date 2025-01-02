@@ -9,6 +9,7 @@ internal partial class Controller
     {
         public Dictionary<string, List<Route>> Routes { get; set; } = [];
         public Dictionary<string, List<SerializableDeviceScheduleEntry>> Schedules { get; set; } = [];
+        public Dictionary<string, List<ServiceOptionValue>> ServiceOptionValues { get; set; } = [];
 
         // Default constructor; used for de-serialization.
         public RunTimeData() { }
@@ -26,6 +27,14 @@ internal partial class Controller
             Routes = routes.ToDictionary(
                 entry => entry.Key,
                 entry => entry.Value.Select(route => new Route(route)).ToList()
+            );
+        }
+
+        internal void SetServiceOptionValues(Dictionary<string, IReadOnlyList<ServiceOptionValue>> serviceOptionValues)
+        {
+            ServiceOptionValues = serviceOptionValues.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value.Select(value => new ServiceOptionValue(value)).ToList()
             );
         }
 
@@ -55,6 +64,13 @@ internal partial class Controller
                 schedules[key] = value.Select(entry => new DeviceScheduleEntry(entry)).ToList();
         }
 
+        internal void PopulateServiceOptionValues(Dictionary<string, IReadOnlyList<ServiceOptionValue>> serviceOptionValues)
+        {
+            serviceOptionValues.Clear();
+            foreach(var (key, value) in ServiceOptionValues)
+                serviceOptionValues[key] = value.Select(value => new ServiceOptionValue(value)).ToList();
+        }
+
         public class Route(string sourceEvent, string targetAddress, string targetFunctionality) : IEventRoute
         {
             public Route(IEventRoute source) : this(source.SourceEvent, source.TargetAddress, source.TargetFunctionality) { }
@@ -65,14 +81,16 @@ internal partial class Controller
             public string TargetFunctionality { get; set; } = targetFunctionality;
         }
 
-        public class SerializableDeviceScheduleEntry(string eventType, IReadOnlyDictionary<string, string> parameters, IScheduleTrigger trigger) : IDeviceScheduleEntry
+        public class SerializableDeviceScheduleEntry(int key, string eventType, IReadOnlyDictionary<string, string> parameters, IScheduleTrigger trigger) : IDeviceScheduleEntry
         {
-            public SerializableDeviceScheduleEntry(IDeviceScheduleEntry source) : this(source.EventType, source.Parameters, source.Trigger) { }
-            public SerializableDeviceScheduleEntry() : this("", new Dictionary<string, string>(), new SerializableScheduleTrigger()) { }
+            public SerializableDeviceScheduleEntry(IDeviceScheduleEntry source) : this(source.Key, source.EventType, source.Parameters, source.Trigger) { }
+            public SerializableDeviceScheduleEntry() : this(0, "", new Dictionary<string, string>(), new SerializableScheduleTrigger()) { }
 
+            public int Key { get; set; } = key;
             public string EventType { get; set; } = eventType;
             public IReadOnlyDictionary<string, string> Parameters { get; set; } = parameters;
             public IScheduleTrigger Trigger { get; set; } = trigger;
+
         }
 
         public class SerializableScheduleTrigger(IReadOnlySet<int> days, ITimeOfDay time) : IScheduleTrigger

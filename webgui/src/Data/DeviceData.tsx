@@ -1,4 +1,4 @@
-import { IDevice, IDeviceConsumableAction, IDeviceRoute, IDeviceRoutingOptions, IDeviceStatus, IDeviceScheduleEntry } from './JsonTypes';
+import { IDevice, IDeviceConsumableAction, IDeviceRoute, IDeviceRoutingOptions, IDeviceStatus, IDeviceScheduleEntry, IServiceOptions } from './JsonTypes';
 
 export type FindDeviceDataType = (address: string, issueWarningNotFound?: boolean) => DeviceData | undefined;
 export class DeviceData {
@@ -8,6 +8,7 @@ export class DeviceData {
   RoutingOptions: IDeviceRoutingOptions | undefined;
   Schedule: IDeviceScheduleEntry[] = [];
   ConsumableActions: IDeviceConsumableAction[] = [];
+  ServiceOptions: IServiceOptions | undefined;
 
   constructor(device: IDevice) {
     this.Device = device;

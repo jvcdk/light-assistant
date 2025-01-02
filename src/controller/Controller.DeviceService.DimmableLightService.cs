@@ -39,6 +39,12 @@ internal partial class Controller
                 }
             }
 
+            [ParamBrightness(PreviewMode.Raw, BrightnessConverter.MinMidBrightness, BrightnessConverter.MaxMidBrightness)]
+            public double MidBrightness { 
+                get => _brightnessConverter.MidBrightness;
+                set => _brightnessConverter.MidBrightness = value;
+            }
+
             private void HandleToggleOnOff(InternalEvent ev)
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));

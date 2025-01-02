@@ -1,6 +1,6 @@
 import ParamKnob from '../image/param_knob_2.svg';
-import { useCallback, useEffect, useRef, useState } from "react";
-import { IParamEnum, IParamFloat, IParamInfo, IParamInt, PreviewMode } from "../Data/JsonTypes";
+import { useCallback, useEffect, useRef } from "react";
+import { IParamEnum, IParamFloat, IParamInfo, IParamInt } from "../Data/JsonTypes";
 import './ParameterOption.css';
 import { tryParseFloat, tryParseInt } from '../Utils/NumberUtils';
 
@@ -9,9 +9,8 @@ const MouseDialScaling = 5;
 export interface ParamOptionProps {
   param: IParamInfo;
   value: string | undefined;
-  previewMode: PreviewMode;
   onChange: (value: string | undefined) => void;
-  onPreview: (value: string, previewMode: PreviewMode) => void;
+  onPreview: (value: string) => void;
 }
 
 function ParamOptionEnum(props: ParamOptionProps) {
@@ -33,47 +32,40 @@ function ParamOptionEnum(props: ParamOptionProps) {
 }
 
 function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
-  const param = props.param as IParamFloat | IParamInt;
+  const { param, value, onChange, onPreview } = props;
+
+  const paramTyped = param as IParamFloat | IParamInt;
   const parseFn = isFloat ? tryParseFloat : tryParseInt;
-  const [value, setValue] = useState(parseFn(props.value, param.Default));
+  const defaultValue = value || paramTyped.Default.toString();
   const inputRef = useRef<HTMLInputElement>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
-  const sendPreview = props.previewMode != "None";
 
-  useEffect(() => {
-    if(props.value === undefined) {
-      props.onChange(param.Default.toString());
-      return;
-    }
+  const getValue = useCallback(() => {
+    const fallback = parseFn(value, paramTyped.Default);
+    const parsed = parseFn(inputRef.current?.value, fallback);
+    return Math.max(paramTyped.Min, Math.min(paramTyped.Max, parsed));
+  }, [paramTyped, parseFn, value]);
 
-    setValue(parseFn(props.value, param.Default));
-  }, [props, param.Default, parseFn]);
-
-  const updateValue = useCallback((value: number) => {
-    value = Math.max(param.Min, Math.min(param.Max, value));
-    const valStr = value.toString();value.toString()
-    props.onChange(valStr);
-    if(sendPreview)
-      props.onPreview(valStr, props.previewMode);
-  }, [param, props, sendPreview]);
-
-  const update = useCallback((newValStr: string) => {
-    const newVal = parseFn(newValStr, value);
-    updateValue(newVal);
-    return newVal;
-  }, [value, updateValue, parseFn]);
+  const updateParent = useCallback(() => {
+    const newValue = getValue().toString();
+    onChange(newValue);
+    if(inputRef.current)
+      inputRef.current.value = newValue;
+  }, [getValue, onChange]);
 
   const handleMove = useCallback((startValue: number, startY: number, stepSize: number, clientY: number) => {
     const deltaY = Math.round((startY - clientY) / MouseDialScaling);
     let newValue = startValue + deltaY * stepSize;
     newValue = Math.round(newValue / stepSize) * stepSize;
-    updateValue(newValue);
-    if(inputRef.current !== null)
-      inputRef.current.value = newValue.toString();
-  }, [updateValue]);
+    newValue = Math.max(paramTyped.Min, Math.min(paramTyped.Max, newValue));
+    const newValueStr = newValue.toString();
+    if(inputRef.current)
+      inputRef.current.value = newValueStr;
+    onPreview(newValueStr);
+  }, [onPreview, paramTyped]);
 
   useEffect(() => {
-    const stepSize = isFloat ? (param.Max - param.Min) / 100 : 1;
+    const stepSize = isFloat ? (paramTyped.Max - paramTyped.Min) / 100 : 1;
 
     function handleMouseDown(event: MouseEvent) {
       if (inputRef.current === null)
@@ -81,7 +73,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
 
       event.preventDefault();
 
-      const startValue = update(inputRef.current.value);
+      const startValue = getValue();
       const startY = event.clientY;
 
       function onMouseMove(moveEvent: MouseEvent) {
@@ -91,8 +83,8 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       function onMouseUp() {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        if(sendPreview)
-          props.onPreview("", "None");
+        updateParent();
+        onPreview('None');
       }
 
       document.addEventListener('mousemove', onMouseMove);
@@ -105,15 +97,15 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
 
       event.preventDefault();
 
-      const startValue = update(inputRef.current.value);
+      const startValue = getValue();
       const startY = event.touches[0].clientY;
 
       const thisSpan = spanRef.current;
       function onTouchEnd() {
         thisSpan.ontouchmove = null;
         thisSpan.ontouchend = null;
-        if(sendPreview)
-          props.onPreview("", "None");
+        updateParent();
+        onPreview('None');
       }
 
       spanRef.current.ontouchmove = (e) => handleMove(startValue, startY, stepSize, e.touches[0].clientY);
@@ -124,7 +116,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       spanRef.current.onmousedown = (e) => handleMouseDown(e);
       spanRef.current.ontouchstart = (e) => handleTouchStart(e);
     }
-  }, [param, value, props, update, updateValue, isFloat, handleMove, sendPreview]);
+  }, [getValue, handleMove, isFloat, onPreview, paramTyped, updateParent]);
 
   const units = props.param.Units;
   const classType = isFloat ? 'Float' : 'Int';
@@ -132,7 +124,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
     <>
       <label className={`Param ${classType}`}>{param.Name}{units && ` [${units}]`}:</label>
       <span className={`Param ${classType}`}>
-        <input ref={inputRef} type="text" defaultValue={value} onBlur={e => update(e.target.value)} />
+        <input ref={inputRef} type="text" defaultValue={defaultValue} onBlur={updateParent} />
         <span ref={spanRef}><ParamKnob /></span>
       </span>
     </>

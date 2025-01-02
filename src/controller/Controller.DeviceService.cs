@@ -10,7 +10,7 @@ internal partial class Controller
         private const string KeywordAction = "action";
         private const string KeywordActionStepSize = "action_step_size";
 
-        protected IConsoleOutput ConsoleOutput { get; }
+        internal IConsoleOutput ConsoleOutput { get; }
         internal string Name { get; private set; }
 
         protected readonly IDevice Device;

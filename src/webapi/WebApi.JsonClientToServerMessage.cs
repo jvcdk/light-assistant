@@ -18,6 +18,13 @@ internal partial class WebApi
         public string Name { get; init; } = "";
         public JsonDeviceRoute[] Route { get; init; } = [];
         public JsonDeviceScheduleEntry[] Schedule { get; init; } = [];
+        public JsonServiceOptionValue[] ServiceOptionValues { get; init; } = [];
+    }
+
+    public class JsonServiceOptionValue : IServiceOptionValue
+    {
+        public string Name { get; init; } = "";
+        public string Value { get; init; } = "";
     }
 
     public class JsonDeviceOptionPreview
