@@ -2,7 +2,19 @@ namespace LightAssistant.Controller;
 
 internal class BrightnessConverter
 {
-    private readonly double _gamma = 10; // Range: _gamma > double.Epsilon. TODO: Make a user interface for configuring gamma.
+    internal const double MinMidBrightness = 0.01;
+    internal const double MaxMidBrightness = 0.99;
+
+    private double _gamma = 5; // Range: _gamma > double.Epsilon.
+    internal double MidBrightness {
+        get {
+            return ApplyGamma(0.5);
+        }
+        set {
+            value = Math.Clamp(value, MinMidBrightness, MaxMidBrightness);
+            _gamma = Math.Log(value) / Math.Log(0.5);
+        }
+    }
 
     private readonly int MaxRawBrightness;
 

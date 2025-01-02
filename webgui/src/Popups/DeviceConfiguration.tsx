@@ -8,13 +8,14 @@ import Popup from 'reactjs-popup';
 import { IRoutingOptionsCallbacks, DeviceRoutingOptions } from '../Widgets/DeviceRoutingOptions';
 import { DeviceScheduleOptions } from '../Widgets/DeviceScheduleOptions';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import { DeviceGeneralOptions } from '../Widgets/DeviceGeneralOptions';
 
 export interface DeviceConfigurationProps {
   isOpen: boolean;
   devData: DeviceData | null;
   routingCallbacks: IRoutingOptionsCallbacks;
   onClose: (devData: DeviceData | null) => void;
-  onActionOptionsPreview: (devData: DeviceData | null, value: string, previewMode: PreviewMode) => void;
+  onOptionsPreview: (devData: DeviceData | null, value: string, previewMode: PreviewMode) => void;
 }
 export function DeviceConfiguration(props: DeviceConfigurationProps) {
   const [devData, setDevData] = useState<DeviceData|null>(null);
@@ -38,14 +39,25 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
     } as DeviceData);
   }
 
-  function OnActionOptionsPreview(value: string, previewMode: PreviewMode) {
-    props.onActionOptionsPreview(devData, value, previewMode);
+  function OnOptionsPreview(value: string, previewMode: PreviewMode) {
+    props.onOptionsPreview(devData, value, previewMode);
+  }
+
+  function OnServiceOptionChange(data: string[]) {
+    setDevData({
+      ...devData,
+      ServiceOptions: {
+        ...devData!.ServiceOptions,
+        Values: data,
+      }
+    } as DeviceData);
   }
 
   if(devData === null)
     return ("");
 
   const device = devData.Device;
+  const serviceOptions = devData.ServiceOptions;
   return (
     <Popup closeOnEscape={closeOnEscape} open={props.isOpen} onClose={() => props.onClose(null)} modal closeOnDocumentClick={false}>
       <div className='DeviceConfiguration'>
@@ -58,19 +70,24 @@ export function DeviceConfiguration(props: DeviceConfigurationProps) {
             <Tab>Schedule</Tab>
           </TabList>
           <TabPanel>
-            <div className='Grid'>
-              <label>Vendor:</label><span>{device.Vendor}</span>
-              <label>Model:</label><span>{device.Model}</span>
-              <label>Description:</label><span>{device.Description}</span>
-              <label>Friendly name:</label>
-              <input className='FriendlyName' type='text' defaultValue={device.Name} onChange={(e) => device.Name = e.target.value} />
-            </div>
+            <DeviceGeneralOptions
+              device={device}
+              onOptionsPreview={OnOptionsPreview}
+              serviceOptions={serviceOptions} 
+              onChange={OnServiceOptionChange} />
           </TabPanel>
           <TabPanel className='Routing'>
-            <DeviceRoutingOptions devData={devData} cb={props.routingCallbacks} setDeviceRoute={UpdateDeviceRoute} />
+            <DeviceRoutingOptions
+              devData={devData}
+              cb={props.routingCallbacks}
+              setDeviceRoute={UpdateDeviceRoute} />
           </TabPanel>
           <TabPanel className='Schedule'>
-            <DeviceScheduleOptions onActionOptionsPreview={OnActionOptionsPreview} devData={devData} setSchedule={UpdateDeviceSchedule} onChildOpenChanged={(val) => setCloseOnEscape(!val)} />
+            <DeviceScheduleOptions
+              onActionOptionsPreview={OnOptionsPreview}
+              devData={devData}
+              setSchedule={UpdateDeviceSchedule}
+              onChildOpenChanged={(val) => setCloseOnEscape(!val)} />
           </TabPanel>
         </Tabs>
         <div className='Buttons'>

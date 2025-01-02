@@ -21,11 +21,17 @@ internal partial class Controller
             VendorTuya.Add(_factoryCollection);
         }
 
-        internal DeviceServiceCollection GetServicesFor(IDevice device)
+        internal DeviceServiceCollection GetServicesFor(IDevice device, IReadOnlyList<IServiceOptionValue>? serviceOptionValues)
         {
             if(_factoryCollection.TryGetValue(device.Vendor, out var modelFactoryCollection)) {
-                if(modelFactoryCollection.TryGetValue(device.Model, out var factory))
-                    return factory.Invoke(device, _consoleOutput);
+                if(modelFactoryCollection.TryGetValue(device.Model, out var factory)) {
+                    var result = factory.Invoke(device, _consoleOutput);
+
+                    if(serviceOptionValues != null)
+                        result.SetServiceOptionValues(serviceOptionValues);
+
+                    return result;
+                }
             }
 
             _consoleOutput.ErrorLine($"No services found for device '{device.Name}' (Vendor: {device.Vendor}, Model: {device.Model}).");

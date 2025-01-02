@@ -8,6 +8,7 @@ export interface IServerToClientMessage {
   RoutingOptions: IDeviceRoutingOptions | undefined;
   Schedule: IDeviceSchedule | undefined;
   ScheduleActionOptions: IScheduleActionOptions | undefined;
+  ServiceOptions: IServiceOptions | undefined;
   OpenNetworkStatus : IOpenNetworkStatus | undefined;
 }
 
@@ -81,6 +82,7 @@ export interface IDeviceProvidedEvent {
  * Should match JsonDeviceScheduleEntry
  */
 export interface IDeviceScheduleEntry {
+  Key: number;
   EventType: string | undefined; // EventType is the action to be taken
   Parameters: object;
   Trigger: IScheduleTrigger;
@@ -124,6 +126,15 @@ export interface IScheduleActionOptions {
 export interface IDeviceConsumableAction {
   EventType: string;
   Parameters: IParamInfo[];
+}
+
+/**
+ * Should match JsonServiceOptions
+ */
+export interface IServiceOptions {
+  Address: string;
+  Params: IParamInfo[];
+  Values: string[];
 }
 
 export type PreviewMode = 'None' | 'Raw' | 'Normalized';
@@ -179,6 +190,14 @@ export interface IOpenNetworkStatus {
 }
 
 /**
+ * Should match JsonServiceOptionValue
+ */
+export interface IServiceOptionValue {
+  Name: string;
+  Value: string;
+}
+
+/**
  * Should match JsonDeviceConfigurationChange
  */
 export class DeviceConfigurationChange {
@@ -186,12 +205,14 @@ export class DeviceConfigurationChange {
   Name: string;
   Route: IDeviceRoute[];
   Schedule: IDeviceScheduleEntry[];
+  ServiceOptionValues: IServiceOptionValue[];
 
-  constructor(address: string, name: string, route: IDeviceRoute[], schedule: IDeviceScheduleEntry[]) {
+  constructor(address: string, name: string, route: IDeviceRoute[], schedule: IDeviceScheduleEntry[], serviceOptionValues: IServiceOptionValue[]) {
     this.Address = address;
     this.Name = name;
     this.Route = route;
     this.Schedule = schedule;
+    this.ServiceOptionValues = serviceOptionValues;
   }
 }
 

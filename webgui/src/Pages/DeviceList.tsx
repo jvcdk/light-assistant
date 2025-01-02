@@ -2,10 +2,12 @@ import './DeviceList.css'
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useWebSocketContext } from "../WebSocketContext";
 import { Device } from "../Widgets/Device";
-import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage, PreviewMode } from '../Data/JsonTypes';
+import { ClientToServerMessage, DeviceConfigurationChange, IDevice, IDeviceRouting, IDeviceRoutingOptions, IDeviceSchedule, IDeviceStatus, IScheduleActionOptions, IServerToClientMessage, IServiceOptions, IServiceOptionValue, PreviewMode } from '../Data/JsonTypes';
 import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 import { GetTargetFunctionalityOptionsType, GetTargetRoutingOptionsType, IRoutingOptionsCallbacks, TargetAddressToNameType } from '../Widgets/DeviceRoutingOptions';
 import { DeviceConfiguration } from '../Popups/DeviceConfiguration';
+import { safeGetValue } from '../Utils/ArrayUtils';
+import { GetParamDefault } from '../Utils/IParamInfoUtils';
 
 export function DeviceList() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);
@@ -112,6 +114,14 @@ export function DeviceList() {
       }
     }
 
+    function handleServiceOptions(serviceOptions: IServiceOptions) {
+      const devData = FindDeviceData(serviceOptions.Address);
+      if (devData) {
+        devData.ServiceOptions = serviceOptions;
+        forceUpdate();
+      }
+    }
+
     if (lastJsonMessage == undefined)
       return
 
@@ -129,6 +139,8 @@ export function DeviceList() {
         handleDeviceSchedule(message.Schedule);
       if (message.ScheduleActionOptions)
         handleScheduleActionOptions(message.ScheduleActionOptions);
+      if(message.ServiceOptions)
+        handleServiceOptions(message.ServiceOptions);
     } catch (error) {
       console.log(`Error message: ${error}`)
     }
@@ -146,13 +158,27 @@ export function DeviceList() {
     if(devData == null)
       return;
 
+    let serviceOptionValues: IServiceOptionValue[] = [];
+    const serviceOptions = devData.ServiceOptions;
+    if(serviceOptions != undefined) {
+      const params = serviceOptions.Params || [];
+      const _serviceOptionValues = devData.ServiceOptions?.Values || [];
+      serviceOptionValues = params.map((param, idx) => {
+        const value = safeGetValue(_serviceOptionValues, idx) || GetParamDefault(param);
+        return {
+          Name: param.Name,
+          Value: value,
+        } as IServiceOptionValue;
+      });
+    }
+
     const device = devData.Device;
     const msg = new ClientToServerMessage();
-    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, devData.Routing, devData.Schedule);
+    msg.DeviceConfigurationChange = new DeviceConfigurationChange(device.Address, device.Name, devData.Routing, devData.Schedule, serviceOptionValues);
     sendJsonMessage(msg);
   }
 
-  function OnActionOptionsPreview(devData: DeviceData | null, value: string, previewMode: PreviewMode) {
+  function OnOptionsPreview(devData: DeviceData | null, value: string, previewMode: PreviewMode) {
     if(devData == null)
       return;
 
@@ -171,7 +197,8 @@ export function DeviceList() {
         <div className='Schedule'>Schedule</div>
       </div>
       {deviceData.current.map(device => Device(device, () => openPopup(device), FindDeviceData))}
-      <DeviceConfiguration onActionOptionsPreview={OnActionOptionsPreview} isOpen={popupOpen} devData={selectedDeviceData} routingCallbacks={routingCallbacks} onClose={OnDeviceConfigurationUpdate} /> 
+      <DeviceConfiguration onOptionsPreview={OnOptionsPreview} isOpen={popupOpen} devData={selectedDeviceData} routingCallbacks={routingCallbacks} onClose={OnDeviceConfigurationUpdate} /> 
     </div>
   );
 }
+

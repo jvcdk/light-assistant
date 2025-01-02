@@ -4,6 +4,7 @@ import { RenderTimeOfDay } from './RenderTimeOfDay';
 import './CircularClock.css';
 import { State } from '../Utils/State';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export enum ClockMode {
   Hour,
   Minute
@@ -74,12 +75,13 @@ export function CircularClock(props: CircularClockProps) {
       let hour = Math.round((normalizedDegrees / 30) % 12);
       if(radius < centerX * 0.75)
         hour += 12;
-      selectedTime.val.Hour = hour;
-    } else {
-      const minute = Math.round((normalizedDegrees / 6) % 60);
-      selectedTime.val.Minute = minute;
+      selectedTime.val = selectedTime.val.WithHour(hour);
     }
-  }, [mode, selectedTime.val]);
+    else {
+      const minute = Math.round((normalizedDegrees / 6) % 60);
+      selectedTime.val = selectedTime.val.WithMinutes(minute);
+    }
+  }, [mode, selectedTime]);
 
   const handleMouseEvent = useCallback((e: MouseEvent) => {
     const circularClock = (e.target as HTMLElement).closest('.CircularClock') as HTMLElement;

@@ -1,3 +1,4 @@
+using System.Reflection;
 using LightAssistant.Interfaces;
 using LightAssistant.Utils;
 
@@ -83,6 +84,12 @@ internal partial class Controller
 
         internal IEnumerable<ActionInfo> ConsumedActions =>
             EnumerateServices().SelectMany(GetActions);
+        
+        internal IEnumerable<IServiceOption> ServiceOptions =>
+            ServiceOptionsPrivate.Cast<IServiceOption>();
+
+        private IEnumerable<ServiceOption> ServiceOptionsPrivate =>
+            EnumerateServices().SelectMany(GetServiceOptions);
 
         private static IEnumerable<ActionInfo> GetActions(DeviceService service)
         {
@@ -95,14 +102,56 @@ internal partial class Controller
                         .EnumeratePropertiesWithAttribute<ParamDescriptor>()
                         .Select(prop => new ParamInfo(prop.prop.Name, prop.attr!))
                         .ToList();
-                    return new ActionInfo(tuple.attr.Name, service, tuple.method, param.ParameterType, paramInfo);
+                    return new ActionInfo(tuple.attr.Name.CamelCaseToSentence(), service, tuple.method, param.ParameterType, paramInfo);
                 });
+        }
+
+        private static IEnumerable<ServiceOption> GetServiceOptions(DeviceService service)
+        {
+            return service.EnumeratePropertiesWithAttribute<ParamDescriptor>()
+                .Select(prop => {
+                    void action(string value) => SetServiceOption(service, prop.prop, value);
+                    var value = prop.prop.GetValue(service);
+                    if(value == null)
+                        return null;
+                    return new ServiceOption(prop.prop.Name.CamelCaseToSentence(), value, prop.attr!, action);
+                })
+                .Where(option => option != null)
+                .Select(option => option!);
+        }
+
+        private static void SetServiceOption(DeviceService service, PropertyInfo prop, string value)
+        {
+            try {
+                prop.SetValue(service, Convert.ChangeType(value, prop.PropertyType));
+            }
+            catch(Exception ex) {
+                service.ConsoleOutput.ErrorLine($"Failed to set service option {prop.Name} to value '{value}'. Msg.: " + ex.Message);
+            }
         }
 
         internal void PreviewDeviceOption(string value, PreviewMode previewMode)
         {
             foreach(var service in EnumerateServices().OfType<IServicePreviewOption>())
                 service.PreviewDeviceOption(value, previewMode);
+        }
+
+        internal List<ServiceOptionValue> SetServiceOptionValues(IEnumerable<IServiceOptionValue> serviceOptionValues)
+        {
+            var existingServiceOptions = ServiceOptionsPrivate.ToList();
+            foreach(var serviceOptionValue in serviceOptionValues) {
+                var serviceOption = existingServiceOptions.FirstOrDefault(option => option.Param.Name == serviceOptionValue.Name);
+                if(serviceOption == null)
+                    continue;
+                serviceOption.Action(serviceOptionValue.Value);
+            }
+
+            // Don't re-use existingServiceOptions, but instead re-iterate via ServiceOptionsPrivate, to re-fetch current values.
+            return ServiceOptionsPrivate
+                .Select(option => new { name = option.Param.Name, value = option.Value?.ToString() })
+                .Where(option => option.value != null)
+                .Select(option => new ServiceOptionValue(option.name, option.value!))
+                .ToList();
         }
     }
 

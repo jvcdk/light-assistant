@@ -114,7 +114,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
     private async Task HandleDeviceConfigurationChange(JsonDeviceConfigurationChange ev)
     {
         Debug.Assert(AppController != null);
-        await AppController.SetDeviceOptions(ev.Address, ev.Name, ev.Route, ev.Schedule);
+        await AppController.SetDeviceOptions(ev.Address, ev.Name, ev.Route, ev.Schedule, ev.ServiceOptionValues);
     }
 
     public async Task DeviceDataUpdated(IDevice device)
@@ -129,9 +129,12 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
         response.WithDeviceRouting(device.Address, routes);
 
         var schedule = AppController.GetScheduleFor(device).Select(entry =>
-            new JsonDeviceScheduleEntry(entry.EventType, entry.Parameters, entry.Trigger)
+            new JsonDeviceScheduleEntry(entry.Key, entry.EventType, entry.Parameters, entry.Trigger)
         ).ToList();
         response.WithDeviceSchedule(device.Address, schedule);
+
+        var serviceOptions = AppController.GetServiceOptionsFor(device);
+        response.WithServiceOptions(device.Address, serviceOptions);
 
         await SendMessageToAllClients(response);
     }
@@ -156,7 +159,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                     new JsonDeviceRoute(route.SourceEvent, route.TargetAddress, route.TargetFunctionality)
                 ).ToList();
                 var schedule = AppController.GetScheduleFor(device).Select(entry =>
-                    new JsonDeviceScheduleEntry(entry.EventType, entry.Parameters, entry.Trigger)
+                    new JsonDeviceScheduleEntry(entry.Key, entry.EventType, entry.Parameters, entry.Trigger)
                 ).ToList();
 
                 response = JsonServerToClientMessage.Empty()
@@ -171,6 +174,10 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
                 var consumableActions = AppController.GetConsumableActionsFor(device);
                 if(consumableActions.Count > 0)
                     response = response.WithScheduleActionOptions(device.Address, consumableActions);
+
+                var serviceOptions = AppController.GetServiceOptionsFor(device);
+                if(serviceOptions.Count > 0)
+                    response = response.WithServiceOptions(device.Address, serviceOptions);
  
                 foreach(var inner in contexts)
                     await SendMessage(inner, response);
