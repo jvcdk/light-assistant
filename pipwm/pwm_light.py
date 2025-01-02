@@ -41,11 +41,15 @@ class PwmLight:
 
     def set_brightness(self, brightness: float, transition: float):
         brightness = self._clamp_brightness(brightness)
-
-        with self._lock:
-            self._target_brightness = brightness
-            diff = brightness - self._brightness
-            self._transition_steps = diff * thread_sleep_time / transition
+        if transition <= 0:
+            with self._lock:
+                self._target_brightness = brightness
+                self._transition_steps = 0
+        else:
+            with self._lock:
+                self._target_brightness = brightness
+                diff = brightness - self._brightness
+                self._transition_steps = diff * thread_sleep_time / transition
 
         self._event.set()
 
