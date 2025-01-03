@@ -33,13 +33,13 @@ internal partial class PiPwmClient
 
         internal Func<string, Dictionary<string, string>, Task>? SendToBus { get; set; }
 
-        public void SendBrightnessTransition(int brightness, double transitionTime)
+        public Task SendBrightnessTransition(int brightness, double transitionTime)
         {
             var data = new Dictionary<string, string> {
                 ["transition"] = transitionTime.ToString(), 
                 ["brightness"] = brightness.ToString()
             };
-            SendToBus?.Invoke($"{Address}/set", data);
+            return SendCommand(data);
         }
 
         public Task SetName(string name)
@@ -49,6 +49,8 @@ internal partial class PiPwmClient
             };
             return SendToBus?.Invoke($"{Address}/rename", data) ?? Task.CompletedTask;
         }
+
+        public Task SendCommand(Dictionary<string, string> data) => SendToBus?.Invoke($"{Address}/set", data) ?? Task.CompletedTask;
     }
 
     public class GenericResponse
