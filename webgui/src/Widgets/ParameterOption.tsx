@@ -39,6 +39,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
   const defaultValue = value || paramTyped.Default.toString();
   const inputRef = useRef<HTMLInputElement>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
+  const stepSize = isFloat ? (paramTyped.Max - paramTyped.Min) / 100 : 1;
 
   const getValue = useCallback(() => {
     const fallback = parseFn(value, paramTyped.Default);
@@ -53,20 +54,41 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       inputRef.current.value = newValue;
   }, [getValue, onChange]);
 
+  const SanitizeValue = useCallback((value: number) => {
+    value = Math.round(value / stepSize) * stepSize;
+    value = Math.max(paramTyped.Min, Math.min(paramTyped.Max, value));
+    return value;
+  }, [paramTyped, stepSize]);
+
+  const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    let direction = 0;
+    if(event.key === 'ArrowUp')
+      direction = 1;
+    else if(event.key === 'ArrowDown')
+      direction = -1;
+    else
+      return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const change = direction * stepSize;
+    const newValue = SanitizeValue(getValue() + change);
+    const newValueStr = newValue.toString();
+    if(inputRef.current)
+      inputRef.current.value = newValueStr;
+  }, [SanitizeValue, getValue, stepSize]);
+
   const handleMove = useCallback((startValue: number, startY: number, stepSize: number, clientY: number) => {
     const deltaY = Math.round((startY - clientY) / MouseDialScaling);
-    let newValue = startValue + deltaY * stepSize;
-    newValue = Math.round(newValue / stepSize) * stepSize;
-    newValue = Math.max(paramTyped.Min, Math.min(paramTyped.Max, newValue));
+    const newValue = SanitizeValue(startValue + deltaY * stepSize);
     const newValueStr = newValue.toString();
     if(inputRef.current)
       inputRef.current.value = newValueStr;
     onPreview(newValueStr);
-  }, [onPreview, paramTyped]);
+  }, [SanitizeValue, onPreview]);
 
   useEffect(() => {
-    const stepSize = isFloat ? (paramTyped.Max - paramTyped.Min) / 100 : 1;
-
     function handleMouseDown(event: MouseEvent) {
       if (inputRef.current === null)
         return;
@@ -120,7 +142,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
       spanRef.current.onmousedown = (e) => handleMouseDown(e);
       spanRef.current.ontouchstart = (e) => handleTouchStart(e);
     }
-  }, [getValue, handleMove, isFloat, onPreview, paramTyped, updateParent]);
+  }, [getValue, handleMove, isFloat, onPreview, paramTyped, updateParent, stepSize]);
 
   const units = props.param.Units;
   const classType = isFloat ? 'Float' : 'Int';
@@ -128,7 +150,7 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
     <>
       <label className={`Param ${classType}`}>{param.Name}{units && ` [${units}]`}:</label>
       <span className={`Param ${classType}`}>
-        <input ref={inputRef} type="text" defaultValue={defaultValue} onBlur={updateParent} />
+        <input ref={inputRef} type="text" defaultValue={defaultValue} onBlur={updateParent} onKeyDown={onKeyDown} />
         <span ref={spanRef}><ParamKnob /></span>
       </span>
     </>
