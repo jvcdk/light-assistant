@@ -108,7 +108,11 @@ function ParamOptionNumber(props: ParamOptionProps, isFloat: boolean) {
         onPreview('None');
       }
 
-      spanRef.current.ontouchmove = (e) => handleMove(startValue, startY, stepSize, e.touches[0].clientY);
+      spanRef.current.ontouchmove = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return handleMove(startValue, startY, stepSize, e.touches[0].clientY);
+      };
       spanRef.current.ontouchend = () => onTouchEnd();
     }
 
