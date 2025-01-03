@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TimeOfDay } from '../Data/ScheduleTrigger';
 import { RenderTimeOfDay } from './RenderTimeOfDay';
 import './CircularClock.css';
@@ -53,7 +53,8 @@ export interface CircularClockProps {
 }
 
 export function CircularClock(props: CircularClockProps) {
-  const selectedTime = new State(useState(props.initialTime.Clone()));
+  const initialTimeState = useState(props.initialTime.Clone());
+  const selectedTime = useMemo(() => new State(initialTimeState), [initialTimeState]);
   selectedTime.addListener("CircularClock", props.onTimeChange);
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState(props.mode);
