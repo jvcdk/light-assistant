@@ -24,7 +24,7 @@ internal partial class Controller
                 AutoModeChange = new(device, consoleOutput) {
                     ModeField = "operation_mode",
                     FromMode = "event",
-                    ModeChangeCommand = "some command"
+                    ToMode = "command"
                 };
 
                 Default = new(device,

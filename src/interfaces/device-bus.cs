@@ -15,8 +15,9 @@ internal interface IDevice
 {
     bool Equals(IDevice other);
 
-    void SendBrightnessTransition(int brightness, double transitionTime);
+    Task SendBrightnessTransition(int brightness, double transitionTime);
     Task SetName(string name);
+    Task SendCommand(Dictionary<string, string> data);
 
     string Name { get; }
     string Address { get; }
