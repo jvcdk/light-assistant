@@ -19,6 +19,7 @@ internal partial class Controller
             VendorSunricher.Add(_factoryCollection);
             VendorTallDane.Add(_factoryCollection);
             VendorTuya.Add(_factoryCollection);
+            VendorEWeLink.Add(_factoryCollection);
         }
 
         internal DeviceServiceCollection GetServicesFor(IDevice device, IReadOnlyList<IServiceOptionValue>? serviceOptionValues)
