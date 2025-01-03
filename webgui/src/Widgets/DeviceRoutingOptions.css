@@ -11,3 +11,7 @@
 .Routing .Route svg {
     vertical-align: middle;
 }
+
+.GeneralOptions label {
+    margin-right: 0.5em;
+}

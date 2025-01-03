@@ -37,7 +37,7 @@ export function DeviceGeneralOptions(prop: DeviceGeneralOptionsProps) {
   const params = serviceOptions?.Params || [];
   const values = serviceOptions?.Values || [];
   return (
-    <div className='Grid'>
+    <div className='Grid GeneralOptions'>
       <label>Vendor:</label><span>{device.Vendor}</span>
       <label>Model:</label><span>{device.Model}</span>
       <label>Description:</label><span>{device.Description}</span>

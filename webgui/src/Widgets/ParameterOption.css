@@ -13,6 +13,7 @@ span.Param.Int svg,
 span.Param.Float svg {
     border-bottom: 1px solid var(--light-assistant-primary);
     padding: 0.25em 0;
+    padding-left: 0.25em;
     vertical-align: bottom;
     cursor: pointer;
 }
