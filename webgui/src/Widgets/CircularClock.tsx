@@ -130,6 +130,9 @@ export function CircularClock(props: CircularClockProps) {
     if (!isDragging)
       return;
 
+    e.preventDefault(); // Prevent drags from triggering scroll and page refresh
+    e.stopPropagation();
+
     handleTouchEvent(e);
   }, [isDragging, handleTouchEvent]);
 
@@ -142,7 +145,7 @@ export function CircularClock(props: CircularClockProps) {
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
