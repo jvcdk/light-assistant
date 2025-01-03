@@ -73,7 +73,7 @@ internal class LightFadeEngine
             if(mode == Controller.TurnOnOffModes.TurnOff && !IsOn)
                 return;
 
-            var newBrightness = _lastSteadyStateBrightness;
+            var newBrightness = Math.Max(_minTurnOnBrightness, _lastSteadyStateBrightness);
             if (IsOn) {
                 _lastSteadyStateBrightness = _brightness;
                 newBrightness = 0;
@@ -181,4 +181,10 @@ internal class LightFadeEngine
     private bool FadeTargetReached => Math.Abs(_fadeBrightnessTarget - _brightness) < float.Epsilon;
 
     private bool IsOn => _brightness >= _brightnessConverter.MinVisibleNormBrightness;
+
+    internal double MinTurnOnBrightness {
+        get => _minTurnOnBrightness;
+        set => _minTurnOnBrightness = Math.Clamp(value, 0.0, 1.0);
+    }
+    private double _minTurnOnBrightness = 0.0;
 }

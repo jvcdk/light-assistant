@@ -45,6 +45,12 @@ internal partial class Controller
                 set => _brightnessConverter.MidBrightness = value;
             }
 
+            [ParamBrightness(PreviewMode.Normalized, 0, 1)]
+            public double MinTurnOnBrightness { 
+                get => _lightFadeEngine.MinTurnOnBrightness;
+                set => _lightFadeEngine.MinTurnOnBrightness = value;
+            }
+
             private void HandleToggleOnOff(InternalEvent ev)
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
