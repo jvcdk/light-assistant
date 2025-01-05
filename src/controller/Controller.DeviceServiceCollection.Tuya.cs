@@ -14,6 +14,9 @@ internal partial class Controller
                 dst.Add("_TZ3000_qja6nq5z", new ModelFactoryCollection {
                     { "TS004F", TuyaSmartKnob.Create }
                 });
+                dst.Add("_TZ3000_nkcobies", new ModelFactoryCollection {
+                    { "TS011F", TuyaSmartPlug.Create }
+                });
             }
         }
 
@@ -46,6 +49,26 @@ internal partial class Controller
                 .With("linkquality", "Link quality", DeviceStatusConverter.Types.Identity)
                 .With("battery", "Battery", DeviceStatusConverter.Types.Percent)
                 .With("voltage", "Voltage", DeviceStatusConverter.Types.MvToV);
+        }
+
+        private class TuyaSmartPlug : DeviceServiceCollection
+        {
+            public TuyaSmartPlug(IDevice device, IConsoleOutput consoleOutput) : base(consoleOutput)
+            {
+                Default = new(device, consoleOutput);
+            }
+
+            internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new TuyaSmartPlug(device, consoleOutput);
+
+            internal DeviceService.SmartPlugService Default { get; }
+
+            protected override DeviceStatusConverter StatusConverter => new DeviceStatusConverter()
+                .With("linkquality", "Link quality", DeviceStatusConverter.Types.Identity)
+                .With("state", "State", DeviceStatusConverter.Types.Bool)
+                .With("voltage", "Voltage", (string value) => value + "V")
+                .With("power", "Power", (string value) => value + "W")
+                .With("current", "Current", (string value) => value + "A")
+                .With("energy", "Energy", DeviceStatusConverter.Types.Identity);
         }
     }
 }

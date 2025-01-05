@@ -18,6 +18,7 @@ internal interface IDevice
     Task SendBrightnessTransition(int brightness, double transitionTime);
     Task SetName(string name);
     Task SendCommand(Dictionary<string, string> data);
+    Task SendStateChange(bool state);
 
     string Name { get; }
     string Address { get; }

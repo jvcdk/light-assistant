@@ -27,7 +27,7 @@ internal class ParamEnum : ParamDescriptor
         if (!sourceEnum.IsEnum)
             throw new ArgumentException("SourceEnum must be an enum type.");
 
-        Values = Enum.GetNames(sourceEnum).Select(entry => entry.CamelCaseToSentence()).ToArray();
+        Values = NameValueAttribute.GetNames(sourceEnum).ToArray();
     }
 
     internal override bool Validate(string value) => Values.Contains(value);

@@ -21,38 +21,43 @@ internal class DeviceStatusConverter
     internal DeviceStatusConverter With(string key, string name, Types type)
     {
         Func<string, string> convert = type switch {
-            Types.Identity => Converter.ConvertIdentity,
-            Types.Bool => Converter.ConvertBool,
-            Types.MvToV => Converter.ConvertMvToV,
-            Types.Percent => Converter.ConvertPercent,
+            Types.Identity => ConvertIdentity,
+            Types.Bool => ConvertBool,
+            Types.MvToV => ConvertMvToV,
+            Types.Percent => ConvertPercent,
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
         _data[key] = new Converter(name, convert);
         return this;
     }
 
+    internal DeviceStatusConverter With(string key, string name, Func<string, string> convert)
+    {
+        _data[key] = new Converter(name, convert);
+        return this;
+    }
+
+    private static string ConvertIdentity(string value) => value;
+
+    private static string ConvertBool(string value)
+    {
+        value = value.ToLower();
+        var isTrue = value == "1" || value == "true" || value == "on" || value == "yes";
+        return isTrue ? "On" : "Off";
+    }
+
+    private static string ConvertMvToV(string value)
+    {
+        if (!double.TryParse(value, out var mv))
+            return value;
+        return (mv / 1000).ToString("F2") + "V";
+    }
+
+    private static string ConvertPercent(string value) => value + "%";
 
     private class Converter(string name, Func<string, string> convert)
     {
         internal string Name { get; } = name;
         internal Func<string, string> Convert { get; } = convert;
-
-        internal static string ConvertIdentity(string value) => value;
-
-        internal static string ConvertBool(string value)
-        {
-            value = value.ToLower();
-            var isTrue = value == "1" || value == "true" || value == "on" || value == "yes";
-            return isTrue ? "On" : "Off";
-        }
-
-        internal static string ConvertMvToV(string value)
-        {
-            if (!double.TryParse(value, out var mv))
-                return value;
-            return (mv / 1000).ToString("F2") + "V";
-        }
-
-        internal static string ConvertPercent(string value) => value + "%";
     }
 }

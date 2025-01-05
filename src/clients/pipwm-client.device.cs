@@ -1,5 +1,5 @@
+using System.Diagnostics;
 using LightAssistant.Interfaces;
-using Newtonsoft.Json;
 
 namespace LightAssistant.Clients;
 
@@ -7,6 +7,8 @@ internal partial class PiPwmClient
 {
     public class Device : IDevice
     {
+        private IConsoleOutput _consoleOutput;
+
         public string Vendor => "TallDane";
         public string Model => "Pi5";
         public string Description => "Pi5 PWM Driver for LEDs.";
@@ -22,6 +24,11 @@ internal partial class PiPwmClient
         public string Address {
             get => _address;
             set => _address = value ?? "";
+        }
+
+        public Device(IConsoleOutput consoleOutput)
+        {
+            _consoleOutput = consoleOutput;
         }
 
         bool IDevice.Equals(IDevice other)
@@ -40,6 +47,13 @@ internal partial class PiPwmClient
                 ["brightness"] = brightness.ToString()
             };
             return SendCommand(data);
+        }
+
+        public Task SendStateChange(bool state)
+        {
+            _consoleOutput.ErrorLine($"PiPwmClient.Device.SendStateChange not supported.");
+            Debugger.Break();
+            return Task.CompletedTask;
         }
 
         public Task SetName(string name)

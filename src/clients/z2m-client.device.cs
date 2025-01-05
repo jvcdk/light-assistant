@@ -79,6 +79,14 @@ internal partial class Zigbee2MqttClient
             return SendCommand(data);
         }
 
+        public Task SendStateChange(bool state)
+        {
+            var data = new Dictionary<string, string> {
+                ["state"] = state ? "on" : "off"
+            };
+            return SendCommand(data);
+        }
+
         public Task SetName(string name)
         {
             var data = new Dictionary<string, string> {
