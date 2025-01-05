@@ -61,7 +61,7 @@ internal partial class PiPwmClient : IDeviceBus
         if(command != "identity")
             return false;
 
-        var device = new Device {
+        var device = new Device(_consoleOutput) {
             Name = deviceId,
             Address = deviceId,
             SendToBus = SendDataToDevice

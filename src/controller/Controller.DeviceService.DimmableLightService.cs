@@ -150,13 +150,13 @@ internal partial class Controller
                 data.Timer.Stop();
                 Device.SendBrightnessTransition(_brightnessConverter.NormToRaw(data.FadeBrightnes), TransitionTime);
             }
-        }
 
-        private class Data
-        {
-            public double FadeBrightnes;
-            public bool PreviewMode;
-            public readonly Timer Timer = new();
+            private class Data
+            {
+                public double FadeBrightnes;
+                public bool PreviewMode;
+                public readonly Timer Timer = new();
+            }
         }
     }
 }

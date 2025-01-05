@@ -64,13 +64,26 @@ internal partial class Controller
         {
             try {
                 if(type.IsEnum)
-                    return Enum.Parse(type, value.SentenceToCamelCase());
+                    return NameValueAttribute.ParseFromName(type, value);
 
                 return Convert.ChangeType(value, type);
             }
             catch(Exception ex) {
                 consoleOutput.ErrorLine($"Failed to convert value '{value}' to type {type}. Msg.: " + ex.Message);
                 return null;
+            }
+        }
+
+        private static string? ChangeToString(object value, IConsoleOutput consoleOutput)
+        {
+            try {
+                if(value.GetType().IsEnum)
+                    return NameValueAttribute.GetValue(value);
+                return Convert.ToString(value);
+            }
+            catch(Exception ex) {
+                consoleOutput.ErrorLine($"Failed to convert value '{value}' to string. Msg.: " + ex.Message);
+                return string.Empty;
             }
         }
 
@@ -114,6 +127,8 @@ internal partial class Controller
                     var value = prop.prop.GetValue(service);
                     if(value == null)
                         return null;
+                    if(value.GetType().IsEnum)
+                        value = NameValueAttribute.GetName(value);
                     return new ServiceOption(prop.prop.Name.CamelCaseToSentence(), value, prop.attr!, action);
                 })
                 .Where(option => option != null)
@@ -123,7 +138,7 @@ internal partial class Controller
         private static void SetServiceOption(DeviceService service, PropertyInfo prop, string value)
         {
             try {
-                prop.SetValue(service, Convert.ChangeType(value, prop.PropertyType));
+                prop.SetValue(service, ChangeType(value, prop.PropertyType, service.ConsoleOutput));
             }
             catch(Exception ex) {
                 service.ConsoleOutput.ErrorLine($"Failed to set service option {prop.Name} to value '{value}'. Msg.: " + ex.Message);
@@ -148,7 +163,7 @@ internal partial class Controller
 
             // Don't re-use existingServiceOptions, but instead re-iterate via ServiceOptionsPrivate, to re-fetch current values.
             return ServiceOptionsPrivate
-                .Select(option => new { name = option.Param.Name, value = option.Value?.ToString() })
+                .Select(option => new { name = option.Param.Name, value = ChangeToString(option.Value, _consoleOutput) })
                 .Where(option => option.value != null)
                 .Select(option => new ServiceOptionValue(option.name, option.value!))
                 .ToList();
