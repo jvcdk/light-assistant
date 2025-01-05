@@ -22,6 +22,11 @@ internal partial class Controller
             internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new EWeLink_WB01(device, consoleOutput);
 
             internal DeviceService.SingleButtonService Default { get; init; } = new(device, "", "single", "double", "long", consoleOutput);
+
+            protected override DeviceStatusConverter StatusConverter => new DeviceStatusConverter()
+                .With("battery", "Battery", DeviceStatusConverter.Types.Percent)
+                .With("linkquality", "Link quality", DeviceStatusConverter.Types.Identity)
+                .With("voltage", "Voltage", DeviceStatusConverter.Types.MvToV);
         }
     }
 }
