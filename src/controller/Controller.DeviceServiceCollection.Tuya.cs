@@ -29,7 +29,7 @@ internal partial class Controller
 
                 Default = new(device,
                     path: "",
-                    actionPush: "toggle",
+                    actionPush: "toggle", actionHold: "hue_move",
                     actionNormalRotateLeft: "brightness_step_down", actionNormalRotateRight: "brightness_step_up",
                     actionPushedRotateLeft: "color_temperature_step_down", actionPushedRotateRight: "color_temperature_step_up",
                     stepSizeToDegrees: 30.0 / 12.0,
