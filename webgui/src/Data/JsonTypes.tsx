@@ -30,10 +30,7 @@ export interface IDevice {
  */
 export interface IDeviceStatus {
   Address: string;
-  LinkQuality: number;
-  Battery: number;
-  Brightness: number;
-  State: boolean | undefined;
+  Data: object; // string-string map
 }
 
 /**
@@ -84,7 +81,7 @@ export interface IDeviceProvidedEvent {
 export interface IDeviceScheduleEntry {
   Key: number;
   EventType: string | undefined; // EventType is the action to be taken
-  Parameters: object;
+  Parameters: object; // string-string map
   Trigger: IScheduleTrigger;
 }
 

@@ -11,7 +11,7 @@ namespace LightAssistant.Interfaces
         IRoutingOptions? GetRoutingOptionsFor(IDevice device);
         IReadOnlyList<IConsumableAction> GetConsumableActionsFor(IDevice device);
         IReadOnlyList<IServiceOption> GetServiceOptionsFor(IDevice device);
-        bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status);
+        bool TryGetDeviceStatus(IDevice device, out Dictionary<string, string>? status);
         Task PreviewDeviceOption(string address, string value, PreviewMode previewMode);
         Task RequestOpenNetwork();
     }

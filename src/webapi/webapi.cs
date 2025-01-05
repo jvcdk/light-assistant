@@ -187,7 +187,7 @@ internal partial class WebApi : WebSocketModule, IDisposable, IUserInterface
 
     public Task DeviceListUpdated() => DeviceListUpdated(null);
 
-    public async Task DeviceStateUpdated(string address, IDeviceStatus deviceStatus)
+    public async Task DeviceStateUpdated(string address, Dictionary<string, string> deviceStatus)
     {
         if(AppController == null)
             return;

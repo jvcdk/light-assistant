@@ -3,46 +3,6 @@ import { DeviceData, FindDeviceDataType } from '../Data/DeviceData';
 import { IDeviceRoute, IDeviceScheduleEntry } from '../Data/JsonTypes';
 import { ScheduleTrigger } from '../Data/ScheduleTrigger';
 
-function DeviceBattery(prop: { battery: number | undefined })
-{
-  if(prop.battery == undefined)
-    return null;
-
-    return (
-      <div className='Battery'>{prop.battery}</div>
-    )
-}
-
-function DeviceLinkQuality(prop: { lq: number | undefined })
-{
-  if(prop.lq == undefined)
-    return null;
-
-    return (
-      <div className='LinkQuality'>{prop.lq}</div>
-    )
-}
-
-function DeviceBrightness(prop: { brightness: number | undefined })
-{
-  if(prop.brightness == undefined)
-    return null;
-
-    return (
-      <div className='Brightness'>{prop.brightness}</div>
-    )
-}
-
-function DeviceOnState(prop: { onState: boolean | undefined })
-{
-  if(prop.onState == undefined)
-    return null;
-
-    return (
-      <div className='State'>{prop.onState ? "On" : "Off"}</div>
-    )
-}
-
 function Route(route: IDeviceRoute, idx: number, findDevice: FindDeviceDataType)
 {
   const targetName = findDevice(route.TargetAddress)?.Device.Name || route.TargetAddress;
@@ -106,10 +66,12 @@ export function Device(devData: DeviceData, openPopup: () => void, findDevice: F
         <div className='Address'>{device.Address}</div>
       </div>
       <div className='Status'>
-        <DeviceBattery battery={status?.Battery} />
-        <DeviceLinkQuality lq={status?.LinkQuality} />
-        <DeviceBrightness brightness={status?.Brightness} />
-        <DeviceOnState onState={status?.State} />
+        {status && Object.entries(status.Data).map((status, idx) =>
+          <div key={idx} className='StatusEntry'>
+            <label>{status[0]}</label>
+            <span className='value'>{status[1]}</span>
+          </div>
+        )}
       </div>
       <DeviceRouting routing={routing} findDevice={findDevice} />
       <DeviceSchedule schedule={devData.Schedule} />

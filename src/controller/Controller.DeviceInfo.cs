@@ -6,7 +6,7 @@ internal partial class Controller
 {
     private class DeviceInfo
     {
-        public DeviceStatus Status = new();
+        public Dictionary<string, string> Status = [];
         public DeviceServiceCollection Services = new EmptyDeviceServiceCollection();
     }
 

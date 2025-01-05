@@ -6,16 +6,8 @@ internal interface IUserInterface
     IController? AppController { set; }
 
     Task DeviceListUpdated();
-    Task DeviceStateUpdated(string address, IDeviceStatus deviceStatus);
+    Task DeviceStateUpdated(string address, Dictionary<string, string> deviceStatus);
     void NetworkOpenStatusChanged(bool status, int time);
     Task DeviceDataUpdated(IDevice device);
     Task Run();
-}
-
-internal interface IDeviceStatus
-{
-    int? LinkQuality { get; }
-    int? Battery { get; }
-    int? Brightness { get; }
-    bool? State { get; }
 }
