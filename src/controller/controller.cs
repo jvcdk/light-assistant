@@ -169,7 +169,7 @@ internal partial class Controller : IController
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
     {
         bool statusUpdated;
-        var newStatus = StatusConversion.ExctractStatus(data);
+        Dictionary<string, string> newStatus;
         DeviceServiceCollection services;
         using(_ = _devices.ObtainWriteLock(out var devices)) {
             if(!devices.TryGetValue(device, out var deviceInfo)) {
@@ -178,6 +178,7 @@ internal partial class Controller : IController
             }
 
             services = deviceInfo.Services;
+            newStatus = services.ExtractStatus(data);
             statusUpdated = !deviceInfo.Status.CompareEqual(newStatus);
             if(statusUpdated)
                 deviceInfo.Status = newStatus;

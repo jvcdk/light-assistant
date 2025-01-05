@@ -41,6 +41,11 @@ internal partial class Controller
             internal DeviceService.AutoModeChangeService AutoModeChange { get; }
 
             internal DeviceService.SmartKnobService Default { get; }
+
+            protected override DeviceStatusConverter StatusConverter => new DeviceStatusConverter()
+                .With("linkquality", "Link quality", DeviceStatusConverter.Types.Identity)
+                .With("battery", "Battery", DeviceStatusConverter.Types.Percent)
+                .With("voltage", "Voltage", DeviceStatusConverter.Types.MvToV);
         }
     }
 }

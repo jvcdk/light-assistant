@@ -153,7 +153,14 @@ internal partial class Controller
                 .Select(option => new ServiceOptionValue(option.name, option.value!))
                 .ToList();
         }
+
+        protected abstract DeviceStatusConverter StatusConverter { get; }
+
+        internal Dictionary<string, string> ExtractStatus(Dictionary<string, string> data) => StatusConverter.Process(data);
     }
 
-    private class EmptyDeviceServiceCollection() : DeviceServiceCollection(new ConsoleOutput()) { }
+    private class EmptyDeviceServiceCollection() : DeviceServiceCollection(new ConsoleOutput())
+    {
+        protected override DeviceStatusConverter StatusConverter => new();
+    }
 }

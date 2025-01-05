@@ -22,6 +22,11 @@ internal partial class Controller
             internal static DeviceServiceCollection Create(IDevice device, IConsoleOutput consoleOutput) => new SunricherCctLed(device, consoleOutput);
 
             internal DeviceService.DimmableLightService Default { get; init; } = new(device, maxBrightness: 254, consoleOutput);
+
+            protected override DeviceStatusConverter StatusConverter => new DeviceStatusConverter()
+                .With("linkquality", "Link quality", DeviceStatusConverter.Types.Identity)
+                .With("brightness", "Brightness", DeviceStatusConverter.Types.Identity)
+                .With("state", "State", DeviceStatusConverter.Types.Bool);
         }
     }
 }
