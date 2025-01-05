@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
 using LightAssistant.Interfaces;
 using Newtonsoft.Json;
 using static System.Text.Encoding;
@@ -28,7 +26,7 @@ internal partial class WebApi
             return this;
         }
 
-        internal JsonServerToClientMessage WithDeviceStatus(string address, IDeviceStatus status) {
+        internal JsonServerToClientMessage WithDeviceStatus(string address, Dictionary<string, string> status) {
             DeviceStatus = new JsonDeviceStatus(address, status);
             return this;
         }
@@ -97,13 +95,10 @@ internal partial class WebApi
     /// <summary>
     /// Must match IDeviceStatus in JsonTypes.tsx
     /// </summary>
-    public class JsonDeviceStatus(string address, IDeviceStatus source)
+    public class JsonDeviceStatus(string address, Dictionary<string, string> data)
     {
         public string Address { get; } = address;
-        public int? LinkQuality { get; } = source.LinkQuality;
-        public int? Battery { get; } = source.Battery;
-        public int? Brightness { get; } = source.Brightness;
-        public bool? State { get; } = source.State;
+        public Dictionary<string, string> Data { get; } = new Dictionary<string, string>(data);
     }
 
     /// <summary>

@@ -31,20 +31,14 @@
     width: 9em;
 }
 
-.Device .Battery::before {
-    content: "\2022 \00A0 Battery: ";
+.Device .Status label::before {
+    content: '•';
+    margin-right: 0.25rem;
 }
 
-.Device .LinkQuality::before {
-    content: "\2022 \00A0 Link quality: ";
-}
-
-.Device .Brightness::before {
-    content: "\2022 \00A0 Brightness: ";
-}
-
-.Device .State::before {
-    content: "\2022 \00A0 State: ";
+.Device .Status label::after {
+    content: ':';
+    margin-right: 0.25rem;
 }
 
 .Device .Route {

@@ -109,12 +109,12 @@ internal partial class Controller : IController
         return devices.Keys.FirstOrDefault(entry => entry.Address == address);
     }
 
-    public bool TryGetDeviceStatus(IDevice device, out IDeviceStatus? status)
+    public bool TryGetDeviceStatus(IDevice device, out Dictionary<string, string>? status)
     {
         using var _ = _devices.ObtainReadLock(out var devices);
 
         if(devices.TryGetValue(device, out var entry)) {
-            status = entry.Status;
+            status = new Dictionary<string, string>(entry.Status);
             return true;
         }
 
@@ -168,8 +168,8 @@ internal partial class Controller : IController
 
     private void HandleDeviceAction(IDevice device, Dictionary<string, string> data)
     {
-        bool didUpdate;
-        DeviceStatus newStatus;
+        bool statusUpdated;
+        var newStatus = StatusConversion.ExctractStatus(data);
         DeviceServiceCollection services;
         using(_ = _devices.ObtainWriteLock(out var devices)) {
             if(!devices.TryGetValue(device, out var deviceInfo)) {
@@ -178,14 +178,12 @@ internal partial class Controller : IController
             }
 
             services = deviceInfo.Services;
-
-            newStatus = deviceInfo.Status.Clone(); // Clone to avoid race conditions
-            didUpdate = newStatus.UpdateFrom(data);
-            if(didUpdate)
+            statusUpdated = !deviceInfo.Status.CompareEqual(newStatus);
+            if(statusUpdated)
                 deviceInfo.Status = newStatus;
         }
 
-        if(didUpdate)
+        if(statusUpdated)
             _guiApp.DeviceStateUpdated(device.Address, newStatus);
 
         var internalEvents = services.ProcessExternalEvent(device, data);
