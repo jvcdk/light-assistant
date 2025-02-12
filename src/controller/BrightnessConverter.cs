@@ -45,7 +45,7 @@ internal class BrightnessConverter
         return (int)Math.Round(normBrightness * (MaxRawBrightness - 1) + 1);
     }
 
-    internal double MinVisibleNormBrightness => float.Epsilon;
+    internal static double MinVisibleNormBrightness => float.Epsilon;
 
     private double UnApplyGamma(double value) => Math.Pow(value, 1.0 / _gamma);
     private double ApplyGamma(double value) => Math.Pow(value, _gamma);
