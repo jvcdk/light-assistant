@@ -32,11 +32,10 @@ internal partial class Controller
                 _brightnessConverter = new(maxBrightness);
                 _lightFadeEngine = new LightFadeEngine(SetFadeBrightness, _brightnessConverter, consoleOutput);
 
-                using(var _ = _data.ObtainWriteLock(out var data)) {
-                    data.Timer.AutoReset = false;
-                    data.Timer.Interval = PreviewTimeoutMs;
-                    data.Timer.Elapsed += (sender, args) => ResetPreview();
-                }
+                using var _ = _data.ObtainWriteLock(out var data);
+                data.Timer.AutoReset = false;
+                data.Timer.Interval = PreviewTimeoutMs;
+                data.Timer.Elapsed += (sender, args) => ResetPreview();
             }
 
             [ParamBrightness(PreviewMode.Raw, BrightnessConverter.MinMidBrightness, BrightnessConverter.MaxMidBrightness)]
@@ -119,29 +118,28 @@ internal partial class Controller
                 }
 
                 var setPreview = (previewMode != PreviewMode.None) && parseOk;
-                using(var _ = _data.ObtainWriteLock(out var data)) {
-                    if(setPreview) {
-                        int raw = previewMode == PreviewMode.Normalized ?
-                            _brightnessConverter.NormToRaw(brightness) :
-                            _brightnessConverter.NormToRawRaw(brightness);
-                        Device.SendBrightnessTransition(raw, TransitionTime);
-                        data.PreviewMode = true;
-                        data.Timer.Stop();
-                        data.Timer.Start();
-                    }
-                    else
-                        ResetPreview_(data);
+
+                using var _ = _data.ObtainWriteLock(out var data);
+                if (setPreview) {
+                    int raw = previewMode == PreviewMode.Normalized ?
+                        _brightnessConverter.NormToRaw(brightness) :
+                        _brightnessConverter.NormToRawRaw(brightness);
+                    Device.SendBrightnessTransition(raw, TransitionTime);
+                    data.PreviewMode = true;
+                    data.Timer.Stop();
+                    data.Timer.Start();
                 }
+                else
+                    ResetPreview_(data);
             }
 
             private void ResetPreview()
             {
-                using(var _ = _data.ObtainWriteLock(out var data)) {
-                    if (!data.PreviewMode)
-                        return;
+                using var _ = _data.ObtainWriteLock(out var data);
+                if (!data.PreviewMode)
+                    return;
 
-                    ResetPreview_(data);
-                }
+                ResetPreview_(data);
             }
 
             private void ResetPreview_(Data data)
