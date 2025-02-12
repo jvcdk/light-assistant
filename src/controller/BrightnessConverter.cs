@@ -23,36 +23,43 @@ internal class BrightnessConverter
         MaxRawBrightness = maxRawBrightness;
     }
 
-    internal int NormToRaw(double normBrightness) {
-        if (normBrightness < MinVisibleNormBrightness)
+    internal int NormToRawGamma(double normBrightness) {
+        if (normBrightness < float.Epsilon)
             return 0;
+
+        if (normBrightness >= 1 - float.Epsilon)
+            return MaxRawBrightness;
 
         return (int)Math.Round(ApplyGamma(normBrightness) * (MaxRawBrightness - 1) + 1);
     }
 
-    internal double RawToNorm(int rawBrightness) {
+    internal double GammaRawToNorm(int rawBrightness) {
         if (rawBrightness <= 0)
             return 0;
 
+        if (rawBrightness >= MaxRawBrightness)
+            return 1;
+
         var result = UnApplyGamma((rawBrightness - 1) / (double)(MaxRawBrightness - 1));
-        return Math.Clamp(result, MinVisibleNormBrightness, 1);
+        return Math.Clamp(result, float.Epsilon, 1 - float.Epsilon);
     } 
 
-    internal int NormToRawRaw(double normBrightness) {
-        if (normBrightness < MinVisibleNormBrightness)
+    internal int NormToRawLinear(double normBrightness) {
+        if (normBrightness < float.Epsilon)
             return 0;
+
+        if (normBrightness >= 1 - float.Epsilon)
+            return MaxRawBrightness;
 
         return (int)Math.Round(normBrightness * (MaxRawBrightness - 1) + 1);
     }
-
-    internal static double MinVisibleNormBrightness => float.Epsilon;
 
     private double UnApplyGamma(double value) => Math.Pow(value, 1.0 / _gamma);
     private double ApplyGamma(double value) => Math.Pow(value, _gamma);
 
     internal bool TryCalcNextStep(ref double brightnessNorm, int direction)
     {
-        var raw = NormToRaw(brightnessNorm);
+        var raw = NormToRawGamma(brightnessNorm);
         var next = raw + direction;
         if (next < 0) {
             brightnessNorm = 0;
@@ -62,7 +69,7 @@ internal class BrightnessConverter
             brightnessNorm = 1;
             return false;
         }
-        brightnessNorm = RawToNorm(next);
+        brightnessNorm = GammaRawToNorm(next);
         return true;
     }
 }
