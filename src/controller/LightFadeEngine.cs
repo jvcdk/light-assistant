@@ -180,7 +180,7 @@ internal class LightFadeEngine
 
     private bool FadeTargetReached => Math.Abs(_fadeBrightnessTarget - _brightness) < float.Epsilon;
 
-    private bool IsOn => _brightness >= _brightnessConverter.MinVisibleNormBrightness;
+    private bool IsOn => _brightness >= BrightnessConverter.MinVisibleNormBrightness;
 
     internal double MinTurnOnBrightness {
         get => _minTurnOnBrightness;
