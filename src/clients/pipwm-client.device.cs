@@ -49,6 +49,13 @@ internal partial class PiPwmClient
             return SendCommand(data);
         }
 
+        public Task SendColorTempTransition(int colorTempRaw, double transitionTime)
+        {
+            _consoleOutput.ErrorLine($"PiPwmClient.Device.SendColorTempTransition not supported.");
+            Debugger.Break();
+            return Task.CompletedTask;
+        }
+
         public Task SendStateChange(bool state)
         {
             _consoleOutput.ErrorLine($"PiPwmClient.Device.SendStateChange not supported.");

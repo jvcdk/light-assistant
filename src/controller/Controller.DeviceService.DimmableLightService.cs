@@ -12,8 +12,8 @@ internal partial class Controller
     {
         internal class DimmableLightService : DeviceService, IServicePreviewOption
         {
-            private const double TransitionTime = 0.25; // s
-            private const double PreviewTimeoutMs = 5000; // ms
+            protected const double TransitionTime = 0.25; // s
+            protected const double PreviewTimeoutMs = 5000; // ms
 
             private readonly SlimReadWriteDataGuard<Data> _data = new(new Data());
 

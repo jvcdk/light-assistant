@@ -16,7 +16,7 @@ internal class DeviceStatusConverter
         return result;
     }
 
-    internal enum Types { Identity, Bool, MvToV, Percent }
+    internal enum Types { Identity, Bool, MvToV, Percent, InvColorTemp }
 
     internal DeviceStatusConverter With(string key, string name, Types type)
     {
@@ -25,10 +25,18 @@ internal class DeviceStatusConverter
             Types.Bool => ConvertBool,
             Types.MvToV => ConvertMvToV,
             Types.Percent => ConvertPercent,
+            Types.InvColorTemp => ConvertInvColorTemp,
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
         _data[key] = new Converter(name, convert);
         return this;
+    }
+
+    private string ConvertInvColorTemp(string arg)
+    {
+        if (!int.TryParse(arg, out var colorTemp))
+            return arg;
+        return (1000000 / colorTemp).ToString();
     }
 
     internal DeviceStatusConverter With(string key, string name, Func<string, string> convert)
