@@ -50,6 +50,25 @@ internal partial class Controller
                 set => _brightnessDimFadeEngine.MinTurnOnBrightness = value;
             }
 
+            [ParamEnum(typeof(PowerOnBehaviourMode))]
+            internal PowerOnBehaviourMode PowerOnBehaviour {
+                get {
+                    using var _ = _data.ObtainReadLock(out var data);
+                    return data.PowerOnBehaviour;
+                }
+                set {
+                    using(var _ = _data.ObtainWriteLock(out var data)) {
+                        data.PowerOnBehaviour = value;
+                    }
+
+                    var valueStr = NameValueAttribute.GetValue(value);
+                    var msg = new Dictionary<string, string> {
+                        { "power_on_behavior", valueStr }
+                    };
+                    Device.SendCommand(msg);
+                }
+            }
+
             private void HandleToggleOnOff(InternalEvent ev)
             {
                 Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
@@ -149,11 +168,26 @@ internal partial class Controller
                 Device.SendBrightnessTransition(_brightnessConverter.NormToRawGamma(data.FadeBrightness), TransitionTime);
             }
 
+            internal enum PowerOnBehaviourMode {
+                [NameValue("Off", "off")]
+                Off,
+
+                [NameValue("On", "on")]
+                On,
+
+                [NameValue("Toggle", "toggle")]
+                Toggle,
+
+                [NameValue("Previous", "previous")]
+                Previous
+            }
+
             private class Data
             {
                 public double FadeBrightness;
                 public bool PreviewMode;
                 public readonly Timer Timer = new();
+                public PowerOnBehaviourMode PowerOnBehaviour;
             }
         }
     }
