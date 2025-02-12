@@ -16,6 +16,7 @@ internal interface IDevice
     bool Equals(IDevice other);
 
     Task SendBrightnessTransition(int brightness, double transitionTime);
+    Task SendColorTempTransition(int colorTempRaw, double transitionTime);
     Task SetName(string name);
     Task SendCommand(Dictionary<string, string> data);
     Task SendStateChange(bool state);

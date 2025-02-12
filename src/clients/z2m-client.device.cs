@@ -79,6 +79,15 @@ internal partial class Zigbee2MqttClient
             return SendCommand(data);
         }
 
+        public Task SendColorTempTransition(int colorTempRaw, double transitionTime)
+        {
+            var data = new Dictionary<string, string> {
+                ["transition"] = transitionTime.ToString(),
+                ["color_temp"] = colorTempRaw.ToString()
+            };
+            return SendCommand(data);
+        }
+
         public Task SendStateChange(bool state)
         {
             var data = new Dictionary<string, string> {
