@@ -67,12 +67,12 @@ internal partial class Controller
             {
                 bool isPreviewMode;
                 using(var _ = _data.ObtainWriteLock(out var data)) {
-                    data.FadeBrightnes = brightness;
+                    data.FadeBrightness = brightness;
                     isPreviewMode = data.PreviewMode;
                 }
 
                 if(!isPreviewMode) {
-                    var rawBrightness = _brightnessConverter.NormToRaw(brightness);
+                    var rawBrightness = _brightnessConverter.NormToRawGamma(brightness);
                     Device.SendBrightnessTransition(rawBrightness, duration);
                 }
             }
@@ -122,8 +122,8 @@ internal partial class Controller
                 using var _ = _data.ObtainWriteLock(out var data);
                 if (setPreview) {
                     int raw = previewMode == PreviewMode.Normalized ?
-                        _brightnessConverter.NormToRaw(brightness) :
-                        _brightnessConverter.NormToRawRaw(brightness);
+                        _brightnessConverter.NormToRawGamma(brightness) :
+                        _brightnessConverter.NormToRawLinear(brightness);
                     Device.SendBrightnessTransition(raw, TransitionTime);
                     data.PreviewMode = true;
                     data.Timer.Stop();
@@ -146,12 +146,12 @@ internal partial class Controller
             {
                 data.PreviewMode = false;
                 data.Timer.Stop();
-                Device.SendBrightnessTransition(_brightnessConverter.NormToRaw(data.FadeBrightnes), TransitionTime);
+                Device.SendBrightnessTransition(_brightnessConverter.NormToRawGamma(data.FadeBrightness), TransitionTime);
             }
 
             private class Data
             {
-                public double FadeBrightnes;
+                public double FadeBrightness;
                 public bool PreviewMode;
                 public readonly Timer Timer = new();
             }
