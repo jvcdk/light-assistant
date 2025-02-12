@@ -17,20 +17,20 @@ internal partial class Controller
 
             private readonly SlimReadWriteDataGuard<Data> _data = new(new Data());
 
-            private readonly LightFadeEngine _lightFadeEngine;
-            private readonly LightDimEngine _lightDimEngine = new();
+            private readonly LightFadeEngine _brightnessDimFadeEngine;
+            private readonly LightDimEngine _brightnessDimEngine = new();
             private readonly BrightnessConverter _brightnessConverter;
 
             internal override IEnumerable<InternalEventSink> ConsumedEvents => [
                 new InternalEventSink(typeof(InternalEvent_Push), "Toggle on/off", HandleToggleOnOff),
-                new InternalEventSink(typeof(InternalEvent_Rotate), "Dim", HandleDim),
-                new InternalEventSink(typeof(InternalEvent_Rotate), "Fade", HandleRotateToFade)
+                new InternalEventSink(typeof(InternalEvent_Rotate), "Brightness dim", HandleBrightnessDim),
+                new InternalEventSink(typeof(InternalEvent_Rotate), "Brightness Fade", HandleRotateToBrightnessFade)
             ];
 
             public DimmableLightService(IDevice device, int maxBrightness, IConsoleOutput consoleOutput) : base("", device, consoleOutput)
             {
                 _brightnessConverter = new(maxBrightness);
-                _lightFadeEngine = new LightFadeEngine(SetFadeBrightness, _brightnessConverter, consoleOutput);
+                _brightnessDimFadeEngine = new LightFadeEngine(SetFadeBrightness, _brightnessConverter, consoleOutput);
 
                 using var _ = _data.ObtainWriteLock(out var data);
                 data.Timer.AutoReset = false;
@@ -46,8 +46,8 @@ internal partial class Controller
 
             [ParamBrightness(PreviewMode.Normalized, 0, 1)]
             public double MinTurnOnBrightness { 
-                get => _lightFadeEngine.MinTurnOnBrightness;
-                set => _lightFadeEngine.MinTurnOnBrightness = value;
+                get => _brightnessDimFadeEngine.MinTurnOnBrightness;
+                set => _brightnessDimFadeEngine.MinTurnOnBrightness = value;
             }
 
             private void HandleToggleOnOff(InternalEvent ev)
@@ -61,7 +61,7 @@ internal partial class Controller
             }
 
             [ActionSink("Turn on/off")]
-            private void HandleTurnOnOff(ActionEvent_TurnOnOff ev) => _lightFadeEngine.TurnOnOff(ev.Mode, ev.UserGenerated);
+            private void HandleTurnOnOff(ActionEvent_TurnOnOff ev) => _brightnessDimFadeEngine.TurnOnOff(ev.Mode, ev.UserGenerated);
 
             private void SetFadeBrightness(double brightness, double duration)
             {
@@ -77,36 +77,36 @@ internal partial class Controller
                 }
             }
 
-            private void HandleDim(InternalEvent ev)
+            private void HandleBrightnessDim(InternalEvent ev)
             {
                 if(ev is not InternalEvent_Rotate evRotate) {
                     Debug.Assert(false);
                     return;
                 }
 
-                var step = _lightDimEngine.HandleDim(evRotate.IsUp, evRotate.Degrees);
-                _lightFadeEngine.DimStep(step);
+                var step = _brightnessDimEngine.HandleDim(evRotate.IsUp, evRotate.Degrees);
+                _brightnessDimFadeEngine.DimStep(step);
             }
 
-            private void HandleRotateToFade(InternalEvent ev)
+            private void HandleRotateToBrightnessFade(InternalEvent ev)
             {
                 if(ev is not InternalEvent_Rotate evRotate) {
                     Debug.Assert(false);
                     return;
                 }
 
-                _lightFadeEngine.HandleRotateToFade(evRotate.IsUp, evRotate.Degrees);
+                _brightnessDimFadeEngine.HandleRotateToFade(evRotate.IsUp, evRotate.Degrees);
             }
 
             [ActionSink("Fade to brightness")]
-            private void HandleFade(ActionEvent_FadeToBrightness ev)
+            private void HandleBrightnessFade(ActionEvent_FadeToBrightness ev)
             {
-                ConsoleOutput.InfoLine($"HandleFade: {ev.Brightness} in {ev.Duration} min");
+                ConsoleOutput.InfoLine($"HandleBrightnessFade: {ev.Brightness} in {ev.Duration} min");
                 if(ev.Duration <= 0)
                     return;
 
                 var duration = ev.Duration * 60; // Unit: s
-                _lightFadeEngine.FadeToBrightness(ev.Brightness, duration);
+                _brightnessDimFadeEngine.FadeToBrightness(ev.Brightness, duration);
             }
 
             public void PreviewDeviceOption(string value, PreviewMode previewMode)
