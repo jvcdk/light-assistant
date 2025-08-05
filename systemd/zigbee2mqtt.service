@@ -1,0 +1,26 @@
+[Unit]
+Description=Bridge between Zigbee and Mqtt
+After=mosquitto.service
+Requires=mosquitto.service
+
+[Service]
+DynamicUser=yes
+Group=docker
+ExecStartPre=-docker rm --force zigbee2mqtt
+ExecStart=docker run --rm --name zigbee2mqtt \
+    --device=/dev/ttyACM0:/dev/ttyACM0 \
+    -v /var/lib/zigbee2mqtt:/app/data \
+    -v /run/udev:/run/udev:ro \
+    -e TZ=Europe/Copenhagen \
+    --network z2m \
+    ghcr.io/koenkk/zigbee2mqtt:2.6.0
+ExecStop=docker rm --force zigbee2mqtt
+
+Restart=on-failure
+RestartSec=3s
+StartLimitInterval=60s
+StartLimitBurst=5
+StartLimitAction=none
+
+[Install]
+WantedBy=multi-user.target

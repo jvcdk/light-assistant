@@ -1,0 +1,24 @@
+[Unit]
+Description=Mosquitto MQTT service
+After=docker-network-z2m.service
+Requires=docker-network-z2m.service
+
+[Service]
+DynamicUser=yes
+Group=docker
+ExecStartPre=-docker rm --force mosquitto
+ExecStart=docker run --rm --name mosquitto \
+    -v /var/lib/mosquitto:/mosquitto/config \
+    -e TZ=Europe/Copenhagen \
+    --network z2m \
+    eclipse-mosquitto:2.0.22
+ExecStop=docker rm --force mosquitto
+
+Restart=on-failure
+RestartSec=3s
+StartLimitInterval=60s
+StartLimitBurst=5
+StartLimitAction=none
+
+[Install]
+WantedBy=multi-user.target

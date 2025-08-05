@@ -1,0 +1,15 @@
+[Unit]
+Description=Docker network for Z2M services.
+After=network.target
+
+[Service]
+Type=oneshot
+DynamicUser=yes
+Group=docker
+ExecStartPre=-docker network rm z2m
+ExecStart=docker network create z2m
+ExecStop=docker network rm z2m
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
