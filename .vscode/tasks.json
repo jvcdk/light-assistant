@@ -2,20 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run web gui",
-            "command": "npm",
-            "type": "process",
-            "args": [
-                "run",
-                "dev",
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/webgui"
-            }
-        },
-        {
             "label": "build dotnet",
             "command": "dotnet",
             "type": "process",
@@ -27,26 +13,6 @@
             ],
             "problemMatcher": "$msCompile",
             "group": "build"
-        },
-        {
-            "label": "publish all arm",
-            "group": "build",
-            "dependsOn":[
-                "build node webgui",
-                "publish dotnet linux-arm",
-            ],
-            "type": "process",
-            "command": "tar",
-            "args": [
-                "vcjf", "build.tar.bz2",
-                "--exclude-vcs-ignores",
-                "--transform", "s,src/bin/Release/net8.0/linux-arm/publish,light-assistant/backend,", "src/bin/Release/net8.0/linux-arm/publish/",
-                "--transform", "s,webgui/dist,light-assistant/frontend,", "webgui/dist/",
-                "--transform", "s,pipwm,light-assistant/pipwm,", "pipwm/"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/"
-            },
         },
         {
             "label": "Run web server",
