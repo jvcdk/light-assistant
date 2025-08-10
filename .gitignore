@@ -8,8 +8,8 @@ bin
 light-assistant.conf
 light-assistant-data.json
 
-# Release
-build.tar.bz2
+# Dev container data
+.data
 
 # Python env created by VS code
 .venv
