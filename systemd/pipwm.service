@@ -1,0 +1,24 @@
+[Unit]
+Description=Pi PWM
+After=mosquitto.service
+Requires=mosquitto.service
+
+[Service]
+DynamicUser=yes
+Group=docker
+ExecStartPre=-docker rm --force pipwm
+ExecStart=docker run --rm -t --name pipwm \
+    -v /var/lib/pipwm:/app/data \
+    -v /sys/class/pwm:/sys/class/pwm \
+    --network z2m \
+    pipwm:latest
+ExecStop=docker rm --force pipwm
+
+Restart=on-failure
+RestartSec=3s
+StartLimitInterval=60s
+StartLimitBurst=5
+StartLimitAction=none
+
+[Install]
+WantedBy=multi-user.target
