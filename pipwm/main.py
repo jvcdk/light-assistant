@@ -26,7 +26,7 @@ DEFAULT_CONFIG = {
     },
     'mqtt': {
         'base_id': 'pipwm',
-        'address': 'localhost',
+        'address': 'mosquitto',
         'port': 1883
     }
 }
