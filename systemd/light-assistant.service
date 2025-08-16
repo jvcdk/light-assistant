@@ -1,0 +1,25 @@
+[Unit]
+Description=Light Assistant
+After=mosquitto.service
+Requires=mosquitto.service
+
+[Service]
+DynamicUser=yes
+Group=docker
+ExecStartPre=-docker rm --force light-assistant
+ExecStart=docker run --rm --name light-assistant \
+    -v /var/lib/light-assistant:/data \
+    --network z2m \
+    -p 80:8080 \
+    -p 8081:8081 \
+    light-assistant:latest
+ExecStop=docker rm --force light-assistant
+
+Restart=on-failure
+RestartSec=3s
+StartLimitInterval=60s
+StartLimitBurst=5
+StartLimitAction=none
+
+[Install]
+WantedBy=multi-user.target
