@@ -73,6 +73,9 @@ def load_config(config_file) -> dict:
         except yaml.YAMLError as e:
             print(f"Error parsing YAML configuration: {e}")
             return DEFAULT_CONFIG.copy()
+        except Exception as e:
+            print(f"Error reading YAML file: {e}")
+            return DEFAULT_CONFIG.copy()
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PWM Controller")
