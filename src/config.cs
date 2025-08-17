@@ -28,7 +28,6 @@ internal class Config
             return;
         }
 
-        Console.Error.WriteLine($"Loaded configuration file {configFile}.");
         var json = File.ReadAllText(configFile);
         try {
             Clients.Clear();
