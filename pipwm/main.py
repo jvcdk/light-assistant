@@ -47,9 +47,15 @@ def signal_handler(signum, frame):
     print("Stopping controller...")
     controller.stop()
 
+def save_updated_config(config_file: str, config: dict, lights: List[PwmLight]):
+    config['pwm_controller']['pwms'] = {light.get_pin(): light.get_name() for light in lights}
+    with open(config_file, 'w') as file:
+        yaml.dump(config, file, default_flow_style=False)
+
 def load_config(config_file) -> dict:
     if not os.path.exists(config_file):
-        print(f"Configuration file '{config_file}' not found. Using default values.")
+        print(f"Configuration file '{config_file}' not found. Saving default values.")
+        save_updated_config(config_file, DEFAULT_CONFIG, [])
         return DEFAULT_CONFIG
 
     with open(config_file, 'r') as file:
@@ -67,11 +73,6 @@ def load_config(config_file) -> dict:
         except yaml.YAMLError as e:
             print(f"Error parsing YAML configuration: {e}")
             return DEFAULT_CONFIG.copy()
-
-def save_updated_config(config_file: str, config: dict, lights: List[PwmLight]):
-    config['pwm_controller']['pwms'] = {light.get_pin(): light.get_name() for light in lights}
-    with open(config_file, 'w') as file:
-        yaml.dump(config, file, default_flow_style=False)
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PWM Controller")
