@@ -83,7 +83,7 @@ internal partial class Controller : IController
         }
 
         if(data == null) {
-            _consoleOutput.ErrorLine($"Could not configuration data from file '{_dataPath}'. Message:" + errMsg);
+            _consoleOutput.ErrorLine($"Could not load configuration data from file '{_dataPath}'. Message:" + errMsg);
             return;
         }
 
