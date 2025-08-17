@@ -10,6 +10,7 @@ ExecStartPre=-docker rm --force pipwm
 ExecStart=docker run --rm -t --name pipwm \
     -v /var/lib/pipwm:/app/data \
     -v /sys/class/pwm:/sys/class/pwm \
+    -e PIPWM_MACHINE_ID=unnamed_machine \
     --network z2m \
     pipwm:latest
 ExecStop=docker rm --force pipwm

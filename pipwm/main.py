@@ -90,6 +90,10 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 def get_system_id() -> str:
+    env_machine_id = os.environ.get("PIPWM_MACHINE_ID")
+    if env_machine_id:
+        return env_machine_id
+
     system_id_path = "/etc/machine-id"
     if os.path.exists(system_id_path):
         with open(system_id_path, 'r') as f:
