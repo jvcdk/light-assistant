@@ -6,6 +6,15 @@ Please see the SystemD service file [pipwm.service](../systemd/pipwm.service) on
 
 The default configuration is to connect to mqtt server `mosquitto`, because this is what it is named with the provided SystemD files. If you prefer to run things on localhost, you need to update the configuration accordingly.
 
+## Building
+
+Build PiPwm with:
+
+```
+docker build . -t pipwm:latest
+```
+
+
 ## Raspberry Pi configuration
 
 The PiPwm service assumes that your Raspberry Pi has pwm-overlay enabled:

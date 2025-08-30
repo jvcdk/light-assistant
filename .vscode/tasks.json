@@ -15,6 +15,20 @@
             "group": "build"
         },
         {
+            "label": "Install npm dependencies",
+            "command": "npm",
+            "type": "process",
+            "args": [
+                "install"
+            ],
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/webgui"
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
             "label": "Run web server",
             "command": "npm",
             "type": "process",
