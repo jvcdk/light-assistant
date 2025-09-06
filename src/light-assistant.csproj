@@ -17,5 +17,6 @@
   </ItemGroup>
 <ItemGroup>
   <InternalsVisibleTo Include="light-assistant-offline" />
+  <InternalsVisibleTo Include="unittest" />
 </ItemGroup>
 </Project>

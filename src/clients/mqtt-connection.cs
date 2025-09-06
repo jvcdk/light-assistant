@@ -5,7 +5,7 @@ using MQTTnet.Client;
 
 namespace LightAssistant.Clients;
 
-internal class MqttConnection : IDisposable
+internal class MqttConnection : IDisposable, IMqttConnection
 {
     private const int MQTT_TIMEOUT = 1500;
 
@@ -75,12 +75,12 @@ internal class MqttConnection : IDisposable
         return Task.CompletedTask;
     }
 
-    internal void SubscribeToTopic(string topic, Action<IReadOnlyList<string>, string> callback)
+    public void SubscribeToTopic(string topic, Action<IReadOnlyList<string>, string> callback)
     {
         _subscriptions[topic] = callback;
     }
 
-    internal async Task Publish(string topic, string message)
+    public async Task Publish(string topic, string message)
     {
         if(_mqttClient == null)
             throw new InvalidOperationException("Not connected to MQTT server");
