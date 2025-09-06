@@ -13,11 +13,11 @@ internal partial class Zigbee2MqttClient : IDeviceBus
     public event Action<bool, int> NetworkOpenStatus = delegate { };
 
     private readonly IConsoleOutput _consoleOutput;
-    private readonly MqttConnection _connection;
+    private readonly IMqttConnection _connection;
     private readonly string _baseTopic;
     private readonly List<IDevice> _knownDevices = [];
 
-    internal Zigbee2MqttClient(MqttConnection connection, IConsoleOutput consoleOutput, string baseTopic)
+    internal Zigbee2MqttClient(IMqttConnection connection, IConsoleOutput consoleOutput, string baseTopic)
     {
         _consoleOutput = consoleOutput;
         _connection = connection;
@@ -159,30 +159,16 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             return;
         }
 
-        if(!parsedMessage.Data.TryGetValue("value", out var valueStr)) {
-            _consoleOutput.ErrorLine("Permit Join request did not contain a 'value' parameter.");
+        if (!parsedMessage.Data.TryGetValue("time", out var timeStr)) {
+            _consoleOutput.ErrorLine("Permit Join request did not contain a 'time' parameter.");
             return;
         }
 
-        if(!bool.TryParse(valueStr, out var value)) {
-            _consoleOutput.ErrorLine("Permit Join request did not have a valid 'value' parameter.");
+        if (!int.TryParse(timeStr, out int time)) {
+            _consoleOutput.ErrorLine("Permit Join request did not have a valid 'time' parameter.");
             return;
         }
-
-        int time = 0;
-        if(value) {
-            if(!parsedMessage.Data.TryGetValue("time", out var timeStr)) {
-                _consoleOutput.ErrorLine("Permit Join request did not contain a 'time' parameter.");
-                return;
-            }
-
-            if(!int.TryParse(timeStr, out time)) {
-                _consoleOutput.ErrorLine("Permit Join request did not have a valid 'time' parameter.");
-                return;
-            }
-        }
-
-        NetworkOpenStatus(value, time);
+        NetworkOpenStatus(true, time);
     }
 
     private void HandleBridgeResponseDeviceMessage(IReadOnlyList<string> commands, GenericMqttResponse parsedMessage)
@@ -256,7 +242,6 @@ internal partial class Zigbee2MqttClient : IDeviceBus
     public async Task RequestOpenNetwork(int openNetworkTimeSeconds)
     {
         var data = new Dictionary<string, string> {
-            ["value"] = "true",
             ["time"] = $"{openNetworkTimeSeconds}"
         };
         await SendDataToDevice("bridge/request/permit_join", data);

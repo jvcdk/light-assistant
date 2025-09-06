@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "light-assistant", "src\ligh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "light-assistant-offline", "test\offline\light-assistant-offline.csproj", "{FB1C99BB-5C71-4DD4-B6A0-34D3B5B1B06D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{11C5DD01-F8D2-4267-9791-D3611EA5CDA7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unittest", "test\unittest\unittest.csproj", "{04ED319A-C2CC-42F1-8D40-04984116807C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +25,18 @@ Global
 		{FB1C99BB-5C71-4DD4-B6A0-34D3B5B1B06D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB1C99BB-5C71-4DD4-B6A0-34D3B5B1B06D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB1C99BB-5C71-4DD4-B6A0-34D3B5B1B06D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04ED319A-C2CC-42F1-8D40-04984116807C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04ED319A-C2CC-42F1-8D40-04984116807C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04ED319A-C2CC-42F1-8D40-04984116807C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04ED319A-C2CC-42F1-8D40-04984116807C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {450A25C6-E30F-437F-BA78-AD940C8CC686}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{04ED319A-C2CC-42F1-8D40-04984116807C} = {11C5DD01-F8D2-4267-9791-D3611EA5CDA7}
 	EndGlobalSection
 EndGlobal
