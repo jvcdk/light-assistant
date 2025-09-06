@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build dotnet",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/test/bin/Debug/net8.0/light-assistant-offline",
+            "program": "${workspaceFolder}/test/offline/bin/Debug/net8.0/light-assistant-offline",
             "args": [],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
@@ -26,7 +26,7 @@
             "request": "launch",
             "preLaunchTask": "build dotnet",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/test/bin/Debug/net8.0/light-assistant",
+            "program": "${workspaceFolder}/test/offline/bin/Debug/net8.0/light-assistant",
             "args": [],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
