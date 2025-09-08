@@ -12,6 +12,7 @@ ExecStart=docker run --rm --name light-assistant \
     --network z2m \
     -p 80:8080 \
     -p 8081:8081 \
+    -u 65534:65534 \
     light-assistant:latest
 ExecStop=docker rm --force light-assistant
 

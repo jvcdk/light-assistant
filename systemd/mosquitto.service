@@ -11,6 +11,7 @@ ExecStart=docker run --rm --name mosquitto \
     -v /var/lib/mosquitto:/mosquitto/config \
     -e TZ=Europe/Copenhagen \
     --network z2m \
+    -u 65534:65534 \
     eclipse-mosquitto:2.0.22
 ExecStop=docker rm --force mosquitto
 

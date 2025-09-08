@@ -9,9 +9,10 @@ Group=docker
 ExecStartPre=-docker rm --force pipwm
 ExecStart=docker run --rm -t --name pipwm \
     -v /var/lib/pipwm:/app/data \
-    -v /sys/class/pwm:/sys/class/pwm \
-    -e PIPWM_MACHINE_ID=unnamed_machine \
+    -v /sys/class/pwm/pwmchip0/:/sys/class/pwm/pwmchip0/ \
+    -e PIPWM_MACHINE_ID=unnamed_machine \                     # <--- Change this!!!
     --network z2m \
+    -u 65534:993 \                                            # <--- Maybe change this!!!
     pipwm:latest
 ExecStop=docker rm --force pipwm
 
