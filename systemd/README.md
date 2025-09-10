@@ -25,7 +25,7 @@ You may want to manually create this configuration file in `/var/lib/mosquitto/m
 
 ```
 allow_anonymous true
-listener 1833 0.0.0.0
+listener 1883 0.0.0.0
 ```
 
 The `allow_anonymous` is safe as long as the services are on the closed `docker` network. Otherwise, you need to add authentication.
