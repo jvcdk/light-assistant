@@ -12,7 +12,8 @@ internal partial class Controller
             internal static void Add(Dictionary<string, ModelFactoryCollection> dst)
             {
                 dst.Add("eWeLink", new ModelFactoryCollection {
-                    { "WB01", EWeLink_WB01.Create }
+                    { "WB01", EWeLink_WB01.Create },
+                    { "SNZB-01P", EWeLink_WB01.Create }
                 });
             }
         }
