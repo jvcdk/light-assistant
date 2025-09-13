@@ -10,7 +10,7 @@ internal class Config
         public const string PiPwm = "pipwm";
     }
 
-    public List<ClientConnection> Clients { get; set; } = [new ClientConnection()];
+    public List<ClientConnection> Clients { get; set; } = [ClientConnection.DefaultZigbee2Mqtt, ClientConnection.DefaultPiPwm];
     public bool Verbose { get; set; } = false;
     public string WebApiHostAddress { get; set; } = "*";
     public int WebApiPort { get; set; } = 8081;
@@ -49,9 +49,23 @@ internal class Config
 
     public class ClientConnection
     {
-        public string Type { get; set; } = ClientType.Zigbee2Mqtt;
-        public string Host { get; set; } = "localhost";
-        public int Port { get; set; } = 1883;
-        public string BaseTopic { get; set; } = "zigbee2mqtt";
+        public required string Type { get; init; }
+        public required string Host { get; init; }
+        public required int Port { get; init; }
+        public required string BaseTopic { get; init; }
+
+        public static ClientConnection DefaultZigbee2Mqtt => new ClientConnection() {
+            Type = ClientType.Zigbee2Mqtt,
+            Host = "localhost",
+            Port = 1883,
+            BaseTopic = "zigbee2mqtt"
+        };
+
+        public static ClientConnection DefaultPiPwm => new ClientConnection() {
+            Type = ClientType.PiPwm,
+            Host = "localhost",
+            Port = 1883,
+            BaseTopic = "pipwm"
+        };
     }
 }
