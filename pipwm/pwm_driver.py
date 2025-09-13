@@ -6,6 +6,24 @@ class PwmDriver:
         self.base_path = base_path
         self._period = period
 
+    def list_available_pwms(self) -> dict[int, str]:
+        pwms = {}
+        if not os.path.exists(self.base_path):
+            print(f"Warning: PWM base path '{self.base_path}' does not exist.")
+            return pwms
+
+        try:
+            path = os.path.join(self.base_path, "npwm")
+            with open(path, "r") as f:
+                n_pwms = int(f.read())
+
+            for i in range(n_pwms):
+                pwms[i] = f"Pwm {i}"
+        except Exception as e:
+            print(f"Warning: Failed to read available PWMs. Error: {e}")
+
+        return pwms
+
     def set_duty_cycle(self, pin: int, duty_cycle: float):
         path = self._get_path(pin, "duty_cycle")
         dc = int(duty_cycle * self._period)

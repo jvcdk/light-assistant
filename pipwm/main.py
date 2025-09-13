@@ -18,10 +18,7 @@ DEFAULT_CONFIG = {
     },
     'pwm_controller': {
         'base_path': '/sys/class/pwm/pwmchip0/',
-        'pwms': {
-            0: 'pwm0',
-            1: 'pwm1'
-        },
+        'pwms': {},
         'period': 2**18*20 # 18 bit resolution x 20ns period
     },
     'mqtt': {
@@ -47,16 +44,18 @@ def signal_handler(signum, frame):
     print("Stopping controller...")
     controller.stop()
 
-def save_updated_config(config_file: str, config: dict, lights: List[PwmLight]):
-    config['pwm_controller']['pwms'] = {light.get_pin(): light.get_name() for light in lights}
+def save_updated_config(config_file: str, config: dict, lights: List[PwmLight] | dict[int, str]):
+    # Check if lights is a list of PwmLight instances
+    if isinstance(lights, list):
+        lights = {light.get_pin(): light.get_name() for light in lights}
+
+    config['pwm_controller']['pwms'] = lights
     with open(config_file, 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
 
-def load_config(config_file) -> dict:
+def load_config(config_file) -> dict | None:
     if not os.path.exists(config_file):
-        print(f"Configuration file '{config_file}' not found. Saving default values.")
-        save_updated_config(config_file, DEFAULT_CONFIG, [])
-        return DEFAULT_CONFIG
+        return None
 
     with open(config_file, 'r') as file:
         try:
@@ -81,16 +80,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PWM Controller")
     parser.add_argument("-c", "--config", default="pipwm.yaml",
                         help="Path to the configuration file (default: pipwm.yaml)")
-    parser.add_argument("--write-default-config", metavar="FILENAME",
-                        help="Write default configuration to the specified file and exit")
-    args = parser.parse_args()
-
-    if args.write_default_config:
-        with open(args.write_default_config, 'w') as f:
-            yaml.dump(DEFAULT_CONFIG, f, default_flow_style=False)
-        print(f"Default configuration written to {args.write_default_config}")
-        exit(0)
-    return args
+    return parser.parse_args()
 
 def get_system_id() -> str:
     env_machine_id = os.environ.get("PIPWM_MACHINE_ID")
@@ -107,7 +97,7 @@ def get_system_id() -> str:
         with open(system_id_path, 'r') as f:
             return f.read().strip()
 
-    print("System ID not found. Please generate one and store it /etc/machine-id or /var/lib/dbus/machine-id.")
+    print("System ID not found. Please set environment variable PIPWM_MACHINE_ID, or generate one and store it /etc/machine-id or /var/lib/dbus/machine-id.")
     sys.exit(1)
 
 if __name__ == "__main__":
@@ -118,6 +108,10 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     config = load_config(args.config)
+    init_new_config = config is None
+    if init_new_config:
+        print(f"Configuration file '{args.config}' not found. Writing default configuration...")
+        config = DEFAULT_CONFIG.copy()
     
     # Instantiate PwmDriver
     pwm_config = config['pwm_controller']
@@ -125,7 +119,11 @@ if __name__ == "__main__":
         pwm_config['base_path'],
         pwm_config['period']
     )
-    
+
+    if init_new_config:
+        available_pwms = pwm_driver.list_available_pwms()
+        save_updated_config(args.config, config, available_pwms)
+
     # Instantiate MqttDriver
     mqtt_config = config['mqtt']
     mqtt_driver = MqttDriver(
