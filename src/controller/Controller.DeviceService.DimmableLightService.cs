@@ -23,6 +23,7 @@ internal partial class Controller
 
             internal override IEnumerable<InternalEventSink> ConsumedEvents => [
                 new InternalEventSink(typeof(InternalEvent_Push), "Toggle on/off", HandleToggleOnOff),
+                new InternalEventSink(typeof(InternalEvent_Push), "Step fade", HandleStepFade),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Brightness dim", HandleBrightnessDim),
                 new InternalEventSink(typeof(InternalEvent_Rotate), "Brightness Fade", HandleRotateToBrightnessFade)
             ];
@@ -67,6 +68,13 @@ internal partial class Controller
                     };
                     Device.SendCommand(msg);
                 }
+            }
+
+            private void HandleStepFade(InternalEvent ev)
+            {
+                Debug.Assert(ev.GetType() == typeof(InternalEvent_Push));
+
+                _brightnessDimFadeEngine.StepFade();
             }
 
             private void HandleToggleOnOff(InternalEvent ev)

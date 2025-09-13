@@ -10,26 +10,40 @@ using NSubstitute;
 public class DimmableLightServiceTests
 {
     private Controller _controller;
-    private TestDeviceBus _deviceBus = new();
+    private TestDeviceBus _deviceBus;
 
-    private MockPi5 _pi5 = new(); // We are using this to get to DimmableLightService
-    private IDevice _weLink = CreateEWeLinkWB01(); // We are using this to get to SingleButtonService
-    private IDevice _envilarHkZdCctA = CreateEnvilarHkZdCctA(); // We are using this to get to CctLightService
+    private MockPi5 _pi5; // We are using this to get to DimmableLightService
+    private IDevice _eWeLink; // We are using this to get to SingleButtonService
+    private IDevice _envilarHkZdCctA; // We are using this to get to CctLightService
 
     [SetUp]
     public void Setup()
     {
+         _deviceBus = new();
+        _pi5 = new();
+        _eWeLink = CreateEWeLinkWB01();
+        _envilarHkZdCctA = CreateEnvilarHkZdCctA();
+
+        // Configure runtime data
+        var runtimeData = new Controller.RunTimeData();
+        runtimeData.ServiceOptionValues = new() {
+            [_pi5.Address] = [
+                new Controller.ServiceOptionValue("Mid brightness", "0.5"), // Configure mid brightness to 50% => no gamma correction
+            ]
+        };
+
         // Set up controller
-        var consoleOutput = new AssertingConsoleOutput();
+            var consoleOutput = new AssertingConsoleOutput();
         var deviceBuses = new List<IDeviceBus>() { _deviceBus };
         var gui = Substitute.For<IUserInterface>();
         var storage = Substitute.For<Controller.IDataStorage>();
-        storage.LoadData().Returns(new Controller.RunTimeData());
+        storage.LoadData().Returns(runtimeData);
         _controller = new Controller(consoleOutput, deviceBuses, gui, storage, 1);
 
         _deviceBus.DiscoverDevice(_pi5);
-        _deviceBus.DiscoverDevice(_weLink);
+        _deviceBus.DiscoverDevice(_eWeLink);
         _deviceBus.DiscoverDevice(_envilarHkZdCctA);
+
     }
 
     private void ConfigureRoute(IDevice src, string srcEvent, IDevice dst, string dstFunc)
@@ -68,20 +82,39 @@ public class DimmableLightServiceTests
     [Test]
     public void WhenReceivingToggleOnOff_ThenLightShouldToggle()
     {
-        // Create route from eWeLink single push to Pi5 toggle
-        ConfigureRoute(_weLink, "Single", _pi5, "Toggle on/off");
+        // Create route from eWeLink single push to Pi5 toggle on/off
+        ConfigureRoute(_eWeLink, "Single", _pi5, "Toggle on/off");
 
-        _deviceBus.InvokeAction(_weLink, "single");
+        _deviceBus.InvokeAction(_eWeLink, "single");
         Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(1));
         Assert.That(_pi5.LastBrightness, Is.EqualTo(MockPi5.MaxRawBrightness));
 
-        _deviceBus.InvokeAction(_weLink, "single");
+        _deviceBus.InvokeAction(_eWeLink, "single");
         Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(2));
         Assert.That(_pi5.LastBrightness, Is.EqualTo(0));
 
-        _deviceBus.InvokeAction(_weLink, "single");
+        _deviceBus.InvokeAction(_eWeLink, "single");
         Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(3));
         Assert.That(_pi5.LastBrightness, Is.EqualTo(MockPi5.MaxRawBrightness));
+    }
+
+    [Test]
+    public void WhenReceivingStepFade_ThenLightShouldFadeThroughSteps()
+    {
+        const int nSteps = LightFadeEngine.StepFade_nSteps;
+
+        // Create route from eWeLink single push to Pi5 step fade
+        ConfigureRoute(_eWeLink, "Single", _pi5, "Step fade");
+
+        for (int nClick = 1; nClick <= 2 * nSteps; nClick++) {
+            var stepNo = (nClick - 1) % nSteps + 1;
+            var brightness = stepNo / (double)nSteps;
+            var expectedBrightness = (int) Math.Round(brightness * (MockPi5.MaxRawBrightness - 1) + 1);
+
+            _deviceBus.InvokeAction(_eWeLink, "single");
+            Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(nClick));
+            Assert.That(_pi5.LastBrightness, Is.EqualTo(expectedBrightness));
+        }
     }
 
     [Test]

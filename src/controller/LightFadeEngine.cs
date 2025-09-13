@@ -6,6 +6,8 @@ namespace LightAssistant.Controller;
 
 internal class LightFadeEngine
 {
+    internal const int StepFade_nSteps = 4; // Const for now; in the future this could be a parameter
+
     private const double FastTransitionTime = 0.25; // s
     private const double SlowTransitionTime = 1.25; // s
     private const int FadeInitiateDelayMs = 750;
@@ -57,20 +59,37 @@ internal class LightFadeEngine
         _fadeEngineTimer.AutoReset = false;
     }
 
+    internal void StepFade()
+    {
+        const double stepSize = 1.0 / StepFade_nSteps;
+
+        lock (_lock) {
+            if (StopActiveFade())
+                return;
+
+            var nCurrentStep = (int) Math.Floor(_brightness / stepSize);
+            var nextStep = nCurrentStep % StepFade_nSteps + 1;
+
+            if (nextStep == 0) // Turning off
+                _lastSteadyStateBrightness = _brightness;
+
+            _fadeBrightnessTarget = nextStep * stepSize;
+            var transitionTime = CalcTransitionTime(_fadeBrightnessTarget, SlowTransitionTime);
+            SetBrightness(_fadeBrightnessTarget, transitionTime);
+        }
+    }
+
     internal void TurnOnOff(Controller.TurnOnOffModes mode, bool isUserGenerated)
     {
         lock (_lock) {
-            if (_fadeEngineTimer.Enabled) {
-                _fadeBrightnessTarget = _brightness;
-                _fadeEngineTimer.Enabled = false;
-                if(isUserGenerated)
-                    return;
-            }
-
-            if(mode == Controller.TurnOnOffModes.TurnOn && IsOn)
+            var fadeWasActive = StopActiveFade();
+            if (fadeWasActive && isUserGenerated)
                 return;
 
-            if(mode == Controller.TurnOnOffModes.TurnOff && !IsOn)
+            if (mode == Controller.TurnOnOffModes.TurnOn && IsOn)
+                return;
+
+            if (mode == Controller.TurnOnOffModes.TurnOff && !IsOn)
                 return;
 
             var newBrightness = Math.Max(_minTurnOnBrightness, _lastSteadyStateBrightness);
@@ -82,6 +101,16 @@ internal class LightFadeEngine
             var transitionTime = CalcTransitionTime(newBrightness, SlowTransitionTime);
             SetBrightness(newBrightness, transitionTime);
         }
+    }
+
+    private bool StopActiveFade()
+    {
+        if (!_fadeEngineTimer.Enabled)
+            return false;
+
+        _fadeBrightnessTarget = _brightness;
+        _fadeEngineTimer.Enabled = false;
+        return true;
     }
 
     private double CalcTransitionTime(double newBrightness, double maxTransitionTime) => Math.Abs(newBrightness - _brightness) * maxTransitionTime;
