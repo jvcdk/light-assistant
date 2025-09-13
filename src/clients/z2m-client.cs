@@ -106,6 +106,8 @@ internal partial class Zigbee2MqttClient : IDeviceBus
             case "extensions":
             case "logging":
             case "definitions":
+            case "health":
+            case "converters":
                 HandleBridgeIgnoredMessage(command, message);
                 break;
 
