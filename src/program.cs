@@ -87,12 +87,12 @@ public static class MainApp {
 
     private static IDeviceBus CreateClientConnection(Config.ClientConnection config, ConsoleOutput consoleOutput)
     {
-        config.Type = config.Type.ToLower();
-        if(config.Type == Config.ClientType.Zigbee2Mqtt) {
+        var clientType = config.Type.ToLower();
+        if(clientType == Config.ClientType.Zigbee2Mqtt) {
             var connection = GetMqttConnection(config.Host, config.Port, consoleOutput);
             return new Zigbee2MqttClient(connection, consoleOutput, config.BaseTopic);
         }
-        else if(config.Type == Config.ClientType.PiPwm) {
+        else if(clientType == Config.ClientType.PiPwm) {
             var connection = GetMqttConnection(config.Host, config.Port, consoleOutput);
             return new PiPwmClient(connection, consoleOutput, config.BaseTopic);
         }
