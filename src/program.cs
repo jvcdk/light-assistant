@@ -62,7 +62,7 @@ public static class MainApp {
             var consoleOutput = new ConsoleOutput() { Verbose = options.Verbose };
             var clients = config.Clients.Select(clientConfig => CreateClientConnection(clientConfig, consoleOutput)).ToList();
             var guiApp = new WebApi.WebApi(consoleOutput, config.WebApiHostAddress, config.WebApiPort);
-            var controller = new Controller.Controller(consoleOutput, clients, guiApp, config.DataPath, config.OpenNetworkTimeSeconds);
+            var controller = new Controller.Controller(consoleOutput, clients, guiApp, new DataStorage(config.DataPath, consoleOutput), config.OpenNetworkTimeSeconds);
 
             await controller.Run();
         }

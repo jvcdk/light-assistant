@@ -17,7 +17,7 @@ public static class OfflineApp {
                 new MqttEmulatedClient(consoleOutput)
             };
             var guiApp = new WebApi(consoleOutput, defaultConfig.WebApiHostAddress, defaultConfig.WebApiPort);
-            var controller = new Controller(consoleOutput, mqttClients, guiApp, defaultConfig.DataPath, defaultConfig.OpenNetworkTimeSeconds);
+            var controller = new Controller(consoleOutput, mqttClients, guiApp, new DummyDataStorage(), defaultConfig.OpenNetworkTimeSeconds);
             controller.Run().Wait();
             return result;
         }
@@ -29,3 +29,8 @@ public static class OfflineApp {
     }
 }
 
+class DummyDataStorage : Controller.IDataStorage
+{
+    public Controller.RunTimeData LoadData() => new();
+    public Task SaveData(Controller.RunTimeData data) => Task.CompletedTask; // Do nothing
+}

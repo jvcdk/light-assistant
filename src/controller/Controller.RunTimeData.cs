@@ -1,10 +1,15 @@
-using Newtonsoft.Json;
 using LightAssistant.Interfaces;
 
 namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
+    internal interface IDataStorage
+    {
+        RunTimeData LoadData();
+        Task SaveData(RunTimeData data);
+    }
+
     public class RunTimeData
     {
         public Dictionary<string, List<Route>> Routes { get; set; } = [];
@@ -38,36 +43,24 @@ internal partial class Controller
             );
         }
 
-        internal static RunTimeData? LoadFromFile(string filePath)
-        {
-            var data = File.ReadAllText(filePath);
-            return JsonConvert.DeserializeObject<RunTimeData>(data);
-        }
-
-        internal async Task SaveToFile(string filePath)
-        {
-            var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-            await File.WriteAllTextAsync(filePath, json);
-        }
-
         internal void PopulateRoutes(Dictionary<string, List<EventRoute>> routes)
         {
             routes.Clear();
-            foreach(var (key, value) in Routes)
+            foreach (var (key, value) in Routes)
                 routes[key] = value.Select(route => new EventRoute(route)).ToList();
         }
 
         internal void PopulateSchedules(Dictionary<string, List<DeviceScheduleEntry>> schedules)
         {
             schedules.Clear();
-            foreach(var (key, value) in Schedules)
+            foreach (var (key, value) in Schedules)
                 schedules[key] = value.Select(entry => new DeviceScheduleEntry(entry)).ToList();
         }
 
         internal void PopulateServiceOptionValues(Dictionary<string, IReadOnlyList<ServiceOptionValue>> serviceOptionValues)
         {
             serviceOptionValues.Clear();
-            foreach(var (key, value) in ServiceOptionValues)
+            foreach (var (key, value) in ServiceOptionValues)
                 serviceOptionValues[key] = value.Select(value => new ServiceOptionValue(value)).ToList();
         }
 

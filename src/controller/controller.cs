@@ -10,7 +10,7 @@ internal partial class Controller : IController
     private readonly List<IDeviceBus> _deviceBuses;
     private readonly IUserInterface _guiApp;
     private readonly DeviceServiceMapping _deviceServiceMapping;
-    private readonly string _dataPath;
+    private readonly IDataStorage _dataStorage;
     private readonly int _openNetworkTimeSeconds;
     private readonly Thread _scheduleThread;
 
@@ -20,13 +20,13 @@ internal partial class Controller : IController
     private readonly SlimReadWriteDataGuard<DeviceRoutes> _routes = new([]);
     private readonly SlimReadWriteDataGuard<ServiceOptionValues> _serviceOptionValues = new([]);
 
-    public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, string dataPath, int openNetworkTimeSeconds)
+    public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, IDataStorage dataStorage, int openNetworkTimeSeconds)
     {
         _consoleOutput = consoleOutput;
         _deviceBuses = deviceBuses;
         _guiApp = guiApp;
         _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
-        _dataPath = dataPath;
+        _dataStorage = dataStorage;
         _openNetworkTimeSeconds = openNetworkTimeSeconds;
 
         foreach(var bus in _deviceBuses) {
@@ -44,9 +44,6 @@ internal partial class Controller : IController
 
     private async Task SaveData()
     {
-        if(string.IsNullOrWhiteSpace(_dataPath))
-            return; // Error written in LoadData
-
         try {
             var data = new RunTimeData();
 
@@ -57,7 +54,7 @@ internal partial class Controller : IController
             using(_ = _schedules.ObtainReadLock(out var schedules))
                 data.SetSchedules(schedules);
 
-            await data.SaveToFile(_dataPath);
+            await _dataStorage.SaveData(data);
         }
         catch(Exception ex) {
             _consoleOutput.ErrorLine("Could not save runtime data. Message: " + ex.Message);
@@ -66,27 +63,7 @@ internal partial class Controller : IController
 
     private void LoadData()
     {
-        if(string.IsNullOrWhiteSpace(_dataPath)) {
-            _consoleOutput.ErrorLine("DataPath (specified in config file) was empty or whitespace. This does not work.");
-            _consoleOutput.ErrorLine("WARNING: Configuration data will not be saved!!!");
-            return;
-        }
-
-        RunTimeData? data;
-        string errMsg = "Unknown reason.";
-        try {
-            data = RunTimeData.LoadFromFile(_dataPath);
-        }
-        catch(Exception ex) {
-            errMsg = ex.Message;
-            data = null;
-        }
-
-        if(data == null) {
-            _consoleOutput.ErrorLine($"Could not load configuration data from file '{_dataPath}'. Message:" + errMsg);
-            return;
-        }
-
+        var data = _dataStorage.LoadData();
         using(_ = _routes.ObtainWriteLock(out var routes))
             data.PopulateRoutes(routes);
 
