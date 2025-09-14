@@ -80,7 +80,7 @@ internal partial class Controller
             }
 
             [ActionSink("Turn on/off")]
-            private void HandleTurnOnOff(ActionEvent_TurnOnOff ev) => _brightnessDimFadeEngine.TurnOnOff(ev.Mode, ev.UserGenerated);
+            protected void HandleTurnOnOff(ActionEvent_TurnOnOff ev) => _brightnessDimFadeEngine.TurnOnOff(ev.Mode, ev.UserGenerated);
 
             private void SetFadeBrightness(double brightness, double duration)
             {
@@ -118,7 +118,7 @@ internal partial class Controller
             }
 
             [ActionSink("Fade to brightness")]
-            private void HandleBrightnessFade(ActionEvent_FadeToBrightness ev)
+            protected void HandleBrightnessFade(ActionEvent_FadeToBrightness ev)
             {
                 ConsoleOutput.InfoLine($"HandleBrightnessFade: {ev.Brightness} in {ev.Duration} min");
                 if(ev.Duration <= 0)
