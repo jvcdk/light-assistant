@@ -3,7 +3,6 @@ namespace unittest.Controller.DeviceService;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using LightAssistant;
 using LightAssistant.Controller;
 using LightAssistant.Interfaces;
 using NSubstitute;
@@ -15,12 +14,13 @@ public class DimmableLightServiceTests
 
     private MockPi5 _pi5 = new(); // We are using this to get to DimmableLightService
     private IDevice _weLink = CreateEWeLinkWB01(); // We are using this to get to SingleButtonService
+    private IDevice _envilarHkZdCctA = CreateEnvilarHkZdCctA(); // We are using this to get to CctLightService
 
     [SetUp]
     public void Setup()
     {
         // Set up controller
-        var consoleOutput = new ConsoleOutput() { Verbose = false };
+        var consoleOutput = new AssertingConsoleOutput();
         var deviceBuses = new List<IDeviceBus>() { _deviceBus };
         var gui = Substitute.For<IUserInterface>();
         var storage = Substitute.For<Controller.IDataStorage>();
@@ -29,6 +29,7 @@ public class DimmableLightServiceTests
 
         _deviceBus.DiscoverDevice(_pi5);
         _deviceBus.DiscoverDevice(_weLink);
+        _deviceBus.DiscoverDevice(_envilarHkZdCctA);
     }
 
     private void ConfigureRoute(IDevice src, string srcEvent, IDevice dst, string dstFunc)
@@ -48,6 +49,18 @@ public class DimmableLightServiceTests
         device.Model.Returns("WB01");
         device.Name.Returns("Mock eWeLink WB01");
         device.Description.Returns("Mock eWeLink WB01 device");
+        device.BatteryPowered.Returns(false);
+        return device;
+    }
+
+    private static IDevice CreateEnvilarHkZdCctA()
+    {
+        var device = Substitute.For<IDevice>();
+        device.Address.Returns("BB:CC:DD:EE:FF:00");
+        device.Vendor.Returns("ENVILAR");
+        device.Model.Returns("HK-ZD-CCT-A");
+        device.Name.Returns("Mock Envilar HK-ZD-CCT-A");
+        device.Description.Returns("Mock Envilar HK-ZD-CCT-A device");
         device.BatteryPowered.Returns(false);
         return device;
     }
@@ -75,6 +88,16 @@ public class DimmableLightServiceTests
     public void GivenDeviceWithDimmableLightService_WhenRequestingAvailableActions_ThenShouldReturnDimmableLightActions()
     {
         var actions = _controller.GetConsumableActionsFor(_pi5);
+        var actionNames = actions.Select(action => action.Type).ToList();
+
+        Assert.That(actionNames, Does.Contain("Turn on/off"));
+        Assert.That(actionNames, Does.Contain("Fade to brightness"));
+    }
+
+    [Test]
+    public void GivenDeviceWithCctLightService_WhenRequestingAvailableActions_ThenShouldReturnCctLightServiceActions()
+    {
+        var actions = _controller.GetConsumableActionsFor(_envilarHkZdCctA);
         var actionNames = actions.Select(action => action.Type).ToList();
 
         Assert.That(actionNames, Does.Contain("Turn on/off"));

@@ -37,6 +37,10 @@ internal partial class Controller
         public int Duration { get; init; } = 1;
     }
 
+    /// Note:
+    /// The methods on which this attribute is applied must have visibility at least 'protected'.
+    /// The reason is that when Device Services inherit from each-other, private functions are not inherited.
+    /// Thus, the reflection code that looks for methods with this attribute will miss them.
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class ActionSink(string name) : Attribute
     {
