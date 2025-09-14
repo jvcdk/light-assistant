@@ -71,6 +71,16 @@ public class DimmableLightServiceTests
         Assert.That(_pi5.LastBrightness, Is.EqualTo(MockPi5.MaxRawBrightness));
     }
 
+    [Test]
+    public void GivenDeviceWithDimmableLightService_WhenRequestingAvailableActions_ThenShouldReturnDimmableLightActions()
+    {
+        var actions = _controller.GetConsumableActionsFor(_pi5);
+        var actionNames = actions.Select(action => action.Type).ToList();
+
+        Assert.That(actionNames, Does.Contain("Turn on/off"));
+        Assert.That(actionNames, Does.Contain("Fade to brightness"));
+    }
+
     private class TestDeviceBus : IDeviceBus
     {
         public event Action<IDevice> DeviceDiscovered = delegate { };
