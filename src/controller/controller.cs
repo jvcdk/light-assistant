@@ -167,7 +167,7 @@ internal partial class Controller : IController
         var internalEvents = services.ProcessExternalEvent(device, data);
         RouteInternalEvents(internalEvents);
 
-        _consoleOutput.ErrorLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+        _consoleOutput.MessageLine($"Device {device.Name} action: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
     }
 
     public Task PreviewDeviceOption(string address, string value, PreviewMode previewMode)
@@ -249,7 +249,7 @@ internal partial class Controller : IController
 
     private async void HandleDeviceDiscovered(IDevice device)
     {
-        _consoleOutput.ErrorLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
+        _consoleOutput.MessageLine($"Discovered device {device.Address} ({device.Vendor} {device.Model}): {device.Description}");
 
         using(_ = _devices.ObtainWriteLock(out var devices)) {
             if(devices.ContainsKey(device))
