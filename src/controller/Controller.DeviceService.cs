@@ -5,7 +5,7 @@ namespace LightAssistant.Controller;
 
 internal partial class Controller
 {
-    private abstract partial class DeviceService : IDisposable
+    private abstract partial class DeviceService
     {
         private const string KeywordAction = "action";
         private const string KeywordActionStepSize = "action_step_size";
@@ -14,40 +14,12 @@ internal partial class Controller
         internal string Name { get; private set; }
 
         protected readonly IDevice Device;
-        private readonly Thread? _processingThread;
-        private volatile bool _terminate = false;
-        private readonly Mutex _flag = new();
 
         protected DeviceService(string name, IDevice device, IConsoleOutput consoleOutput)
         {
             Name = name;
             Device = device;
             ConsoleOutput = consoleOutput;
-            if(NeedsTickCall) {
-                _processingThread = new(ProcessingThread);
-                _processingThread.Start();
-            }
-        }
-
-        private void ProcessingThread(object? obj)
-        {
-            while(!_terminate) {
-                int delayMs = ProcessTick();
-                _flag.WaitOne(delayMs);
-            }
-        }
-
-        protected virtual bool NeedsTickCall => false;
-
-        protected void WakeUpProcessing() => _flag.ReleaseMutex();
-
-        protected virtual int ProcessTick() => -1;
-
-        public void Dispose()
-        {
-            _terminate = true;
-            WakeUpProcessing();
-            _processingThread?.Join();
         }
 
         internal virtual IEnumerable<InternalEvent> ProcessExternalEvent(IDevice sourceDevice, IReadOnlyDictionary<string, string> data)
