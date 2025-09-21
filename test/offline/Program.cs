@@ -17,7 +17,7 @@ public static class OfflineApp {
                 new MqttEmulatedClient(consoleOutput)
             };
             var guiApp = new WebApi(consoleOutput, defaultConfig.WebApiHostAddress, defaultConfig.WebApiPort);
-            var controller = new Controller(consoleOutput, mqttClients, guiApp, new DummyDataStorage(), defaultConfig.OpenNetworkTimeSeconds);
+            var controller = new Controller(consoleOutput, mqttClients, guiApp, new DummyDataStorage(), defaultConfig.OpenNetworkTimeSeconds, new SystemUtils());
             controller.Run().Wait();
             return result;
         }

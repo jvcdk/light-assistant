@@ -13,6 +13,8 @@ internal partial class Controller : IController
     private readonly IDataStorage _dataStorage;
     private readonly int _openNetworkTimeSeconds;
     private readonly Thread _scheduleThread;
+    private readonly ISystemUtils _systemUtils;
+    private readonly IManualResetEvent _terminateEvent;
 
     // Protected data
     private readonly SlimReadWriteDataGuard<DeviceInfoCollection> _devices = new([]);
@@ -20,7 +22,7 @@ internal partial class Controller : IController
     private readonly SlimReadWriteDataGuard<DeviceRoutes> _routes = new([]);
     private readonly SlimReadWriteDataGuard<ServiceOptionValues> _serviceOptionValues = new([]);
 
-    public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, IDataStorage dataStorage, int openNetworkTimeSeconds)
+    public Controller(IConsoleOutput consoleOutput, List<IDeviceBus> deviceBuses, IUserInterface guiApp, IDataStorage dataStorage, int openNetworkTimeSeconds, ISystemUtils systemUtils)
     {
         _consoleOutput = consoleOutput;
         _deviceBuses = deviceBuses;
@@ -28,8 +30,10 @@ internal partial class Controller : IController
         _deviceServiceMapping = new DeviceServiceMapping(_consoleOutput);
         _dataStorage = dataStorage;
         _openNetworkTimeSeconds = openNetworkTimeSeconds;
+        _systemUtils = systemUtils;
+        _terminateEvent = systemUtils.NewManualResetEvent(false);
 
-        foreach(var bus in _deviceBuses) {
+        foreach (var bus in _deviceBuses) {
             bus.DeviceDiscovered += HandleDeviceDiscovered;
             bus.DeviceUpdated += HandleDeviceUpdated;
             bus.DeviceAction += HandleDeviceAction;
@@ -403,7 +407,6 @@ internal partial class Controller : IController
         await Task.WhenAll(tasks);
     }
 
-    private readonly ManualResetEvent _terminateEvent = new(false);
     public void TerminateScheduleThread()
     {
         _terminateEvent.Set();
@@ -415,7 +418,7 @@ internal partial class Controller : IController
         int _lastRunMinute = -1;
         var doTerminate = false;
         while(!doTerminate) {
-            var now = DateTime.Now;
+            var now = _systemUtils.Now;
             if (now.Minute == _lastRunMinute) {
                 var secondsToWait = 60 - now.Second + 1; // +1 for good measures
                 doTerminate = _terminateEvent.WaitOne(secondsToWait * 1000);
@@ -444,7 +447,7 @@ internal partial class Controller : IController
 
     private List<(string, DeviceScheduleEntry)> GetTriggeredSchedules()
     {
-        var now = DateTime.Now;
+        var now = _systemUtils.Now;
         var result = new List<(string, DeviceScheduleEntry)>();
         using var _ = _schedules.ObtainReadLock(out var schedules);
         foreach (var (address, entries) in schedules)
