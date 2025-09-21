@@ -38,7 +38,7 @@ public class DimmableLightServiceTests
         var gui = Substitute.For<IUserInterface>();
         var storage = Substitute.For<Controller.IDataStorage>();
         storage.LoadData().Returns(runtimeData);
-        _controller = new Controller(consoleOutput, deviceBuses, gui, storage, 1);
+        _controller = new Controller(consoleOutput, deviceBuses, gui, storage, 1, new LightAssistant.SystemUtils());
 
         _deviceBus.DiscoverDevice(_pi5);
         _deviceBus.DiscoverDevice(_eWeLink);
