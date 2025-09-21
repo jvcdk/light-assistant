@@ -11,6 +11,7 @@ public class DimmableLightServiceTests
 {
     private Controller _controller;
     private TestDeviceBus _deviceBus;
+    private SystemUtilsMock _systemUtils;
 
     private MockPi5 _pi5; // We are using this to get to DimmableLightService
     private IDevice _eWeLink; // We are using this to get to SingleButtonService
@@ -19,10 +20,11 @@ public class DimmableLightServiceTests
     [SetUp]
     public void Setup()
     {
-         _deviceBus = new();
+        _deviceBus = new();
         _pi5 = new();
         _eWeLink = CreateEWeLinkWB01();
         _envilarHkZdCctA = CreateEnvilarHkZdCctA();
+        _systemUtils = new SystemUtilsMock();
 
         // Configure runtime data
         var runtimeData = new Controller.RunTimeData();
@@ -33,12 +35,12 @@ public class DimmableLightServiceTests
         };
 
         // Set up controller
-            var consoleOutput = new AssertingConsoleOutput();
+        var consoleOutput = new AssertingConsoleOutput();
         var deviceBuses = new List<IDeviceBus>() { _deviceBus };
         var gui = Substitute.For<IUserInterface>();
         var storage = Substitute.For<Controller.IDataStorage>();
         storage.LoadData().Returns(runtimeData);
-        _controller = new Controller(consoleOutput, deviceBuses, gui, storage, 1, new LightAssistant.SystemUtils());
+        _controller = new Controller(consoleOutput, deviceBuses, gui, storage, 1, _systemUtils);
 
         _deviceBus.DiscoverDevice(_pi5);
         _deviceBus.DiscoverDevice(_eWeLink);
@@ -53,6 +55,25 @@ public class DimmableLightServiceTests
         route.TargetAddress.Returns(dst.Address);
         route.TargetFunctionality.Returns(dstFunc);
         _controller.SetDeviceOptions(src.Address, src.Name, [route], [], []).Wait();
+    }
+
+    private void ConfigureSchedule(IDevice device, ScheduleEventConfiguration scheduleEvent)
+    {
+        var timeOfDay = Substitute.For<ITimeOfDay>();
+        timeOfDay.Hour.Returns(scheduleEvent.Time.Hour);
+        timeOfDay.Minute.Returns(scheduleEvent.Time.Minute);
+
+        var trigger = Substitute.For<IScheduleTrigger>();
+        trigger.Days.Returns(new HashSet<int>() { 0, 1, 2, 3, 4, 5, 6 }); // Every day
+        trigger.Time.Returns(timeOfDay);
+
+        var schedule = Substitute.For<IDeviceScheduleEntry>();
+        schedule.Key.Returns(1);
+        schedule.EventType.Returns(scheduleEvent.EventType);
+        schedule.Parameters.Returns(scheduleEvent.Parameters);
+        schedule.Trigger.Returns(trigger);
+
+        _controller.SetDeviceOptions(device.Address, device.Name, [], [schedule], []).Wait();
     }
 
     private static IDevice CreateEWeLinkWB01()
@@ -109,7 +130,7 @@ public class DimmableLightServiceTests
         for (int nClick = 1; nClick <= 2 * nSteps; nClick++) {
             var stepNo = (nClick - 1) % nSteps + 1;
             var brightness = stepNo / (double)nSteps;
-            var expectedBrightness = (int) Math.Round(brightness * (MockPi5.MaxRawBrightness - 1) + 1);
+            var expectedBrightness = (int)Math.Round(brightness * (MockPi5.MaxRawBrightness - 1) + 1);
 
             _deviceBus.InvokeAction(_eWeLink, "single");
             Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(nClick));
@@ -135,6 +156,31 @@ public class DimmableLightServiceTests
 
         Assert.That(actionNames, Does.Contain("Turn on/off"));
         Assert.That(actionNames, Does.Contain("Fade to brightness"));
+    }
+
+    [Test]
+    public void GivenDeviceWithTurnOnSchedule_WhenTimeReached_ThenLightShouldTurnOn()
+    {
+        // Simulate time is 12:30 (date is not important)
+        _systemUtils.Now = DateTime.Parse("2024-01-01T12:30:00");
+        ConfigureSchedule(_pi5, ScheduleEventConfiguration.TurnOnAt(new ScheduleTime(12, 31))); // Next minute
+
+        // No action yet
+        Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(0));
+
+        // Simulate time is 12:31
+        _systemUtils.Now = new DateTime(2024, 1, 1, 12, 31, 00);
+
+        // Internal knowledge: The event that the scheduling thread is waiting on, is the terminate event.
+        // So we simulate a timeout on that event to make the scheduling thread check the time again.
+        _systemUtils.SimulateWaitOneTimeout();
+
+        // Wait for the event to be processed
+        _pi5.SendBrightnessEvent.WaitOne(2000);
+
+        // Now the action should have been triggered
+        Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(1));
+        Assert.That(_pi5.LastBrightness, Is.EqualTo(MockPi5.MaxRawBrightness));
     }
 
     private class TestDeviceBus : IDeviceBus
@@ -176,8 +222,10 @@ public class DimmableLightServiceTests
             SendBrightnessTransitionCalls++;
             LastBrightness = brightness;
             LastTransitionTime = transitionTime;
+            SendBrightnessEvent.Set();
             return Task.CompletedTask;
         }
+        public AutoResetEvent SendBrightnessEvent = new(false);
         internal int SendBrightnessTransitionCalls = 0;
         internal int LastBrightness = -1;
         internal double LastTransitionTime = -1;
@@ -193,5 +241,23 @@ public class DimmableLightServiceTests
             Name = name;
             return Task.CompletedTask;
         }
+    }   
+
+    private readonly struct ScheduleTime(int hour, int minute)
+    {
+        public int Hour { get; } = hour;
+        public int Minute { get; } = minute;
+    }
+
+    private readonly struct ScheduleEventConfiguration(string eventType, Dictionary<string, string> parameters, ScheduleTime time)
+    {
+        public string EventType { get; } = eventType;
+        public Dictionary<string, string> Parameters { get; } = parameters;
+        public ScheduleTime Time { get; } = time;
+
+        public static ScheduleEventConfiguration TurnOnAt(ScheduleTime time) =>
+            new("Turn on/off", new Dictionary<string, string>() {
+                { "Mode", "Turn on" }
+            }, time);
     }
 }
