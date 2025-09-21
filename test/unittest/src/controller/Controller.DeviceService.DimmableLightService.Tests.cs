@@ -183,6 +183,36 @@ public class DimmableLightServiceTests
         Assert.That(_pi5.LastBrightness, Is.EqualTo(MockPi5.MaxRawBrightness));
     }
 
+    [Test]
+    public void GivenDeviceWithFadeToBrightnessOnSchedule_WhenTimeReached_ThenLightShouldFadeUp()
+    {
+        // Simulate time is 12:30 (date is not important)
+        _systemUtils.Now = DateTime.Parse("2024-01-01T12:30:00");
+        ConfigureSchedule(_pi5, ScheduleEventConfiguration.FadeToBrightnessAt(new ScheduleTime(12, 31))); // Next minute
+
+        // No action yet
+        Assert.That(_pi5.SendBrightnessTransitionCalls, Is.EqualTo(0));
+
+        // Simulate time is 12:31
+        _systemUtils.Now = new DateTime(2024, 1, 1, 12, 31, 00);
+
+        // Internal knowledge: The event that the scheduling thread is waiting on, is the terminate event.
+        // So we simulate a timeout on that event to make the scheduling thread check the time again.
+        _systemUtils.SimulateWaitOneTimeout();
+
+        int lastBrightness = 0;
+        int lastTransitionCalls = 0;
+        while (_pi5.SendBrightnessTransitionCalls < 10) {
+            // Wait for the next event in the fade-up sequence (this part of the code has not mocked out the timer yet)
+            _pi5.SendBrightnessEvent.WaitOne(1000);
+
+            Assert.That(_pi5.SendBrightnessTransitionCalls, Is.GreaterThanOrEqualTo(lastTransitionCalls));
+            Assert.That(_pi5.LastBrightness, Is.GreaterThanOrEqualTo(lastBrightness));
+            lastTransitionCalls = _pi5.SendBrightnessTransitionCalls;
+            lastBrightness = _pi5.LastBrightness;
+        }
+    }
+
     private class TestDeviceBus : IDeviceBus
     {
         public event Action<IDevice> DeviceDiscovered = delegate { };
@@ -223,6 +253,7 @@ public class DimmableLightServiceTests
             LastBrightness = brightness;
             LastTransitionTime = transitionTime;
             SendBrightnessEvent.Set();
+            Console.Error.WriteLine($"MockPi5: SendBrightnessTransition called with brightness={brightness}, transitionTime={transitionTime}");
             return Task.CompletedTask;
         }
         public AutoResetEvent SendBrightnessEvent = new(false);
@@ -258,6 +289,12 @@ public class DimmableLightServiceTests
         public static ScheduleEventConfiguration TurnOnAt(ScheduleTime time) =>
             new("Turn on/off", new Dictionary<string, string>() {
                 { "Mode", "Turn on" }
+            }, time);
+
+        public static ScheduleEventConfiguration FadeToBrightnessAt(ScheduleTime time) =>
+            new("Fade to brightness", new Dictionary<string, string>() {
+                { "Brightness", "1" },
+                { "Duration", "5" }
             }, time);
     }
 }
