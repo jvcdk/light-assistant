@@ -454,9 +454,13 @@ internal partial class Controller : IController
         var result = new List<(string, DeviceScheduleEntry)>();
         using var _ = _schedules.ObtainReadLock(out var schedules);
         foreach (var (address, entries) in schedules)
-            foreach (var entry in entries)
-                if (ShouldTrigger(entry.Trigger, now))
+            foreach (var entry in entries) {
+                _consoleOutput.MessageLine($"Checking schedule for device {address}: {entry}");
+                if (ShouldTrigger(entry.Trigger, now)) {
+                    _consoleOutput.MessageLine($"Schedule for device {address} triggered: {entry}");
                     result.Add((address, entry));
+                }
+            }
         return result;
     }
 
