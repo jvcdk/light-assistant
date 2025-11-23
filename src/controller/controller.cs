@@ -429,6 +429,7 @@ internal partial class Controller : IController
             _lastRunMinute = now.Minute;
 
             var triggeredSchedules = GetTriggeredSchedules();
+            _consoleOutput.MessageLine($"Schedule thread found {triggeredSchedules.Count} triggered schedules.");
             ExecuteScheduleActions(triggeredSchedules);
         }
     }
