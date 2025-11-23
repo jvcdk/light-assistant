@@ -421,7 +421,9 @@ internal partial class Controller : IController
             var now = _systemUtils.Now;
             if (now.Minute == _lastRunMinute) {
                 var secondsToWait = 60 - now.Second + 1; // +1 for good measures
+                _consoleOutput.MessageLine($"Schedule thread sleeping for {secondsToWait} seconds.");
                 doTerminate = _terminateEvent.WaitOne(secondsToWait * 1000);
+                _consoleOutput.MessageLine($"Schedule thread woke up. Terminate={doTerminate}");
                 continue;
             }
             _lastRunMinute = now.Minute;
