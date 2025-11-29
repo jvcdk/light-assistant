@@ -9,6 +9,7 @@ Group=docker
 ExecStartPre=-docker rm --force light-assistant
 ExecStart=docker run --rm --name light-assistant \
     -v /var/lib/light-assistant:/data \
+    -e TZ=Europe/Copenhagen \                       # <--- Ensure this is correct!!!
     --network z2m \
     -p 80:8080 \
     -p 8081:8081 \

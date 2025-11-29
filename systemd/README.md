@@ -5,6 +5,7 @@ I put the services on the same named Docker network: `z2m`.
 Steps:
  * Place the files in `/etc/systemd/system/` folder (or where-ever your SystemD expects sercice files)
  * Go through the files and adapt to your needs:
+   * Ensure the timezone for light-assistant is correct.
    * The containers are started with user:group ID 65534:65534. This usually maps to nobody:nogroup.
    * Config folders are located in /var/lib/... . Create these with same user:group ownership as above.
    * Port: Light Assistant listens on port 80 (for web) and 8081 (for websocket).
