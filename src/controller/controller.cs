@@ -456,7 +456,7 @@ internal partial class Controller : IController
         foreach (var (address, entries) in schedules)
             foreach (var entry in entries) {
                 _consoleOutput.MessageLine($"Checking schedule for device {address}: {entry}");
-                if (ShouldTrigger(entry.Trigger, now)) {
+                if (ShouldTrigger(entry.Trigger, now, _consoleOutput)) {
                     _consoleOutput.MessageLine($"Schedule for device {address} triggered: {entry}");
                     result.Add((address, entry));
                 }
@@ -464,12 +464,14 @@ internal partial class Controller : IController
         return result;
     }
 
-    private static bool ShouldTrigger(IScheduleTrigger trigger, DateTime now)
+    private static bool ShouldTrigger(IScheduleTrigger trigger, DateTime now, IConsoleOutput _consoleOutput)
     {
         int dayOfWeek = ((int)now.DayOfWeek + 6) % 7; // Shift to match the IScheduleTrigger days
+        _consoleOutput.MessageLine($"Checking trigger for day {dayOfWeek} (was {now.DayOfWeek})");
         if(!trigger.Days.Contains(dayOfWeek))
             return false;
 
+        _consoleOutput.MessageLine($"Checking trigger time {trigger.Time.Hour}:{trigger.Time.Minute} against now {now.Hour}:{now.Minute}");
         return trigger.Time.Hour == now.Hour &&
             trigger.Time.Minute == now.Minute;
     }
