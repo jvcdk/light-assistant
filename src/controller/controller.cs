@@ -467,11 +467,9 @@ internal partial class Controller : IController
     private static bool ShouldTrigger(IScheduleTrigger trigger, DateTime now, IConsoleOutput _consoleOutput)
     {
         int dayOfWeek = ((int)now.DayOfWeek + 6) % 7; // Shift to match the IScheduleTrigger days
-        _consoleOutput.MessageLine($"Checking trigger for day {dayOfWeek} (was {now.DayOfWeek})");
         if(!trigger.Days.Contains(dayOfWeek))
             return false;
 
-        _consoleOutput.MessageLine($"Checking trigger time {trigger.Time.Hour}:{trigger.Time.Minute} against now {now.Hour}:{now.Minute}");
         return trigger.Time.Hour == now.Hour &&
             trigger.Time.Minute == now.Minute;
     }
