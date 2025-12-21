@@ -85,13 +85,13 @@ export function CircularClock(props: CircularClockProps) {
     const normalizedDegrees = (degrees + 360) % 360;
   
     if (mode == ClockMode.Hour) {
-      let hour = Math.round((normalizedDegrees / 30) % 12);
+      let hour = Math.round((normalizedDegrees / 30)) % 12;
       if(radius < centerX * 0.75)
         hour += 12;
       selectedTime.val = selectedTime.val.WithHour(hour);
     }
     else {
-      const minute = Math.round((normalizedDegrees / 6) % 60);
+      const minute = Math.round((normalizedDegrees / 6)) % 60;
       selectedTime.val = selectedTime.val.WithMinutes(minute);
     }
   }, [mode, selectedTime]);
