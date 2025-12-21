@@ -60,13 +60,15 @@ export function CircularClock(props: CircularClockProps) {
   const [mode, setMode] = useState(props.mode);
 
   const updateTime = useCallback((circularClock: HTMLElement, clientX: number, clientY: number) => {
-    const rect = circularClock.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const mouseX = clientX - rect.left - centerX;
-    const mouseY = clientY - rect.top - centerY;
+    const rectClock = circularClock.getBoundingClientRect();
+    const rectCenterTime = circularClock.querySelector('.CenterTime')!.getBoundingClientRect();
+    const radiusCenterTime = Math.max(rectCenterTime.width, rectCenterTime.height) / 2;
+    const centerX = rectClock.width / 2;
+    const centerY = rectClock.height / 2;
+    const mouseX = clientX - rectClock.left - centerX;
+    const mouseY = clientY - rectClock.top - centerY;
     const radius = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
-    if(radius < Math.abs(centerX) * 0.25 || radius > Math.abs(centerX) * 1.1)
+    if(radius < radiusCenterTime)
       return; // Ignore clicks inside or outside the clock
     const angle = Math.atan2(mouseY, mouseX);
     const degrees = angle * (180 / Math.PI) + 90; // Offset for 12 o'clock
