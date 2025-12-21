@@ -10,6 +10,16 @@ export enum ClockMode {
   Minute
 }
 
+function ClockHand(props: { Angle: number, IsInner: boolean }) {
+  const handClass = props.IsInner ? 'Hand Inner' : 'Hand Outer';
+  return (
+    <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${props.Angle}deg)` }}>
+      <div className="HandBar" />
+      <div className={`HandDot ${props.IsInner ? 'Inner' : 'Outer'}`} />
+    </div>
+  );
+}
+
 function ClockDigits(props: { Mode: ClockMode, SelectedDigit: number }) {
   let nElements = 60/5;
   let stepSize = 5;
@@ -159,14 +169,13 @@ export function CircularClock(props: CircularClockProps) {
   }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd, isDragging]);
 
   const isModeHour = mode == ClockMode.Hour;
-  const handClass = (isModeHour && selectedTime.val.Hour >= 12) ? 'Hand Inner' : 'Hand Outer';
   const handAngle = (isModeHour ? selectedTime.val.Hour * 30 : selectedTime.val.Minute * 6) + 90;
   const selectedDigit = isModeHour ? selectedTime.val.Hour : selectedTime.val.Minute;
 
   return (
     <div>
       <div className="CircularClock" onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
-        <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${handAngle}deg)` }} />
+        <ClockHand Angle={handAngle} IsInner={isModeHour && selectedTime.val.Hour >= 12} />
         <ClockDigits Mode={mode} SelectedDigit={selectedDigit} />
         <span className='CenterTime'>
           <RenderTimeOfDay selected={mode} Time={selectedTime.val} OnMinutesClick={() => setMode(ClockMode.Minute)} OnHourClick={() => setMode(ClockMode.Hour)} />
