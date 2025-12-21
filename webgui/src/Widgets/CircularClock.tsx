@@ -11,9 +11,20 @@ export enum ClockMode {
 }
 
 function ClockHand(props: { Angle: number, IsInner: boolean }) {
+  const [prevAngle, setPrevAngle] = useState(props.Angle);
+  let angle = props.Angle;
+  while ((angle - prevAngle) > 180)
+    angle -= 360;
+  while ((angle - prevAngle) < -180)
+    angle += 360;
+
+  useEffect(() => {
+    setPrevAngle(angle);
+  }, [angle]);
+
   const handClass = props.IsInner ? 'Hand Inner' : 'Hand Outer';
   return (
-    <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${props.Angle}deg)` }}>
+    <div className={handClass} style={{ transform: `translate(-50%, -50%) rotate(${angle}deg)` }}>
       <div className="HandBar" />
       <div className={`HandDot ${props.IsInner ? 'Inner' : 'Outer'}`} />
     </div>
